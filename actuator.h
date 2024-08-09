@@ -268,6 +268,17 @@ public:
 	}
 
 	/**
+	 * @brief process all commands in modbus queue
+	 */
+	void flush()
+	{
+		while (modbus_client.get_queue_size() > 0)
+		{
+			run();
+		}
+	}
+
+	/**
 	 * @brief handle the motor frame transmissions cadence
 	 * @
 	 * This dispatches transmissions for motor frames when connected and dispatches handshake messages when not.

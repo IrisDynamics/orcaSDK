@@ -119,13 +119,13 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	modbus_client->pass_time(2001);
 	motor.run_out();
 
-	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x18', '\x44', '\x28' };
+	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
 	EXPECT_EQ(third_sync_message, modbus_client->sendBuffer);
 
 	std::deque<char> third_sync_response{
-		'\x1', '\x3', '\x18'
+		'\x1', '\x3', '\x19'
 	};
-	for (int i = 0; i < 0x18 * 2; i++) // Push 24 (0x18) register values into the receive buffer
+	for (int i = 0; i < 0x19 * 2; i++) // Push 24 (0x18) register values into the receive buffer
 	{
 		third_sync_response.push_back('\0');
 	}

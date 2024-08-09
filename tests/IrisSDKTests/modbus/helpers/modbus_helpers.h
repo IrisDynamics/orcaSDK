@@ -1,6 +1,6 @@
 #pragma once
 #include <deque>
-#include "modbus_client/src/mb_crc.h"
+#include "src/mb_crc.h"
 
 namespace ModbusTesting
 {

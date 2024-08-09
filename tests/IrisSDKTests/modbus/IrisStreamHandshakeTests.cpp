@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "modbus_client/src/iris_client_application.h"
+#include "src/iris_client_application.h"
 #include "modbus/helpers/TestModbusClient.h"
 
 class IrisStreamHandshakeTests : public testing::Test

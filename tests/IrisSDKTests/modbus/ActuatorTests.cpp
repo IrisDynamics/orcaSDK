@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "modbus/helpers/TestModbusClient.h"
-#include "modbus_client/actuator.h"
+#include "actuator.h"
 #include <memory>
 #include "helpers/modbus_helpers.h"
 

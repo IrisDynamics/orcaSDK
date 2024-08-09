@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "modbus_client/src/iris_client_application.h"
+#include "src/iris_client_application.h"
 #include "modbus/helpers/TestModbusClient.h"
-#include "modbus_client/actuator.h"
+#include "actuator.h"
 
 class TransactionConstructionTests : public testing::Test
 {

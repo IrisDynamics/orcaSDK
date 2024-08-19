@@ -94,7 +94,7 @@ public:
      * @brief used to check whether a message is ready to be dequeued
      */
     bool is_response_ready() {
-    	if ( front_index != back_index && transaction_buffer[front_index].is_finished()) return true;
+    	if ( front_index != back_index && transaction_buffer[front_index].is_ready_to_process()) return true;
     	return false;
     }
 
@@ -121,6 +121,13 @@ public:
     	return &transaction_buffer[active_index];
     }
 
+    void increment_active_index_if_finished() {
+        if (transaction_buffer[active_index].is_ready_to_process() || transaction_buffer[active_index].is_dequeued()) {
+            active_index++;
+            active_index &= (NUM_MESSAGES - 1); // mod
+        }
+    }
+
     /**
      * @brief returns true when the transaction at the active_index is new and ready to start being sent
      * Advances the active_index when the current message is finished and marks the transaction as sent
@@ -131,10 +138,6 @@ public:
 
     	bool ret = false;
 			
-	    if ( transaction_buffer[active_index].is_finished() || transaction_buffer[active_index].is_dequeued() ) {
-		    active_index++;
-		    active_index &= (NUM_MESSAGES-1); // mod
-    	    }
 	    if ((active_index == back_index) || transaction_buffer[active_index].is_active()) {
 		    // no new messages, or the current message is still active
 		    ret = false;

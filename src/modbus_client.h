@@ -213,6 +213,7 @@ public:
     	// If the interframe has expired, or there are no timers expired, check for a message to transmit
     	if ( my_enabled_timer == TIMER_ID::none	||  has_timer_expired() == TIMER_ID::interframe_delay) {
     		disable_timer();
+            messages.increment_active_index_if_finished();
     		if ( messages.available_to_send() ) {
                 my_state = emission;
     			enable_response_timeout();

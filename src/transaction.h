@@ -139,7 +139,7 @@ public:
      * @brief mark the message as having been finalized and ready for parsing (if valid)
     */
     void mark_finished(){
-    	my_state = finished;
+    	my_state = ready_to_process;
     }
     /**
 	 * @brief mark the message as having been removed from the queue
@@ -163,8 +163,8 @@ public:
     /**
      * @brief returns true when the message has been finished sending
      */
-    bool is_finished() {
-    	return my_state == finished;
+    bool is_ready_to_process() {
+    	return my_state == ready_to_process;
     }
     /**
      * @brief returns true when the message has been removed from the queue
@@ -327,7 +327,7 @@ private:
         unused = 33,			// not a valid transaction to send
         queued,					// has been loaded with data to send, but hasn't been marked as transmitted
         sent,					// has been transmitted (or is transmitting), but not marked as received or timed out
-        finished,				// marked as done (either received or error encountered) as received or timed out
+        ready_to_process,				// marked as done (either received or error encountered) as received or timed out
         dequeued,				// marked as having been removed from the queue (but not reset)
     };
     volatile TRANSMIT_STATE my_state = unused;

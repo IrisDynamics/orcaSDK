@@ -184,7 +184,7 @@ public:
      * @brief returns true when the transaction has received at least as many bytes as it expected
      * Does not indicate validity
      */
-    bool is_fully_received() {
+    bool received_expected_number_of_bytes() {
     	return
     		(get_rx_buffer_size() >= reception_length)
     		||

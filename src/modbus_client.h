@@ -149,7 +149,7 @@ public:
 
 				// If the length was unknown assume this was the expected termination of the response until it is validated
 				if( !active_transaction->is_expected_length_known() ){
-					validate_response(active_transaction);
+					active_transaction->validate_response(diagnostic_counters);
 				}
 				// If the length was known and an interchar timeout occurred (ie the message got messed up)
 				else {
@@ -354,7 +354,7 @@ protected:
 		if (active_transaction->received_expected_number_of_bytes() )
 		{
 			enable_interframe_delay();// used to signal the earliest start time of the next message
-			validate_response(active_transaction);// might transition to resting from connected
+            active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
 		}
 		else {
 			enable_interchar_timeout();
@@ -379,47 +379,6 @@ private:
 
 	volatile uint32_t timer_start_time;	// recorded in system cycles: must be checked as such
 
-
-	/**
-     * @brief Increment diagnostic counters and flag appropriate bits in the Transaction::reception_validity field based on the contents of the response
-     * @param response a pointer to the transaction with the most recently received response in the MessageQueue
-    */
-    void validate_response(Transaction* response){
-
-        // Check that destination and source addresses are the same
-        if(response->get_tx_address() != response->get_rx_address()){   //if response to broadcast or incorrect responder
-            diagnostic_counters.increment_diagnostic_counter(unexpected_responder);
-            response->invalidate(Transaction::UNEXPECTED_RESPONDER);	// invalidates message
-        }
-
-        // Checking CRC
-        if ( !response->check_rx_buffer_crc() ) {
-            diagnostic_counters.increment_diagnostic_counter(crc_error_count);
-            response->invalidate(Transaction::CRC_ERROR);				// invalidates message
-        }
-
-        // todo; other things that might invalidate a message
-
-
-        // Increment counters for valid messages
-		if ( response->is_reception_valid() ) {
-            diagnostic_counters.increment_diagnostic_counter(return_bus_message_count);
-
-			// Parse exception responses
-			if (response->is_error_response()) {
-                diagnostic_counters.increment_diagnostic_counter(return_server_exception_error_count);
-				switch(response->get_rx_data()[0]){
-					case 5: //exception code corresponding to NAK
-                        diagnostic_counters.increment_diagnostic_counter(return_server_NAK_count);
-						break;
-					case 6: //exception code corresponding to server busy error
-                        diagnostic_counters.increment_diagnostic_counter(return_server_busy_count);
-				}
-			}
-
-            response->mark_finished();
-		}
-    }
 
 /////////////////////////////////////////////////////////////
 ///////////////////////////////// The Timer ////////////////

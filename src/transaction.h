@@ -246,6 +246,47 @@ public:
     }
 
     /**
+     * @brief Increment diagnostic counters and flag appropriate bits in the Transaction::reception_validity field based on the contents of the response
+     * @param response a pointer to the transaction with the most recently received response in the MessageQueue
+    */
+    void validate_response(DiagnosticsTracker& diagnostics_tracker) {
+
+        // Check that destination and source addresses are the same
+        if (get_tx_address() != get_rx_address()) {   //if response to broadcast or incorrect responder
+            diagnostics_tracker.increment_diagnostic_counter(unexpected_responder);
+            invalidate(Transaction::UNEXPECTED_RESPONDER);	// invalidates message
+        }
+
+        // Checking CRC
+        if (!check_rx_buffer_crc()) {
+            diagnostics_tracker.increment_diagnostic_counter(crc_error_count);
+            invalidate(Transaction::CRC_ERROR);				// invalidates message
+        }
+
+        // todo; other things that might invalidate a message
+
+
+        // Increment counters for valid messages
+        if (is_reception_valid()) {
+            diagnostics_tracker.increment_diagnostic_counter(return_bus_message_count);
+
+            // Parse exception responses
+            if (is_error_response()) {
+                diagnostics_tracker.increment_diagnostic_counter(return_server_exception_error_count);
+                switch (get_rx_data()[0]) {
+                case 5: //exception code corresponding to NAK
+                    diagnostics_tracker.increment_diagnostic_counter(return_server_NAK_count);
+                    break;
+                case 6: //exception code corresponding to server busy error
+                    diagnostics_tracker.increment_diagnostic_counter(return_server_busy_count);
+                }
+            }
+
+            mark_finished();
+        }
+    }
+
+    /**
      * @brief is true when the message has not been invalidated
      */
     bool is_reception_valid(){

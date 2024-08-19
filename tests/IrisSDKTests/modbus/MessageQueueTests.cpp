@@ -78,7 +78,7 @@ TEST_F(MessageQueueTests, TwoEnqueuedMessagesDequeueInFIFOOrder)
 
 // ===============================BAD BEHAVIOUR TESTS================================
 
-TEST_F(MessageQueueTests, GetActiveTransactionUpdatesAsMessagesAreDequeuedANDAvailableToSendIsCalled)
+TEST_F(MessageQueueTests, GetActiveTransactionUpdatesAsMessagesAreDequeuedANDIncrementActiveIndexIsCalled)
 {
 	uint8_t data[1] = { 3 };
 	Transaction transaction_1;
@@ -92,7 +92,7 @@ TEST_F(MessageQueueTests, GetActiveTransactionUpdatesAsMessagesAreDequeuedANDAva
 
 	queue.dequeue();
 
-	bool command_and_query_method = queue.available_to_send(); //TODO: Find way to remove this requirement
+	queue.increment_active_index_if_finished();
 
 	Transaction* active_transaction = queue.get_active_transaction();
 	EXPECT_EQ(5, active_transaction->get_tx_data()[0]);
@@ -116,7 +116,7 @@ TEST_F(MessageQueueTests, IfMessageIsDequeuedButAvailableToSendIsntCalledActiveT
 	EXPECT_EQ(3, active_transaction->get_tx_data()[0]); //TODO: This should fail (Equal 5)
 }
 
-TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedCausesActiveTransactionToMoveForwardIfAvailableToSendCalled)
+TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedCausesActiveTransactionToMoveForward)
 {
 	uint8_t data[1] = { 3 };
 	Transaction transaction_1;
@@ -133,13 +133,13 @@ TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedCausesActiveTransactionT
 
 	active_transaction->mark_finished();
 
-	queue.available_to_send(); // This should not be a dependency
+	queue.increment_active_index_if_finished();
 
 	active_transaction = queue.get_active_transaction();
 	EXPECT_EQ(5, active_transaction->get_tx_data()[0]);
 }
 
-TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedDoesntCauseActiveTransactionToMoveForwardIfAvailableToSendIsNotCalled)
+TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedDoesntCauseActiveTransactionToMoveForwardIfIncrementActiveIndexIsNotCalled)
 {
 	uint8_t data[1] = { 3 };
 	Transaction transaction_1;

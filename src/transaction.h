@@ -242,6 +242,7 @@ public:
     */
     void invalidate(error_id error_id){
        reception_validity |= (1 << error_id);
+       mark_finished();
     }
 
     /**

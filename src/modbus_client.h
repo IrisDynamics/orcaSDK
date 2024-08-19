@@ -164,7 +164,6 @@ public:
 				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
 				increment_diagnostic_counter(return_server_no_response_count);
 				active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
-				active_transaction->mark_finished();
 				break;
 
 			case TIMER_ID::interchar_timeout:
@@ -182,8 +181,6 @@ public:
 					increment_diagnostic_counter(ignoring_state_error);
 					my_state = ignoring;
 				}
-
-				active_transaction->mark_finished();
 
 				break;
 
@@ -380,7 +377,6 @@ protected:
 		{
 			enable_interframe_delay();// used to signal the earliest start time of the next message
 			validate_response(active_transaction);// might transition to resting from connected
-			active_transaction->mark_finished();
 		}
 		else {
 			enable_interchar_timeout();
@@ -440,7 +436,6 @@ private:
 		if ( response->is_reception_valid() ) {
 			increment_diagnostic_counter(return_bus_message_count);
 
-
 			// Parse exception responses
 			if (response->is_error_response()) {
 				increment_diagnostic_counter(return_server_exception_error_count);
@@ -452,6 +447,8 @@ private:
 						increment_diagnostic_counter(return_server_busy_count);
 				}
 			}
+
+            response->mark_finished();
 		}
     }
 

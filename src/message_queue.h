@@ -26,6 +26,7 @@
 #ifndef MESSAGE_QUEUE_H_
 #define MESSAGE_QUEUE_H_
 
+#include "diagnostics_tracker.h"
 #include "transaction.h"
 
 
@@ -37,7 +38,9 @@ class MessageQueue {
 public:
     /*@brief On construction the message queue and errors are reset.
     */
-    MessageQueue(){
+    MessageQueue(DiagnosticsTracker& diagnostic_counters) :
+        diagnostics_tracker(diagnostic_counters)
+    {
     	reset();
     }
 
@@ -160,6 +163,7 @@ public:
    }
 
 private:
+    DiagnosticsTracker& diagnostics_tracker;
     Transaction transaction_buffer[NUM_MESSAGES];  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
     int back_index = 0;       //!<index of next available empty spot
     int front_index = 0;      //!<index of item in front of queue

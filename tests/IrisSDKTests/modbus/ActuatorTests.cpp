@@ -218,9 +218,51 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 	EXPECT_EQ(2, motor.get_orca_reg_content(SHAFT_SHEED_H));
 }
 
-TEST_F(ActuatorTests, ModbusMotorCommandCorrectlyHandlesBadResponse)
+TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 {
+	motor.read_register(POWER);
 
+	motor.run_out();
+	std::deque<char> receive_buffer{
+		'\x1', '\x3', '\x1', '\x0', '\xff', '\x0', '\x0'
+	};
+	modbus_client->consume_new_message(receive_buffer);
+	motor.consume_new_message();
+
+	motor.run_in();
+
+	EXPECT_EQ(1, modbus_client->diagnostic_counters[crc_error_count]);
+}
+
+TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFullMessageResponseTimeout)
+{
+	motor.read_register(POWER);
+
+	motor.run_out();
+
+	modbus_client->pass_time(50001);
+
+	motor.run_in();
+
+	EXPECT_EQ(1, modbus_client->diagnostic_counters[return_server_no_response_count]);
+}
+
+TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetweenSeeingNewBytes)
+{
+	motor.read_register(POWER);
+
+	motor.run_out();
+
+	std::deque<char> new_input
+	{
+		'\x1'
+	};
+	modbus_client->consume_new_message(new_input);
+	modbus_client->pass_time(16001);
+
+	motor.run_in();
+
+	EXPECT_EQ(1, modbus_client->diagnostic_counters[unexpected_interchar]);
 }
 
 //TEST_F(ActuatorTests, ModbusFlushUpdatesRegistersImmediately)

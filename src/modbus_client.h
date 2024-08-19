@@ -74,9 +74,9 @@ public:
         ignoring_state_error                    , //entered ignoring state
 		unhandled_isr							,
 
-	} diag_counter_t;
+	} diagnostic_counter_t;
 
-    uint16_t diag_counters[20] = {0}; //!< 18 entry array of 16-bit serial line diagnostic counters
+    uint16_t diagnostic_counters[20] = {0}; //!< 18 entry array of 16-bit serial line diagnostic counters
 
     /**
     * @brief construct ModbusClient object
@@ -162,7 +162,7 @@ public:
 
 			case TIMER_ID::repsonse_timeout:
 				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
-				increment_diag_counter(return_server_no_response_count);
+				increment_diagnostic_counter(return_server_no_response_count);
 				active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
 				active_transaction->mark_finished();
 				break;
@@ -177,9 +177,9 @@ public:
 				}
 				// If the length was known and an interchar timeout occurred (ie the message got messed up)
 				else {
-					increment_diag_counter(unexpected_interchar);
+					increment_diagnostic_counter(unexpected_interchar);
 					active_transaction->invalidate(Transaction::INTERCHAR_TIMEOUT_ERROR);
-					increment_diag_counter(ignoring_state_error);
+					increment_diagnostic_counter(ignoring_state_error);
 					my_state = ignoring;
 				}
 
@@ -218,7 +218,7 @@ public:
                 my_state = emission;
     			enable_response_timeout();
     			tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
-                increment_diag_counter(message_sent_count);    //temp? - for frequency benchmarking
+                increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
     		}
     		else {
     			my_state = idle;
@@ -348,7 +348,7 @@ protected:
 		//send the current data byte
 		uint8_t data = active_transaction->pop_tx_buffer();
 		send_byte(data);
-		increment_diag_counter(bytes_out_count);
+		increment_diagnostic_counter(bytes_out_count);
 
 		if ( active_transaction->is_fully_sent() ) {
 
@@ -373,7 +373,7 @@ protected:
 
 		uint8_t byte = receive_byte();
 		active_transaction->load_reception(byte); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
-		increment_diag_counter(bytes_in_count);
+		increment_diagnostic_counter(bytes_in_count);
 
 		// If this was the last character for this message
 		if (active_transaction->is_fully_received() )
@@ -391,10 +391,10 @@ protected:
     /**
      * @brief Increment one of the serial line diagnostic counters.
      */
-    void increment_diag_counter(diag_counter_t counter) {
+    void increment_diagnostic_counter(diagnostic_counter_t counter) {
         if (counter < 5)
             std::cout << "DIAG COUNTER DOES NOT JUST USE ENUM" << std::endl;
-    	diag_counters[counter]++;
+    	diagnostic_counters[counter]++;
     }
 
 
@@ -423,13 +423,13 @@ private:
 
         // Check that destination and source addresses are the same
         if(response->get_tx_address() != response->get_rx_address()){   //if response to broadcast or incorrect responder
-            increment_diag_counter(unexpected_responder);
+            increment_diagnostic_counter(unexpected_responder);
             response->invalidate(Transaction::UNEXPECTED_RESPONDER);	// invalidates message
         }
 
         // Checking CRC
         if ( !response->check_rx_buffer_crc() ) {
-            increment_diag_counter(crc_error_count);
+            increment_diagnostic_counter(crc_error_count);
             response->invalidate(Transaction::CRC_ERROR);				// invalidates message
         }
 
@@ -438,18 +438,18 @@ private:
 
         // Increment counters for valid messages
 		if ( response->is_reception_valid() ) {
-			increment_diag_counter(return_bus_message_count);
+			increment_diagnostic_counter(return_bus_message_count);
 
 
 			// Parse exception responses
 			if (response->is_error_response()) {
-				increment_diag_counter(return_server_exception_error_count);
+				increment_diagnostic_counter(return_server_exception_error_count);
 				switch(response->get_rx_data()[0]){
 					case 5: //exception code corresponding to NAK
-						increment_diag_counter(return_server_NAK_count);
+						increment_diagnostic_counter(return_server_NAK_count);
 						break;
 					case 6: //exception code corresponding to server busy error
-						increment_diag_counter(return_server_busy_count);
+						increment_diagnostic_counter(return_server_busy_count);
 				}
 			}
 		}

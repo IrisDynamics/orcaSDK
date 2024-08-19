@@ -184,6 +184,40 @@ TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLoca
 	EXPECT_EQ(motor.get_orca_reg_content(98), 0xe3e);
 }
 
+TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
+{
+	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.read_registers(SHAFT_SPEED_MMPS, 2);
+	motor.run_out();
+
+	std::deque<char> first_message_response = std::deque<char>{
+		//						 low  reg(2)  high reg(65536)
+			'\x1', '\x3', '\x4', '\0', '\x2', '\0', '\x1'
+	};
+	ModbusTesting::CalculateAndAppendCRC(first_message_response);
+	modbus_client->consume_new_message(first_message_response);
+
+	motor.run_in();
+
+	modbus_client->pass_time(2001);
+
+	motor.run_out();
+
+	EXPECT_EQ(65538, motor.get_position_um());
+
+	std::deque<char> second_message_response = std::deque<char>{
+		//						 low  reg(2)  high reg(65536)
+			'\x1', '\x3', '\x4', '\0', '\x3', '\0', '\x2'
+	};
+	ModbusTesting::CalculateAndAppendCRC(second_message_response);
+	modbus_client->consume_new_message(second_message_response);
+
+	motor.run_in();
+
+	EXPECT_EQ(3, motor.get_orca_reg_content(SHAFT_SPEED_MMPS));
+	EXPECT_EQ(2, motor.get_orca_reg_content(SHAFT_SHEED_H));
+}
+
 TEST_F(ActuatorTests, ModbusMotorCommandCorrectlyHandlesBadResponse)
 {
 

@@ -3,11 +3,14 @@
 
 class MessageQueueTests : public testing::Test
 {
+	DiagnosticsTracker diagnostic_tracker;
 protected:
 	MessageQueueTests()
 	{}
 
-	MessageQueue queue;
+	MessageQueue queue{ diagnostic_tracker };
+
+private:
 };
 
 TEST_F(MessageQueueTests, QueueBeginsEmpty)

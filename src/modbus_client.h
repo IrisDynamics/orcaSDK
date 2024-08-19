@@ -25,6 +25,7 @@
 #ifndef MODBUS_CLIENT_H_
 #define MODBUS_CLIENT_H_
 
+#include "diagnostics_tracker.h"
 #include "message_queue.h"
 #ifdef __MK20DX256__
 #include <Arduino.h>
@@ -53,30 +54,6 @@ class ModbusClient {
 public:
 
     const int channel_number;               //!<the channels identifying number
-
-    /**
-     * @brief Description of the different diagnostic counters
-    */
-    typedef enum {
-
-        message_sent_count                      = 5,
-		return_bus_message_count 			    ,
-        bytes_out_count			                ,
-        bytes_in_count			                ,
-		nothing_0								,
-		return_server_exception_error_count	    = 10,
-		return_server_NAK_count				    ,
-		return_server_busy_count 			    ,
-        unexpected_responder                    , //responder has wrong address or response to broadcast
-		crc_error_count						    ,
-		return_server_no_response_count		    = 15,
-        unexpected_interchar                    ,
-        ignoring_state_error                    , //entered ignoring state
-		unhandled_isr							,
-
-	} diagnostic_counter_t;
-
-    uint16_t diagnostic_counters[20] = {0}; //!< 18 entry array of 16-bit serial line diagnostic counters
 
     /**
     * @brief construct ModbusClient object
@@ -162,7 +139,7 @@ public:
 
 			case TIMER_ID::repsonse_timeout:
 				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
-				increment_diagnostic_counter(return_server_no_response_count);
+                diagnostic_counters.increment_diagnostic_counter(return_server_no_response_count);
 				active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
 				break;
 
@@ -176,9 +153,9 @@ public:
 				}
 				// If the length was known and an interchar timeout occurred (ie the message got messed up)
 				else {
-					increment_diagnostic_counter(unexpected_interchar);
+                    diagnostic_counters.increment_diagnostic_counter(unexpected_interchar);
 					active_transaction->invalidate(Transaction::INTERCHAR_TIMEOUT_ERROR);
-					increment_diagnostic_counter(ignoring_state_error);
+                    diagnostic_counters.increment_diagnostic_counter(ignoring_state_error);
 					my_state = ignoring;
 				}
 
@@ -215,7 +192,7 @@ public:
                 my_state = emission;
     			enable_response_timeout();
     			tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
-                increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
+                diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
     		}
     		else {
     			my_state = idle;
@@ -303,7 +280,8 @@ public:
     */
     virtual uint32_t get_system_cycles() = 0;
 
-    MessageQueue messages;            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
+    DiagnosticsTracker diagnostic_counters;
+    MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
 protected:
 
@@ -345,7 +323,7 @@ protected:
 		//send the current data byte
 		uint8_t data = active_transaction->pop_tx_buffer();
 		send_byte(data);
-		increment_diagnostic_counter(bytes_out_count);
+        diagnostic_counters.increment_diagnostic_counter(bytes_out_count);
 
 		if ( active_transaction->is_fully_sent() ) {
 
@@ -370,7 +348,7 @@ protected:
 
 		uint8_t byte = receive_byte();
 		active_transaction->load_reception(byte); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
-		increment_diagnostic_counter(bytes_in_count);
+        diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
 
 		// If this was the last character for this message
 		if (active_transaction->received_expected_number_of_bytes() )
@@ -382,15 +360,6 @@ protected:
 			enable_interchar_timeout();
 		}
 
-    }
-
-    /**
-     * @brief Increment one of the serial line diagnostic counters.
-     */
-    void increment_diagnostic_counter(diagnostic_counter_t counter) {
-        if (counter < 5)
-            std::cout << "DIAG COUNTER DOES NOT JUST USE ENUM" << std::endl;
-    	diagnostic_counters[counter]++;
     }
 
 
@@ -419,13 +388,13 @@ private:
 
         // Check that destination and source addresses are the same
         if(response->get_tx_address() != response->get_rx_address()){   //if response to broadcast or incorrect responder
-            increment_diagnostic_counter(unexpected_responder);
+            diagnostic_counters.increment_diagnostic_counter(unexpected_responder);
             response->invalidate(Transaction::UNEXPECTED_RESPONDER);	// invalidates message
         }
 
         // Checking CRC
         if ( !response->check_rx_buffer_crc() ) {
-            increment_diagnostic_counter(crc_error_count);
+            diagnostic_counters.increment_diagnostic_counter(crc_error_count);
             response->invalidate(Transaction::CRC_ERROR);				// invalidates message
         }
 
@@ -434,17 +403,17 @@ private:
 
         // Increment counters for valid messages
 		if ( response->is_reception_valid() ) {
-			increment_diagnostic_counter(return_bus_message_count);
+            diagnostic_counters.increment_diagnostic_counter(return_bus_message_count);
 
 			// Parse exception responses
 			if (response->is_error_response()) {
-				increment_diagnostic_counter(return_server_exception_error_count);
+                diagnostic_counters.increment_diagnostic_counter(return_server_exception_error_count);
 				switch(response->get_rx_data()[0]){
 					case 5: //exception code corresponding to NAK
-						increment_diagnostic_counter(return_server_NAK_count);
+                        diagnostic_counters.increment_diagnostic_counter(return_server_NAK_count);
 						break;
 					case 6: //exception code corresponding to server busy error
-						increment_diagnostic_counter(return_server_busy_count);
+                        diagnostic_counters.increment_diagnostic_counter(return_server_busy_count);
 				}
 			}
 

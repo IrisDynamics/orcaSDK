@@ -373,7 +373,7 @@ protected:
 		increment_diagnostic_counter(bytes_in_count);
 
 		// If this was the last character for this message
-		if (active_transaction->is_fully_received() )
+		if (active_transaction->received_expected_number_of_bytes() )
 		{
 			enable_interframe_delay();// used to signal the earliest start time of the next message
 			validate_response(active_transaction);// might transition to resting from connected

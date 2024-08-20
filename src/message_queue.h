@@ -28,6 +28,7 @@
 
 #include "diagnostics_tracker.h"
 #include "transaction.h"
+#include <deque>
 
 
 /**
@@ -55,13 +56,8 @@ public:
 		PRINTDL("back: ", back_index);
 		PRINTDL("active: ", active_index);
 #endif 
-    	for (int i = front_index; i != back_index; i++) {
-    		i &= 0xF;
-    		transaction_buffer[i].printme();
-    	}
-    	for (int i = 0; i < NUM_MESSAGES; i++) {
-    		i &= 0xF;
-    		transaction_buffer[i].printme();
+    	for (Transaction& t : transaction_buffer) {
+    		t.printme();
     	}
     }
 
@@ -69,12 +65,7 @@ public:
      * @brief reset all messages in the queue to be empty
      */
     void reset () {
-        for(int i = 0; i < NUM_MESSAGES; i++) transaction_buffer[i].reset_transaction();
-        error.reset_transaction();
-
-        back_index = 0;
-        front_index = 0;
-        active_index = 0;
+        transaction_buffer.clear();
     }
 
     /**
@@ -82,12 +73,9 @@ public:
      * Returns false if the message was not added.
     */
     bool enqueue(Transaction message){
-        if(!full()) {
-        	transaction_buffer[back_index].reset_transaction();
-        	transaction_buffer[back_index] = message;				// todo: get rid of this assignment...
-        	transaction_buffer[back_index].mark_queued();
-            back_index++;
-            back_index &= (NUM_MESSAGES - 1); 
+        if(!full()) {			// todo: get rid of this assignment...
+            message.mark_queued();
+            transaction_buffer.push_back(message);
             return true;
         }
         return false;
@@ -97,8 +85,7 @@ public:
      * @brief used to check whether a message is ready to be dequeued
      */
     bool is_response_ready() {
-    	if ( front_index != back_index && transaction_buffer[front_index].is_ready_to_process()) return true;
-    	return false;
+        return transaction_buffer.size() && transaction_buffer.front().is_ready_to_process();
     }
 
 
@@ -109,10 +96,9 @@ public:
     Transaction dequeue(){
         Transaction ret;
     	if(size()) {
-            transaction_buffer[front_index].mark_dequeued();
-            ret = transaction_buffer[front_index];
-			front_index++;
-			front_index &= (NUM_MESSAGES - 1);
+            transaction_buffer.front().mark_dequeued();
+            ret = transaction_buffer.front();
+            transaction_buffer.pop_front();
     	}
         return ret;
     }
@@ -121,14 +107,7 @@ public:
      * @brief returns a pointer to the active transaction. No checking is done as to the state of the transaction
      */
     Transaction * get_active_transaction () {
-    	return &transaction_buffer[active_index];
-    }
-
-    void increment_active_index_if_finished() {
-        if (transaction_buffer[active_index].is_ready_to_process() || transaction_buffer[active_index].is_dequeued()) {
-            active_index++;
-            active_index &= (NUM_MESSAGES - 1); // mod
-        }
+    	return &transaction_buffer.front();
     }
 
     /**
@@ -139,16 +118,18 @@ public:
      */
     bool available_to_send() {
 
+        if (size() == 0) return false;
+
     	bool ret = false;
 			
-	    if ((active_index == back_index) || transaction_buffer[active_index].is_active()) {
+	    if (transaction_buffer.front().is_active()) {
 		    // no new messages, or the current message is still active
 		    ret = false;
 	    }
-	    else if ( transaction_buffer[active_index].is_queued()) {
+	    else if (transaction_buffer.front().is_queued()) {
 		    // current message hasn't been sent yet, but was loaded and queued up
 		    ret = true;
-		    transaction_buffer[active_index].mark_sent();
+            transaction_buffer.front().mark_sent();
 	    }
 
     	return ret;
@@ -159,17 +140,15 @@ public:
 	 * @return The number of messages in the queue
 	*/
    int size(){
-	   return (back_index - front_index) & (NUM_MESSAGES - 1);
+	   return transaction_buffer.size();
    }
 
 private:
     DiagnosticsTracker& diagnostics_tracker;
-    Transaction transaction_buffer[NUM_MESSAGES];  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
-    int back_index = 0;       //!<index of next available empty spot
-    int front_index = 0;      //!<index of item in front of queue
-    int active_index = 0;
-
-    Transaction error;   //!<error in the transaciton
+    std::deque<Transaction> transaction_buffer;  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
+    //int back_index = 0;       //!<index of next available empty spot
+    //int front_index = 0;      //!<index of item in front of queue
+    //int active_index = 0;
 
     /**
      * @brief Determine if the Message queue is full

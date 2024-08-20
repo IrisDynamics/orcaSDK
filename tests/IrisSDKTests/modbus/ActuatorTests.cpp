@@ -100,6 +100,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 
 	modbus_client->sendBuffer.clear();
 	modbus_client->pass_time(2001);
+	motor.run_in();
 	motor.run_out();
 
 	std::vector<char> second_sync_message{ '\x1', '\x03', '\x01', '\xb0', '\0', '\x5', '\x85', '\xd2' };
@@ -117,6 +118,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 
 	modbus_client->sendBuffer.clear();
 	modbus_client->pass_time(2001);
+	motor.run_in();
 	motor.run_out();
 
 	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
@@ -133,8 +135,6 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	modbus_client->consume_new_message(third_sync_response);
 	
 	//Consume the 3 ready response messages.
-	motor.run_in();
-	motor.run_in();
 	motor.run_in();
 
 	modbus_client->sendBuffer.clear();

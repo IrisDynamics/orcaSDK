@@ -95,50 +95,7 @@ TEST_F(MessageQueueTests, GetActiveTransactionUpdatesAsMessagesAreDequeuedANDInc
 
 	queue.dequeue();
 
-	queue.increment_active_index_if_finished();
-
 	Transaction* active_transaction = queue.get_active_transaction();
-	EXPECT_EQ(5, active_transaction->get_tx_data()[0]);
-}
-
-TEST_F(MessageQueueTests, IfMessageIsDequeuedButAvailableToSendIsntCalledActiveTransactionDoesntMove)
-{
-	uint8_t data[1] = { 3 };
-	Transaction transaction_1;
-	transaction_1.load_transmission_data(1, 3, data, 1, 5);
-	queue.enqueue(transaction_1);
-
-	data[0] = { 5 };
-	Transaction transaction_2;
-	transaction_2.load_transmission_data(1, 3, data, 1, 5);
-	queue.enqueue(transaction_2);
-
-	queue.dequeue();
-
-	Transaction* active_transaction = queue.get_active_transaction();
-	EXPECT_EQ(3, active_transaction->get_tx_data()[0]); //TODO: This should fail (Equal 5)
-}
-
-TEST_F(MessageQueueTests, TransactionBeingMarkedFinishedCausesActiveTransactionToMoveForward)
-{
-	uint8_t data[1] = { 3 };
-	Transaction transaction_1;
-	transaction_1.load_transmission_data(1, 3, data, 1, 5);
-	queue.enqueue(transaction_1);
-
-	data[0] = { 5 };
-	Transaction transaction_2;
-	transaction_2.load_transmission_data(1, 3, data, 1, 5);
-	queue.enqueue(transaction_2);
-
-	Transaction* active_transaction = queue.get_active_transaction();
-	EXPECT_EQ(3, active_transaction->get_tx_data()[0]);
-
-	active_transaction->mark_finished();
-
-	queue.increment_active_index_if_finished();
-
-	active_transaction = queue.get_active_transaction();
 	EXPECT_EQ(5, active_transaction->get_tx_data()[0]);
 }
 

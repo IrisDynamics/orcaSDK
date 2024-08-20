@@ -258,7 +258,7 @@ public:
         }
 
         // Checking CRC
-        if (!check_rx_buffer_crc()) {
+        if (!check_rx_buffer_crc ()) {
             diagnostics_tracker.increment_diagnostic_counter(crc_error_count);
             invalidate(Transaction::CRC_ERROR);				// invalidates message
         }

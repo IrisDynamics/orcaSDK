@@ -31,8 +31,8 @@ TEST_F(MessageQueueTests, DequeuingAMessageReducesSizeAndReturnsSameTransaction)
 	Transaction new_transaction;
 	new_transaction.load_transmission_data(1, 3, data, 1, 5);
 	queue.enqueue(new_transaction);
-	Transaction* dequeued_transaction = queue.dequeue();
-	EXPECT_EQ(3, dequeued_transaction->get_tx_data()[0]);
+	Transaction dequeued_transaction = queue.dequeue();
+	EXPECT_EQ(3, dequeued_transaction.get_tx_data()[0]);
 	EXPECT_EQ(0, queue.size());
 }
 
@@ -72,11 +72,11 @@ TEST_F(MessageQueueTests, TwoEnqueuedMessagesDequeueInFIFOOrder)
 	transaction_2.load_transmission_data(1, 3, data, 1, 5);
 	queue.enqueue(transaction_2);
 
-	Transaction* dequeued_transaction_1 = queue.dequeue();
-	EXPECT_EQ(3, dequeued_transaction_1->get_tx_data()[0]);
+	Transaction dequeued_transaction_1 = queue.dequeue();
+	EXPECT_EQ(3, dequeued_transaction_1.get_tx_data()[0]);
 
-	Transaction* dequeued_transaction_2 = queue.dequeue();
-	EXPECT_EQ(5, dequeued_transaction_2->get_tx_data()[0]);
+	Transaction dequeued_transaction_2 = queue.dequeue();
+	EXPECT_EQ(5, dequeued_transaction_2.get_tx_data()[0]);
 }
 
 // ===============================BAD BEHAVIOUR TESTS================================

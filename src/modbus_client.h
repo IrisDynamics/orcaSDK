@@ -228,7 +228,7 @@ public:
      * @brief dequeue a transaction from the message queue
      * @return 0 when dequeue fails, or the address of the dequeued message otherwise
     */
-    Transaction * dequeue_transaction(){
+    Transaction dequeue_transaction(){
         return messages.dequeue();
     }
 

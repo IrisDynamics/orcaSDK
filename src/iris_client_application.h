@@ -190,7 +190,7 @@ public:
 
 			if (new_data()) {
 
-				if (response->is_echo_response() && response->is_reception_valid()) {
+				if (response.is_echo_response() && response.is_reception_valid()) {
 
 					num_discovery_pings_received++;
 
@@ -214,7 +214,7 @@ public:
 
 		case ConnectionStatus::synchronization:
 
-			if (new_data() && !response->is_reception_valid()) {
+			if (new_data() && !response.is_reception_valid()) {
 				// this allows queued data to timeout or be received before reattempting a connection
 				disconnect();
 			}
@@ -237,8 +237,8 @@ public:
 			if (new_data()) {
 
 				// Server responded to our change connection request with its realized baud and delay
-				if (response->get_rx_function_code() == change_connection_status && response->is_reception_valid()) {
-					uint8_t* rx_data = response->get_rx_data();
+				if (response.get_rx_function_code() == change_connection_status && response.is_reception_valid()) {
+					uint8_t* rx_data = response.get_rx_data();
 					UART.adjust_baud_rate(
 						(uint32_t(rx_data[2]) << 24)
 						| (uint32_t(rx_data[3]) << 16)
@@ -282,7 +282,7 @@ protected:
 	*/
 	const char* my_name;
 	// Points to the last dequeued transaction from the modbus client
-	Transaction* response;
+	Transaction response;
 
 	// This is used to determine when a connection has terminated and the ConnectionStatus should change to disconnecting
 	int cur_consec_failed_msgs = 0;          //!< current number of consecutive failed messages

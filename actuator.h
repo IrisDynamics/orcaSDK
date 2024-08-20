@@ -305,7 +305,7 @@ public:
 		if ( modbus_client->is_response_ready() ) {
 			consume_new_message();
 
-			if ( !response->is_reception_valid() ) {
+			if ( !response.is_reception_valid() ) {
 				cur_consec_failed_msgs++;
 				failed_msg_counter++;
 				if(connection_state == ConnectionStatus::connected && cur_consec_failed_msgs >= connection_config.max_consec_failed_msgs){
@@ -321,15 +321,15 @@ public:
 				cur_consec_failed_msgs = 0;
 				success_msg_counter++;
 
-				switch (response->get_rx_function_code()) {
+				switch (response.get_rx_function_code()) {
 
 				case ModbusFunctionCodes::read_holding_registers:
 				case ModbusFunctionCodes::read_write_multiple_registers: {
 					// add the received data to the local copy of the memory map
-					u16 register_start_address 		= (response->get_tx_data()[0] << 8) + response->get_tx_data()[1];
-					u16 num_registers 				= (response->get_tx_data()[2] << 8) + response->get_tx_data()[3];
+					u16 register_start_address 		= (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
+					u16 num_registers 				= (response.get_tx_data()[2] << 8) + response.get_tx_data()[3];
 					for ( int i = 0; i < num_registers; i++ ) {
-						u16 register_data 			= (response->get_rx_data()[1 + i*2] << 8) + response->get_rx_data()[2 + i*2];
+						u16 register_data 			= (response.get_rx_data()[1 + i*2] << 8) + response.get_rx_data()[2 + i*2];
 						orca_reg_contents[register_start_address + i] = register_data;
 					}
 					break;
@@ -339,46 +339,46 @@ public:
 					break;
 
 				case motor_command:
-					orca_reg_contents[POS_REG_H_OFFSET] 	= (response->get_rx_data()[ 0] << 8) | response->get_rx_data()[ 1];
-					orca_reg_contents[POS_REG_OFFSET]  		= (response->get_rx_data()[ 2] << 8) | response->get_rx_data()[ 3];
-					orca_reg_contents[FORCE_REG_H_OFFSET] 	= (response->get_rx_data()[ 4] << 8) | response->get_rx_data()[ 5];
-					orca_reg_contents[FORCE_REG_OFFSET] 	= (response->get_rx_data()[ 6] << 8) | response->get_rx_data()[ 7];
-					orca_reg_contents[POWER_REG_OFFSET] 	= (response->get_rx_data()[ 8] << 8) | response->get_rx_data()[ 9];
-					orca_reg_contents[TEMP_REG_OFFSET] 		= (response->get_rx_data()[10]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] 	= (response->get_rx_data()[11] << 8) | response->get_rx_data()[12];
-					orca_reg_contents[ERROR_REG_OFFSET] 	= (response->get_rx_data()[13] << 8) | response->get_rx_data()[14];
+					orca_reg_contents[POS_REG_H_OFFSET] 	= (response.get_rx_data()[ 0] << 8) | response.get_rx_data()[ 1];
+					orca_reg_contents[POS_REG_OFFSET]  		= (response.get_rx_data()[ 2] << 8) | response.get_rx_data()[ 3];
+					orca_reg_contents[FORCE_REG_H_OFFSET] 	= (response.get_rx_data()[ 4] << 8) | response.get_rx_data()[ 5];
+					orca_reg_contents[FORCE_REG_OFFSET] 	= (response.get_rx_data()[ 6] << 8) | response.get_rx_data()[ 7];
+					orca_reg_contents[POWER_REG_OFFSET] 	= (response.get_rx_data()[ 8] << 8) | response.get_rx_data()[ 9];
+					orca_reg_contents[TEMP_REG_OFFSET] 		= (response.get_rx_data()[10]);
+					orca_reg_contents[VOLTAGE_REG_OFFSET] 	= (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
+					orca_reg_contents[ERROR_REG_OFFSET] 	= (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
 					break;
 				
 				case motor_read: {
-					u16 register_start_address = (response->get_tx_data()[0] << 8) + response->get_tx_data()[1];
-					u8 width = response->get_tx_data()[2];
-					u16 register_data = (response->get_rx_data()[2] << 8) + response->get_rx_data()[3];
+					u16 register_start_address = (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
+					u8 width = response.get_tx_data()[2];
+					u16 register_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
 					orca_reg_contents[register_start_address] = register_data;
 					if (width > 1) {
-						register_data = (response->get_rx_data()[0] << 8) + response->get_rx_data()[1];
+						register_data = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
 						orca_reg_contents[register_start_address + 1] = register_data;
 					}
-					orca_reg_contents[MODE_OF_OPERATION] = response->get_rx_data()[4];
-					orca_reg_contents[POS_REG_H_OFFSET] = (response->get_rx_data()[5] << 8) | response->get_rx_data()[6];
-					orca_reg_contents[POS_REG_OFFSET] = (response->get_rx_data()[7] << 8) | response->get_rx_data()[8];
-					orca_reg_contents[FORCE_REG_H_OFFSET] = (response->get_rx_data()[9] << 8) | response->get_rx_data()[10];
-					orca_reg_contents[FORCE_REG_OFFSET] = (response->get_rx_data()[11] << 8) | response->get_rx_data()[12];
-					orca_reg_contents[POWER_REG_OFFSET] = (response->get_rx_data()[13] << 8) | response->get_rx_data()[14];
-					orca_reg_contents[TEMP_REG_OFFSET] = (response->get_rx_data()[15]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response->get_rx_data()[16] << 8) | response->get_rx_data()[17];
-					orca_reg_contents[ERROR_REG_OFFSET] = (response->get_rx_data()[18] << 8) | response->get_rx_data()[19];
+					orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[4];
+					orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
+					orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
+					orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
+					orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
+					orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
+					orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[15]);
+					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[16] << 8) | response.get_rx_data()[17];
+					orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[18] << 8) | response.get_rx_data()[19];
 				}
 					break; 
 				case motor_write:
-					orca_reg_contents[MODE_OF_OPERATION] = response->get_rx_data()[0];
-					orca_reg_contents[POS_REG_H_OFFSET] = (response->get_rx_data()[1] << 8) | response->get_rx_data()[2];
-					orca_reg_contents[POS_REG_OFFSET] = (response->get_rx_data()[3] << 8) | response->get_rx_data()[4];
-					orca_reg_contents[FORCE_REG_H_OFFSET] = (response->get_rx_data()[5] << 8) | response->get_rx_data()[6];
-					orca_reg_contents[FORCE_REG_OFFSET] = (response->get_rx_data()[7] << 8) | response->get_rx_data()[8];
-					orca_reg_contents[POWER_REG_OFFSET] = (response->get_rx_data()[9] << 8) | response->get_rx_data()[10];
-					orca_reg_contents[TEMP_REG_OFFSET] = (response->get_rx_data()[11]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response->get_rx_data()[12] << 8) | response->get_rx_data()[13];
-					orca_reg_contents[ERROR_REG_OFFSET] = (response->get_rx_data()[14] << 8) | response->get_rx_data()[15];
+					orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[0];
+					orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
+					orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
+					orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
+					orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
+					orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
+					orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[11]);
+					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];
+					orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[14] << 8) | response.get_rx_data()[15];
 					break;
 
 				case ModbusFunctionCodes::read_coils                   :

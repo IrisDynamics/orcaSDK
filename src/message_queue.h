@@ -106,13 +106,13 @@ public:
      * @brief returns a pointer to the message now removed from the queue
      * 
     */
-    Transaction * dequeue(){
-    	Transaction * ret = 0;
+    Transaction dequeue(){
+        Transaction ret;
     	if(size()) {
-			ret = &transaction_buffer[front_index];
+            transaction_buffer[front_index].mark_dequeued();
+            ret = transaction_buffer[front_index];
 			front_index++;
 			front_index &= (NUM_MESSAGES - 1);
-			ret->mark_dequeued();
     	}
         return ret;
     }

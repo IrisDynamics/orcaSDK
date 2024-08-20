@@ -130,20 +130,21 @@ public:
     	}
     	// A timer is enabled
     	else {
-
-    		Transaction * active_transaction = messages.get_active_transaction();
+            Transaction* active_transaction;
 
 
 			TIMER_ID expired_timer = has_timer_expired();
 			switch (expired_timer) {
 
 			case TIMER_ID::repsonse_timeout:
+                active_transaction = messages.get_active_transaction();
 				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
                 diagnostic_counters.increment_diagnostic_counter(return_server_no_response_count);
 				active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
 				break;
 
 			case TIMER_ID::interchar_timeout:
+                active_transaction = messages.get_active_transaction();
 
 				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
 
@@ -187,7 +188,6 @@ public:
     	// If the interframe has expired, or there are no timers expired, check for a message to transmit
     	if ( my_enabled_timer == TIMER_ID::none	||  has_timer_expired() == TIMER_ID::interframe_delay) {
     		disable_timer();
-            messages.increment_active_index_if_finished();
     		if ( messages.available_to_send() ) {
                 my_state = emission;
     			enable_response_timeout();

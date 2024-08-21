@@ -36,7 +36,7 @@ public:
 
     void increment_diagnostic_counter(diagnostic_counter_t diagnostic_number)
     {
-        if (diagnostic_number >= diagnostic_counters_array_size || diagnostic_number < 0)
+        if (outOfDiagnosticsRange(diagnostic_number))
         {
             std::cout << "Writing out of bounds of diagnostic counters.\n";
             return;
@@ -45,9 +45,9 @@ public:
         diagnostic_counters[diagnostic_number]++;
     }
 
-    uint16_t Get(int diagnostic_number)
+    uint16_t Get(diagnostic_counter_t diagnostic_number)
     {
-        if (diagnostic_number >= diagnostic_counters_array_size || diagnostic_number < 0)
+        if (outOfDiagnosticsRange(diagnostic_number))
         {
             std::cout << "Reading out of bounds of diagnostic counters.\n";
             return -1;
@@ -56,11 +56,16 @@ public:
         return diagnostic_counters[diagnostic_number];
     }
 
-    uint16_t operator [](int diagnostic_number)
+    uint16_t operator [](diagnostic_counter_t diagnostic_number)
     {
         return Get(diagnostic_number);
     }
 
 private:
     std::array<uint16_t, diagnostic_counters_array_size> diagnostic_counters;
+
+    bool outOfDiagnosticsRange(diagnostic_counter_t diagnostic_number)
+    {
+        return diagnostic_number >= diagnostic_counters_array_size || diagnostic_number < 0;
+    }
 };

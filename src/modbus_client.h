@@ -191,6 +191,15 @@ public:
     		if ( messages.available_to_send() ) {
                 my_state = emission;
     			enable_response_timeout();
+                if (ready_to_send())
+                {
+                    //while there are bytes left to send in the transaction, continue adding them to sendBuf
+                    while (messages.get_active_transaction()->bytes_left_to_send()) {
+                        if (my_state == emission) {
+                            send();
+                        }
+                    }
+                }
     			tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
                 diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
     		}
@@ -307,9 +316,10 @@ protected:
 	 * 		  Example: If using a UART, this function would read the UART FIFO upon receiving a byte, and return that byte.
      */
     virtual uint8_t receive_byte() = 0;
-    /**
-     * @brief should check receiver hardware to determine if at least one byte is ready to be read
-     */
+    
+    // Intended to let the application layer know if our serial interface is ready to use
+    virtual bool ready_to_send() = 0;
+
 
     public:
     /**

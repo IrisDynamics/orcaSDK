@@ -177,6 +177,10 @@ public:
         
     }
 
+    bool ready_to_send() override {
+        return serial_success;
+    }
+
     /**
      * @brief If there are bytes left to send, add them to a buffer, then send them all together.
     */
@@ -185,13 +189,6 @@ public:
         if (!serial_success) return;
         char charBuf[128] = { 0 };
         DWORD dwBytesWritten = 0;
-
-        //while there are bytes left to send in the transaction, continue adding them to sendBuf
-        while (messages.get_active_transaction()->bytes_left_to_send()) {
-            if (my_state == emission) {
-                send();
-            }
-        }
 
         //copy the contents of sendBuf over to charBuf - type issue
         for (int i = 0; i < sendBuf.size(); i++) {

@@ -66,6 +66,10 @@ public:
 		return current_time; 
 	}
 
+	bool ready_to_send() override {
+		return true;
+	}
+
 
 private:
 	std::deque<char> receive_buffer;

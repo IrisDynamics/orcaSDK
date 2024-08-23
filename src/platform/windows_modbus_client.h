@@ -71,7 +71,7 @@ public:
     }
 
     void disable_comport_comms() {
-        run_out();
+        //run_out();
         //adjust_baud_rate(19200);
         if (!threadHandle == NULL) {
             if (SuspendThread(threadHandle) == -1) {

@@ -67,18 +67,18 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	}
 	modbus_client->sendBuffer.clear();
 	modbus_client->consume_new_message(ping_echo);
-	modbus_client->pass_time(2001);
 	motor.run_in();
+	modbus_client->pass_time(2001);
 	motor.run_out();
 	modbus_client->sendBuffer.clear();
 	modbus_client->consume_new_message(ping_echo);
-	modbus_client->pass_time(2001);
 	motor.run_in();
+	modbus_client->pass_time(2001);
 	motor.run_out();
 	modbus_client->sendBuffer.clear();
 	modbus_client->consume_new_message(ping_echo);
-	modbus_client->pass_time(2001);
 	motor.run_in();
+	modbus_client->pass_time(2001);
 	motor.run_out();
 
 	//-----Synchronization-----
@@ -99,8 +99,8 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	modbus_client->consume_new_message(first_sync_response);
 
 	modbus_client->sendBuffer.clear();
-	modbus_client->pass_time(2001);
 	motor.run_in();
+	modbus_client->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> second_sync_message{ '\x1', '\x03', '\x01', '\xb0', '\0', '\x5', '\x85', '\xd2' };
@@ -117,8 +117,8 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	modbus_client->consume_new_message(second_sync_response);
 
 	modbus_client->sendBuffer.clear();
-	modbus_client->pass_time(2001);
 	motor.run_in();
+	modbus_client->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
@@ -227,8 +227,7 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 		'\x1', '\x3', '\x1', '\x0', '\xff', '\x0', '\x0'
 	};
 	modbus_client->consume_new_message(receive_buffer);
-	motor.consume_new_message();
-
+	
 	motor.run_in();
 
 	EXPECT_EQ(1, modbus_client->diagnostic_counters[crc_error_count]);
@@ -258,9 +257,11 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 		'\x1'
 	};
 	modbus_client->consume_new_message(new_input);
+
+	motor.run_in(); //Parse first byte
 	modbus_client->pass_time(16001);
 
-	motor.run_in();
+	motor.run_in(); //Timer times out from not receiving second byte
 
 	EXPECT_EQ(1, modbus_client->diagnostic_counters[unexpected_interchar]);
 }

@@ -25,10 +25,6 @@ public:
 	void consume_new_message(std::deque<char> new_message)
 	{
 		receive_buffer = new_message;
-		for (int i = 0; i < new_message.size(); i++)
-		{
-			receive();
-		}
 	}
 
 	std::vector<char> sendBuffer;
@@ -68,6 +64,10 @@ public:
 
 	bool ready_to_send() override {
 		return true;
+	}
+
+	bool ready_to_receive() override {
+		return !receive_buffer.empty();
 	}
 
 

@@ -10,11 +10,11 @@ class ActuatorTests : public testing::Test
 {
 protected:
 	ActuatorTests() :
-		motor(modbus_client, -1, "Hello")
+		serial_interface(std::make_shared<TestModbusClient>()),
+		motor(serial_interface, -1, "Hello")
 	{}
 
-	TestModbusClient serial_interface;
-	std::shared_ptr<ModbusClient> modbus_client = std::make_shared<ModbusClient>(serial_interface, -1, 1);
+	std::shared_ptr<TestModbusClient> serial_interface;
 	Actuator motor;
 };
 
@@ -27,14 +27,14 @@ TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 		'\x1', '\x3', '\x1', '\x56', '\0', '\x2', '\x25', '\xe7'
 	};
 
-	EXPECT_EQ(expected_sent_buffer, serial_interface.sendBuffer);
+	EXPECT_EQ(expected_sent_buffer, serial_interface->sendBuffer);
 
 	std::deque<char> next_input_message = std::deque<char>{
 		//						 low  reg(2)  high reg(65536)
 			'\x1', '\x3', '\x4', '\0', '\x2', '\0', '\x1'
 	};
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
-	serial_interface.consume_new_message(next_input_message);
+	serial_interface->consume_new_message(next_input_message);
 
 	motor.run_in();
 
@@ -55,7 +55,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	std::vector<char> ping_message{
 		{ '\x1', '\b', '\0', '\0', '\x80', '\x1a' }
 	};
-	EXPECT_EQ(ping_message, serial_interface.sendBuffer);
+	EXPECT_EQ(ping_message, serial_interface->sendBuffer);
 
 	//-----Discovery-----
 	// Involves sending three ping messages and hearing three echo responses
@@ -66,20 +66,20 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	{
 		ping_echo.push_back(c);
 	}
-	serial_interface.sendBuffer.clear();
-	serial_interface.consume_new_message(ping_echo);
+	serial_interface->sendBuffer.clear();
+	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 	motor.run_out();
-	serial_interface.sendBuffer.clear();
-	serial_interface.consume_new_message(ping_echo);
+	serial_interface->sendBuffer.clear();
+	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 	motor.run_out();
-	serial_interface.sendBuffer.clear();
-	serial_interface.consume_new_message(ping_echo);
+	serial_interface->sendBuffer.clear();
+	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 	motor.run_out();
 
 	//-----Synchronization-----
@@ -87,7 +87,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	// Completes when each read returns with the correct shape and parameters
 	// and Actuator::run_in() consumes all 3 messages
 	std::vector<char> first_sync_message{ '\x1', '\x03', '\x01', '\x90', '\0', '\x13', '\x5', '\xd6' };
-	EXPECT_EQ(first_sync_message, serial_interface.sendBuffer);
+	EXPECT_EQ(first_sync_message, serial_interface->sendBuffer);
 
 	std::deque<char> first_sync_response{
 		'\x1', '\x3', '\x13'
@@ -97,15 +97,15 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 		first_sync_response.push_back('\0');
 	}
 	ModbusTesting::CalculateAndAppendCRC(first_sync_response);
-	serial_interface.consume_new_message(first_sync_response);
+	serial_interface->consume_new_message(first_sync_response);
 
-	serial_interface.sendBuffer.clear();
+	serial_interface->sendBuffer.clear();
 	motor.run_in();
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> second_sync_message{ '\x1', '\x03', '\x01', '\xb0', '\0', '\x5', '\x85', '\xd2' };
-	EXPECT_EQ(second_sync_message, serial_interface.sendBuffer);
+	EXPECT_EQ(second_sync_message, serial_interface->sendBuffer);
 
 	std::deque<char> second_sync_response{
 		'\x1', '\x3', '\x5'
@@ -115,15 +115,15 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 		second_sync_response.push_back('\0');
 	}
 	ModbusTesting::CalculateAndAppendCRC(second_sync_response);
-	serial_interface.consume_new_message(second_sync_response);
+	serial_interface->consume_new_message(second_sync_response);
 
-	serial_interface.sendBuffer.clear();
+	serial_interface->sendBuffer.clear();
 	motor.run_in();
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
-	EXPECT_EQ(third_sync_message, serial_interface.sendBuffer);
+	EXPECT_EQ(third_sync_message, serial_interface->sendBuffer);
 
 	std::deque<char> third_sync_response{
 		'\x1', '\x3', '\x19'
@@ -133,13 +133,13 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 		third_sync_response.push_back('\0');
 	}
 	ModbusTesting::CalculateAndAppendCRC(third_sync_response);
-	serial_interface.consume_new_message(third_sync_response);
+	serial_interface->consume_new_message(third_sync_response);
 	
 	//Consume the 3 ready response messages.
 	motor.run_in();
 
-	serial_interface.sendBuffer.clear();
-	serial_interface.pass_time(2001);
+	serial_interface->sendBuffer.clear();
+	serial_interface->pass_time(2001);
 	motor.run_out();
 
 	//-----Negotiation-----
@@ -154,7 +154,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 			'\0', '\xa0', // Target Response delay (128ms)
 			'\x62', '\xdd' // CRC calculated for custom response
 	};
-	serial_interface.consume_new_message(stream_negotiation_response);
+	serial_interface->consume_new_message(stream_negotiation_response);
 	motor.run_in();
 	motor.run_out();
 
@@ -171,13 +171,13 @@ TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLoca
 		'\x1', '\x17', '\x0', '\x61', '\0', '\x2', '\0', '\xb4', '\x0', '\x1', '\x2', '\x1', '\x1', '\x9d', '\x24'
 	};
 
-	EXPECT_EQ(expected_sent_buffer, serial_interface.sendBuffer);
+	EXPECT_EQ(expected_sent_buffer, serial_interface->sendBuffer);
 
 	std::deque<char> expected_response = std::deque<char>{
 			'\x01', '\x17', '\x04', '\x0d', '\x9d', '\x0e', '\x3e'
 	};
 	ModbusTesting::CalculateAndAppendCRC(expected_response);
-	serial_interface.consume_new_message(expected_response);
+	serial_interface->consume_new_message(expected_response);
 
 	motor.run_in();
 
@@ -196,11 +196,11 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 			'\x1', '\x3', '\x4', '\0', '\x2', '\0', '\x1'
 	};
 	ModbusTesting::CalculateAndAppendCRC(first_message_response);
-	serial_interface.consume_new_message(first_message_response);
+	serial_interface->consume_new_message(first_message_response);
 
 	motor.run_in();
 
-	serial_interface.pass_time(2001);
+	serial_interface->pass_time(2001);
 
 	motor.run_out();
 
@@ -211,7 +211,7 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 			'\x1', '\x3', '\x4', '\0', '\x3', '\0', '\x2'
 	};
 	ModbusTesting::CalculateAndAppendCRC(second_message_response);
-	serial_interface.consume_new_message(second_message_response);
+	serial_interface->consume_new_message(second_message_response);
 
 	motor.run_in();
 
@@ -227,11 +227,11 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 	std::deque<char> receive_buffer{
 		'\x1', '\x3', '\x1', '\x0', '\xff', '\x0', '\x0'
 	};
-	serial_interface.consume_new_message(receive_buffer);
+	serial_interface->consume_new_message(receive_buffer);
 	
 	motor.run_in();
 
-	EXPECT_EQ(1, modbus_client->diagnostic_counters[crc_error_count]);
+	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[crc_error_count]);
 }
 
 TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFullMessageResponseTimeout)
@@ -240,11 +240,11 @@ TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFu
 
 	motor.run_out();
 
-	serial_interface.pass_time(50001);
+	serial_interface->pass_time(50001);
 
 	motor.run_in();
 
-	EXPECT_EQ(1, modbus_client->diagnostic_counters[return_server_no_response_count]);
+	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 }
 
 TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetweenSeeingNewBytes)
@@ -257,14 +257,14 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	{
 		'\x1'
 	};
-	serial_interface.consume_new_message(new_input);
+	serial_interface->consume_new_message(new_input);
 
 	motor.run_in(); //Parse first byte
-	serial_interface.pass_time(16001);
+	serial_interface->pass_time(16001);
 
 	motor.run_in(); //Timer times out from not receiving second byte
 
-	EXPECT_EQ(1, modbus_client->diagnostic_counters[unexpected_interchar]);
+	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[unexpected_interchar]);
 }
 
 //TEST_F(ActuatorTests, ModbusFlushUpdatesRegistersImmediately)

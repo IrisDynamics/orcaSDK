@@ -25,6 +25,7 @@
 #ifndef MODBUS_CLIENT_H_
 #define MODBUS_CLIENT_H_
 
+#include "serial_interface.h"
 #include "diagnostics_tracker.h"
 #include "message_queue.h"
 #ifdef __MK20DX256__
@@ -50,6 +51,7 @@
  *
  * */
 class ModbusClient {
+    SerialInterface& serial_interface;
 
 public:
 
@@ -60,9 +62,11 @@ public:
     * @param _channel_number specify channel number, particularly relevant if there are multiple uart channels possible
     */                       
     ModbusClient(
+        SerialInterface& serial_interface,
         int _channel_number,
 		uint32_t cycle_per_us
     ):
+        serial_interface(serial_interface),
         channel_number(_channel_number),
     	my_cycle_per_us ( cycle_per_us ),
 		repsonse_timeout_cycles  ( cycle_per_us * DEFAULT_RESPONSE_uS	),	// 100 milliseconds
@@ -88,7 +92,11 @@ public:
     /**
       * @brief init tranceiver hardware
      */
-     virtual void init(int baud) = 0;
+    void init(int baud)
+    {
+        serial_interface.init(baud);
+        reset_state();
+    }
 
 ////////////////////////////////////////////////////////
 ////////////////////////// State Machine Iteration ////
@@ -274,7 +282,9 @@ public:
      * @brief Adjust the baud rate
      * @param baud_rate the new baud rate in bps
     */
-    virtual void adjust_baud_rate(uint32_t baud_rate) = 0;
+    virtual void adjust_baud_rate(uint32_t baud_rate) {
+        serial_interface.adjust_baud_rate(baud_rate);
+    }
 
 
     /// @brief Change the time required to elapse before a message is deemed failed. Used to reduce from the default after a handshake negotiates a higher baud
@@ -287,12 +297,14 @@ public:
     /**
      * @brief Get the device's current system time in cycles
     */
-    virtual uint32_t get_system_cycles() = 0;
+    virtual uint32_t get_system_cycles() {
+        return serial_interface.get_system_cycles();
+    }
 
     DiagnosticsTracker diagnostic_counters;
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
-protected:
+private:
 
 
 /////////////////////////////////////////////////////////////
@@ -304,23 +316,38 @@ protected:
      * @brief Enable the transmitter in half-duplex systems (should disable the receiver)
      * This must enable the mechanism which calls the send() function when the transmitting hardware is capable of accepting data
      */
-    virtual void tx_enable() = 0;
+    void tx_enable()
+    {
+        serial_interface.tx_enable();
+    }
 
     /**
      * @brief Initiates transmission of a single byte.
 	 * 		  Example: If using a UART, this function would write the passed byte to the UART TX FIFO
      */
-    virtual void send_byte(uint8_t data) = 0;
+    void send_byte(uint8_t data) 
+    {
+        serial_interface.send_byte(data);
+    }
     /**
      * @brief Returns the next byte to be received by the ModBus server.
 	 * 		  Example: If using a UART, this function would read the UART FIFO upon receiving a byte, and return that byte.
      */
-    virtual uint8_t receive_byte() = 0;
+    uint8_t receive_byte()
+    {
+        return serial_interface.receive_byte();
+    }
     
     // Intended to let the application layer know if our serial interface is ready to use
-    virtual bool ready_to_send() = 0;
+    bool ready_to_send()
+    {
+        return serial_interface.ready_to_send();
+    }
 
-    virtual bool ready_to_receive() = 0;
+    bool ready_to_receive()
+    {
+        return serial_interface.ready_to_receive();
+    }
 
     public:
     /**

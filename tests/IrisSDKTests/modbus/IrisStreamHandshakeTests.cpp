@@ -6,19 +6,21 @@ class IrisStreamHandshakeTests : public testing::Test
 {
 protected:
 	IrisStreamHandshakeTests() :
+		modbus_client(serial_interface, -1, 1),
 		modbus_app(modbus_client, "Hello")
 	{}
 
-	TestModbusClient modbus_client;
+	TestModbusClient serial_interface;
+	ModbusClient modbus_client;
 	IrisClientApplication modbus_app;
 
 	void ReceiveMessageAndSendResponse(std::deque<char> message_to_receive)
 	{
-		modbus_client.sendBuffer.clear();
-		modbus_client.consume_new_message(message_to_receive);
+		serial_interface.sendBuffer.clear();
+		serial_interface.consume_new_message(message_to_receive);
 		modbus_client.run_in();
 		modbus_app.consume_new_message();
-		modbus_client.pass_time(2001); //Interframe delay is 2000us
+		serial_interface.pass_time(2001); //Interframe delay is 2000us
 
 		modbus_app.modbus_handshake();
 		modbus_client.run_out();
@@ -30,29 +32,29 @@ TEST_F(IrisStreamHandshakeTests, FirstHandshakeMessageIsPing)
 	modbus_app.modbus_handshake();
 	modbus_client.run_out();
 	std::vector<char> output{ '\x1', '\b', '\0', '\0', '\x80', '\x1a'};
-	ASSERT_EQ(output, modbus_client.sendBuffer);
+	ASSERT_EQ(output, serial_interface.sendBuffer);
 }
 
 TEST_F(IrisStreamHandshakeTests, SecondHandshakeOnlySendsDataIfReceivedResponse)
 {
 	modbus_app.modbus_handshake();
 	modbus_client.run_out();
-	modbus_client.sendBuffer.clear();
+	serial_interface.sendBuffer.clear();
 	modbus_app.modbus_handshake();
 	modbus_client.run_out();
-	ASSERT_EQ(std::vector<char>{}, modbus_client.sendBuffer);
+	ASSERT_EQ(std::vector<char>{}, serial_interface.sendBuffer);
 }
 
 TEST_F(IrisStreamHandshakeTests, SecondHandshakePingsAgainIfReceivedEcho)
 {
 	modbus_app.modbus_handshake();
 	modbus_client.run_out();
-	modbus_client.sendBuffer.clear();
+	serial_interface.sendBuffer.clear();
 
 	ReceiveMessageAndSendResponse({ '\x1', '\b', '\0', '\0', '\x80', '\x1a' });
 
 	std::vector<char> output = { '\x1', '\b', '\0', '\0', '\x80', '\x1a' };
-	ASSERT_EQ(output, modbus_client.sendBuffer);
+	ASSERT_EQ(output, serial_interface.sendBuffer);
 }
 
 TEST_F(IrisStreamHandshakeTests, AfterThreeDiscoveryPingsSendsManageHighSpeedStreamRequest)
@@ -81,7 +83,7 @@ TEST_F(IrisStreamHandshakeTests, AfterThreeDiscoveryPingsSendsManageHighSpeedStr
 		'\0', '\x50', // Target Response delay (80ms)
 		'\x25', '\x28' // CRC
 	};
-	ASSERT_EQ(output, modbus_client.sendBuffer);
+	ASSERT_EQ(output, serial_interface.sendBuffer);
 }
 
 TEST_F(IrisStreamHandshakeTests, AfterSendingManageHighSpeedStreamMessageSetsConnectedAndUpdatesBaud)
@@ -102,7 +104,7 @@ TEST_F(IrisStreamHandshakeTests, AfterSendingManageHighSpeedStreamMessageSetsCon
 	modbus_app.modbus_handshake();
 	modbus_client.run_out(); //Sends Manage High-speed Stream message 
 
-	modbus_client.consume_new_message(
+	serial_interface.consume_new_message(
 		{
 			'\x01', //Orca address
 			65, //Manage High-speed Stream message ID
@@ -118,5 +120,5 @@ TEST_F(IrisStreamHandshakeTests, AfterSendingManageHighSpeedStreamMessageSetsCon
 	modbus_app.modbus_handshake();
 
 	ASSERT_TRUE(modbus_app.is_connected());
-	ASSERT_EQ(255, modbus_client.adjusted_baud_rate);
+	ASSERT_EQ(255, serial_interface.adjusted_baud_rate);
 }

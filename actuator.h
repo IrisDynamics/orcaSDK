@@ -36,14 +36,15 @@
  */
 class Actuator : public IrisClientApplication {
 
-	std::shared_ptr<ModbusClient> modbus_client;
+	std::shared_ptr<SerialInterface> serial_interface;
 
 public:
+	ModbusClient modbus_client;
 
 #if defined(WINDOWS)
 	bool set_new_comport(int _comport) {
 		//return value
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(modbus_client);
+		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
 		bool comport_set = false;
 		int curr_comport = win_modbus_client->get_port_number();
 		//checks to see if the new comport is the same as the old one, and if the motor is connected 
@@ -55,7 +56,7 @@ public:
 	}
 
 	void disable_comport() {
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(modbus_client);
+		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
 		win_modbus_client->disable_comport_comms();
 	}
 #endif
@@ -82,12 +83,12 @@ public:
 	{}
 
 	Actuator(
-		std::shared_ptr<ModbusClient> modbus_client,
+		std::shared_ptr<SerialInterface> serial_interface,
 		int uart_channel,
 		const char* name
 	) :
-		modbus_client(modbus_client),
-		IrisClientApplication(*modbus_client, name)
+		modbus_client(*serial_interface, uart_channel, 1),
+		IrisClientApplication(modbus_client, name)
 	{}
 
 	/**
@@ -185,7 +186,7 @@ public:
 	*/
 	void set_force_mN(int32_t force) {
 		force_command = force;
-		stream_timeout_start = modbus_client->get_system_cycles();
+		stream_timeout_start = modbus_client.get_system_cycles();
 	}
 
 	/**
@@ -195,7 +196,7 @@ public:
 	*/
 	void set_position_um(int32_t position) {
 		position_command = position;
-		stream_timeout_start = modbus_client->get_system_cycles();
+		stream_timeout_start = modbus_client.get_system_cycles();
 	}
 
 	/**
@@ -238,7 +239,7 @@ public:
 	*/
 	void init(){
 		disconnect();	// dc is expected to return us to a good init state
-		modbus_client->init(UART_BAUD_RATE);
+		modbus_client.init(UART_BAUD_RATE);
 	}
 
 	/**
@@ -285,7 +286,7 @@ public:
 			}
 		}
 		// This function results in the UART sending any data that has been queued
-		modbus_client->run_out();
+		modbus_client.run_out();
 	}
 
 
@@ -300,9 +301,9 @@ public:
 	void run_in() {
 
 
-		modbus_client->run_in();
+		modbus_client.run_in();
 
-		if ( modbus_client->is_response_ready() ) {
+		if ( modbus_client.is_response_ready() ) {
 			consume_new_message();
 
 			if ( !response.is_reception_valid() ) {
@@ -406,7 +407,7 @@ public:
 	 */
 	void isr() {
 #if defined(WINDOWS)
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(modbus_client);
+		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
 		win_modbus_client->uart_isr();
 #endif
 	}
@@ -427,7 +428,7 @@ public:
 	* @return int, channel number
 	*/
 	int channel_number() {
-		return modbus_client->channel_number;
+		return modbus_client.channel_number;
 	}
 
 	/**
@@ -823,7 +824,7 @@ private:
 		switch (comms_mode) {
 			;
 		case ForceMode: {
-			if (uint32_t(modbus_client->get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
+			if (uint32_t(modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
 				comms_mode = SleepMode;
 			}
 			else {
@@ -832,7 +833,7 @@ private:
 			break;
 		}
 		case PositionMode:
-			if (uint32_t(modbus_client->get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
+			if (uint32_t(modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
 				comms_mode = SleepMode;
 			}
 			else {
@@ -863,7 +864,7 @@ private:
 	 * @brief enqueue a motor message if the queue is empty
 	 */
 	void enqueue_motor_frame() {
-		if(modbus_client->get_queue_size() >= 2) return;
+		if(modbus_client.get_queue_size() >= 2) return;
 		switch (stream_mode) {
 		case MotorCommand:
 			motor_stream_command();
@@ -921,7 +922,7 @@ private:
 				uint8_t(register_value)
 		};
 		my_temp_transaction.load_transmission_data(device_address, motor_command, data_bytes, 5, get_app_reception_length(motor_command));
-		int check = modbus_client->enqueue_transaction(my_temp_transaction);
+		int check = modbus_client.enqueue_transaction(my_temp_transaction);
 		my_temp_transaction.reset_transaction();
 		return check;
 	}
@@ -934,7 +935,7 @@ private:
 		};
 
 		my_temp_transaction.load_transmission_data(device_address, motor_read, data_bytes, 3, get_app_reception_length(motor_read));
-		int check = modbus_client->enqueue_transaction(my_temp_transaction);
+		int check = modbus_client.enqueue_transaction(my_temp_transaction);
 		my_temp_transaction.reset_transaction();
 		return check;
 	}
@@ -951,7 +952,7 @@ private:
 		};
 
 		my_temp_transaction.load_transmission_data(device_address, motor_write, data_bytes, 7, get_app_reception_length(motor_write));
-		int check = modbus_client->enqueue_transaction(my_temp_transaction);
+		int check = modbus_client.enqueue_transaction(my_temp_transaction);
 		my_temp_transaction.reset_transaction();
 		return check;
 	}

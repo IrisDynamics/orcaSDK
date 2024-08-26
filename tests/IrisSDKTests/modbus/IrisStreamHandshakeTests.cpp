@@ -16,6 +16,7 @@ protected:
 	{
 		modbus_client.sendBuffer.clear();
 		modbus_client.consume_new_message(message_to_receive);
+		modbus_client.run_in();
 		modbus_app.consume_new_message();
 		modbus_client.pass_time(2001); //Interframe delay is 2000us
 
@@ -110,6 +111,7 @@ TEST_F(IrisStreamHandshakeTests, AfterSendingManageHighSpeedStreamMessageSetsCon
 			'\0', '\xa0', // Target Response delay (128ms)
 			'\x62', '\xdd' // CRC calculated for custom response
 		});
+	modbus_client.run_in();
 	modbus_app.consume_new_message();
 
 	//Handle manage high-speed stream response and move to connected state

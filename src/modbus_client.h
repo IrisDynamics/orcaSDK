@@ -122,7 +122,7 @@ public:
     void run_in() {
 
     	// Looking for message parsing? Check the application run_in() function (e.g. Actuator object).
-
+        receive();
 
     	// No timers are enabled
     	if ( my_enabled_timer == TIMER_ID::none ) {
@@ -320,6 +320,7 @@ protected:
     // Intended to let the application layer know if our serial interface is ready to use
     virtual bool ready_to_send() = 0;
 
+    virtual bool ready_to_receive() = 0;
 
     public:
     /**
@@ -353,23 +354,26 @@ protected:
 	 */
 	void receive() {
 
+        if (messages.size() == 0) return;
+
 		Transaction * active_transaction = messages.get_active_transaction();
 
+        while (ready_to_receive())
+        {
+            uint8_t byte = receive_byte();
+            active_transaction->load_reception(byte); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
+            diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
 
-		uint8_t byte = receive_byte();
-		active_transaction->load_reception(byte); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
-        diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
-
-		// If this was the last character for this message
-		if (active_transaction->received_expected_number_of_bytes() )
-		{
-			enable_interframe_delay();// used to signal the earliest start time of the next message
-            active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
-		}
-		else {
-			enable_interchar_timeout();
-		}
-
+            // If this was the last character for this message
+            if (active_transaction->received_expected_number_of_bytes())
+            {
+                enable_interframe_delay();// used to signal the earliest start time of the next message
+                active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+            }
+            else {
+                enable_interchar_timeout();
+            }
+        }
     }
 
 

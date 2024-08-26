@@ -33,6 +33,8 @@
 #include <sstream>
 #include "src/modbus_client.h"
 #include "src/transaction.h"
+#include <mutex>
+#include <deque>
 
  /**
   * @class windows_ModbusClient
@@ -251,27 +253,6 @@ public:
     }
 
     /**
-     * @brief Return the next byte received by the serial port.
-     */
-    uint8_t receive_byte() override {
-
-        char buff = 0;
-        int toRead = 1;
-        DWORD bytesRead = 0;
-
-        if (!ReadFile(hSerial, &buff, toRead, &bytesRead, &o)) { 
-            if (GetLastError() != ERROR_IO_PENDING) {
-                //ERROR_IO_PENDING - means the IO request was succesfully queued and will return later 
-                LPCWSTR readErr = L"Error recieving bytes\n";
-                OutputDebugString(readErr);
-                OutputDebugString((LPCWSTR)GetLastError());
-            }
-        }
-
-        return buff;
-    }
-
-    /**
      * @brief Adjust the baud rate
      * @param baud_rate the new baud rate in bps
      * this method overrides the modbus default delay
@@ -297,25 +278,57 @@ public:
         return ticks.QuadPart / 10;
     };
 
+    uint8_t receive_byte() override {
+        char out_byte;
+        rcv_buffer_mx.lock();
+
+        out_byte = incoming_byte_buffer.front();
+        incoming_byte_buffer.pop_front();
+
+        rcv_buffer_mx.unlock();
+
+        return out_byte;
+    }
+
+    bool ready_to_receive() override {
+        bool ready = false;
+
+        rcv_buffer_mx.lock();
+
+        ready = !incoming_byte_buffer.empty();
+
+        rcv_buffer_mx.unlock();
+
+        return ready;
+    }
 
     /**
    * @brief Called whenever there is new data to recieve in the serial port.
    */
     void uart_isr() {
-        if (my_state == reception) {
-            while (byte_ready_to_receive()) {
+        //if (my_state == reception) {
+        rcv_buffer_mx.lock();
+        
+        while (byte_ready_to_receive()) {
+            char next_byte = receive_byte_from_serial_port();
+            append_byte_to_buffer(next_byte);
 
-                receive();
-                //    //slot called when new data arrives in the port 
-                //    //as long as the state is reception and there is data to recieve, it will be recieved. 
-                //    //receive method handles slotting data into the correct transaction.
-
-            }
+            //receive();
+            //    //slot called when new data arrives in the port 
+            //    //as long as the state is reception and there is data to recieve, it will be recieved. 
+            //    //receive method handles slotting data into the correct transaction.
 
         }
+
+        rcv_buffer_mx.unlock();
+
+        //}
     }
 
 private:
+    
+    std::deque<char> incoming_byte_buffer;
+    std::mutex rcv_buffer_mx;
 
     bool disconnected_msg_sent = false;
     bool motor_disconnected = false;
@@ -334,7 +347,33 @@ private:
     //for messaging
     std::vector <char> sendBuf;
     OVERLAPPED o;
+
+    /**
+     * @brief Return the next byte received by the serial port.
+     */
+    uint8_t receive_byte_from_serial_port() {
+
+        char buff = 0;
+        int toRead = 1;
+        DWORD bytesRead = 0;
+
+        if (!ReadFile(hSerial, &buff, toRead, &bytesRead, &o)) {
+            if (GetLastError() != ERROR_IO_PENDING) {
+                //ERROR_IO_PENDING - means the IO request was succesfully queued and will return later 
+                LPCWSTR readErr = L"Error recieving bytes\n";
+                OutputDebugString(readErr);
+                OutputDebugString((LPCWSTR)GetLastError());
+            }
+        }
+
+        return buff;
+    }
     
+    void append_byte_to_buffer(char next_byte)
+    {
+        incoming_byte_buffer.push_back(next_byte);
+    }
+
     /**
     * @brief checks the comport to determine if at least one byte is ready to be read
     */

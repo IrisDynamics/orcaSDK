@@ -3,11 +3,10 @@
 #include <vector>
 #include <deque>
 
-class TestModbusClient : public ModbusClient
+class TestModbusClient : public SerialInterface
 {
 public:
-	TestModbusClient() :
-		ModbusClient(0, 1)
+	TestModbusClient()
 	{}
 
 	//Test specific setup and output
@@ -33,10 +32,10 @@ public:
 
 	//Handling TX
 	void tx_enable() override {
-		//while there are bytes left to send in the transaction, continue adding them to sendBuf
-		while (messages.get_active_transaction()->bytes_left_to_send()) {
-			send();
-		}
+		////while there are bytes left to send in the transaction, continue adding them to sendBuf
+		//while (messages.get_active_transaction()->bytes_left_to_send()) {
+		//	send();
+		//}
 	}
 
 	void send_byte(uint8_t byte) override {

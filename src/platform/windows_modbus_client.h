@@ -26,6 +26,7 @@
 
 #pragma once 
 
+#include "../serial_interface.h"
 #include<iostream>
 #include <windows.h>
 #include <timeapi.h>
@@ -41,10 +42,10 @@
   * @brief Extension of the ModbusClient virtual class that implements functions for the Eagle K20's timers, and interrupts. UART channel specific functions to be
  */
 
-class windows_ModbusClient : public ModbusClient {
+class windows_ModbusClient : public SerialInterface, public ModbusClient {
 public:
     windows_ModbusClient(int _channel_number, uint32_t _cycles_per_us) : 
-        ModbusClient(_channel_number, _cycles_per_us),
+        ModbusClient(*this, _channel_number, _cycles_per_us),
         channel_number(_channel_number)
     {}
 
@@ -174,7 +175,6 @@ public:
 
 
         //set everything to a clear state 
-        reset_state();
         sendBuf.clear();
         
     }

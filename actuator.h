@@ -65,18 +65,17 @@ public:
 	//Constructor
 	Actuator(
 		int uart_channel,
-		const char* name,
-		uint32_t cycle_per_us
+		const char* name
 	) :
 		Actuator(
 #ifdef IRIS_ZYNQ_7000
-			std::make_shared<Zynq7000_ModbusClient>(uart_channel, cycle_per_us),
+			std::make_shared<Zynq7000_ModbusClient>(uart_channel),
 #elif defined(__MK20DX256__)
-			std::make_shared<k20_ModbusClient>(uart_channel, cycle_per_us),
+			std::make_shared<k20_ModbusClient>(uart_channel),
 #elif defined(WINDOWS)
-			std::make_shared<windows_ModbusClient>(uart_channel, cycle_per_us),
+			std::make_shared<windows_ModbusClient>(uart_channel),
 #elif defined(QT_WINDOWS)
-			std::make_shared<qt_ModbusClient>(uart_channel, cycle_per_us),
+			std::make_shared<qt_ModbusClient>(uart_channel),
 #endif
 		uart_channel,
 		name)
@@ -87,7 +86,7 @@ public:
 		int uart_channel,
 		const char* name
 	) :
-		modbus_client(*serial_interface, uart_channel, 1),
+		modbus_client(*serial_interface, uart_channel),
 		IrisClientApplication(modbus_client, name)
 	{}
 
@@ -959,6 +958,16 @@ private:
 
 
 	////////////////////////////////////////////////////////////////////
+	
+public:
+	//Deprecated. Just here for backwards compatibility. Placing down here because we do not want it used
+	Actuator(
+		int uart_channel,
+		const char* name,
+		int cycles_per_us
+	) :
+		Actuator(uart_channel, name)
+	{}
 };
 
 #ifdef IRIS_ZYNQ_7000

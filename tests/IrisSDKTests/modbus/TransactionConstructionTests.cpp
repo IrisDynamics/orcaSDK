@@ -7,7 +7,7 @@ class TransactionConstructionTests : public testing::Test
 {
 protected:
 	TransactionConstructionTests() :
-		modbus_client(serial_interface, -1, -1),
+		modbus_client(serial_interface, -1),
 		modbus_app(modbus_client, "Hello")
 	{}
 

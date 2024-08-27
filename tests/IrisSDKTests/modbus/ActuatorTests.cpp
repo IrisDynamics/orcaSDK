@@ -267,17 +267,54 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[unexpected_interchar]);
 }
 
-//TEST_F(ActuatorTests, ModbusFlushUpdatesRegistersImmediately)
-//{
-//	motor.read_registers(SHAFT_POS_UM, 2);
-//
-//	std::deque<char> next_input_message = std::deque<char>{
-//		//						 low  reg(2)  high reg(65536)
-//			'\x1', '\x3', '\x4', '\0', '\x2', '\0', '\x1'
-//	};
-//	ModbusTesting::CalculateAndAppendCRC(next_input_message);
-//	modbus_client->consume_new_message(next_input_message);
-//
-//	motor.flush();
-//	EXPECT_EQ(65538, motor.get_position_um());
-//}
+TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
+{
+	motor.enable();
+	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.set_mode(Actuator::ForceMode);
+
+	EXPECT_EQ(Actuator::ForceMode, motor.get_mode());
+
+	serial_interface->pass_time(100001);
+	motor.run_out();
+
+	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
+}
+
+TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCommands)
+{
+	motor.enable();
+	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.set_mode(Actuator::PositionMode);
+
+	EXPECT_EQ(Actuator::PositionMode, motor.get_mode());
+
+	serial_interface->pass_time(100001);
+	motor.run_out();
+
+	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
+}
+
+TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
+{
+	motor.enable();
+	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.set_mode(Actuator::PositionMode);
+
+	motor.set_position_um(1); // This sets the stream timeout timer
+	motor.run_out(); // This sends the change mode command
+
+	std::deque<char> echo_of_mode_register_write{
+		'\x1', '\x6', '\0', '\x3', '\0', '\x3', '\x39', '\xcb'
+	};
+	serial_interface->consume_new_message(echo_of_mode_register_write);
+	motor.run_in();
+	serial_interface->sendBuffer.clear();
+
+	serial_interface->pass_time(2001);
+
+	motor.run_out(); // This should inject a position command
+
+	std::vector<char> position_stream_command = { '\x1', '\x64', '\x1e', '\0', '\0', '\0', '\x1', '\x6a', '\x26' };
+	EXPECT_EQ(position_stream_command, serial_interface->sendBuffer);
+}

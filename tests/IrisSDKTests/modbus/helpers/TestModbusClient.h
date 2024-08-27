@@ -3,10 +3,10 @@
 #include <vector>
 #include <deque>
 
-class TestModbusClient : public SerialInterface
+class TestSerialInterface : public SerialInterface
 {
 public:
-	TestModbusClient()
+	TestSerialInterface()
 	{}
 
 	//Test specific setup and output

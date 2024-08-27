@@ -38,20 +38,20 @@
 #include <deque>
 
  /**
-  * @class windows_ModbusClient
+  * @class windows_SerialInterface
   * @brief Extension of the ModbusClient virtual class that implements functions for the Eagle K20's timers, and interrupts. UART channel specific functions to be
  */
 
-class windows_ModbusClient : public SerialInterface {
+class windows_SerialInterface : public SerialInterface {
 public:
-    windows_ModbusClient(int _channel_number) : 
+    windows_SerialInterface(int _channel_number) : 
         channel_number(_channel_number)
     {}
 
     /**
     * @brief ends the listening thread, purges the comport and closes it
     */
-    ~windows_ModbusClient() {
+    ~windows_SerialInterface() {
 
         //delete timers in the timer queue 
         //have to signal the timer here to stop the timer 
@@ -436,7 +436,7 @@ private:
 
 
     // @brief Function checks if a new byte has arrived in the serial port.
-    static int check_coms(windows_ModbusClient* w) {
+    static int check_coms(windows_SerialInterface* w) {
         DWORD dwCommEvent;
         if (WaitCommEvent(w->hSerial, &dwCommEvent, NULL)) {
             if (dwCommEvent == EV_RXCHAR) {
@@ -462,7 +462,7 @@ private:
     static DWORD WINAPI ListeningThread(LPVOID lpParam) {
         while (1) {
             // infinite while loop for modbus client IO
-            windows_ModbusClient* w = (windows_ModbusClient*)(lpParam);
+            windows_SerialInterface* w = (windows_SerialInterface*)(lpParam);
             check_coms(w);
         }
     }
@@ -475,6 +475,6 @@ private:
     }
 };
 
-extern windows_ModbusClient modbus_client;
+extern windows_SerialInterface modbus_client;
 
 

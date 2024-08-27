@@ -10,11 +10,11 @@ class ActuatorTests : public testing::Test
 {
 protected:
 	ActuatorTests() :
-		serial_interface(std::make_shared<TestModbusClient>()),
+		serial_interface(std::make_shared<TestSerialInterface>()),
 		motor(serial_interface, -1, "Hello")
 	{}
 
-	std::shared_ptr<TestModbusClient> serial_interface;
+	std::shared_ptr<TestSerialInterface> serial_interface;
 	Actuator motor;
 };
 

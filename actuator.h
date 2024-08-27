@@ -86,6 +86,7 @@ public:
 		int uart_channel,
 		const char* name
 	) :
+		serial_interface(serial_interface),
 		modbus_client(*serial_interface, uart_channel),
 		IrisClientApplication(modbus_client, name)
 	{}

@@ -96,27 +96,11 @@ public:
         reset_state();
     }
 
-////////////////////////////////////////////////////////
-////////////////////////// State Machine Iteration ////
-//////////////////////////////////////////////////////
-
-    enum STATE_ID {
-    	initial		= 20,
-		idle,
-		emission,
-		reception,
-		ignoring
-    };
-
-    volatile STATE_ID my_state = initial;
-
-
     /**
      * @brief brings the state machine back to an initial state
      */
     void reset_state () {
     	messages.reset();
-    	my_state = initial;
     	enable_interframe_delay();
     }
 
@@ -163,7 +147,6 @@ public:
                     diagnostic_counters.increment_diagnostic_counter(unexpected_interchar);
 					active_transaction->invalidate(Transaction::INTERCHAR_TIMEOUT_ERROR);
                     diagnostic_counters.increment_diagnostic_counter(ignoring_state_error);
-					my_state = ignoring;
 				}
 
 				break;
@@ -195,22 +178,18 @@ public:
     	if ( my_enabled_timer == TIMER_ID::none	||  has_timer_expired() == TIMER_ID::interframe_delay) {
     		disable_timer();
     		if ( messages.available_to_send() ) {
-                my_state = emission;
     			enable_response_timeout();
                 if (serial_interface.ready_to_send())
                 {
                     //while there are bytes left to send in the transaction, continue adding them to sendBuf
                     while (messages.get_active_transaction()->bytes_left_to_send()) {
-                        if (my_state == emission) {
-                            send();
-                        }
+                         send();
                     }
                 }
     			serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
                 diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
     		}
     		else {
-    			my_state = idle;
     		}
     	}
     }
@@ -327,7 +306,6 @@ private:
 			}else{
 				enable_response_timeout();
 			}
-			my_state = reception;
 		}
     }
 

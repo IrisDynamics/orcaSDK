@@ -63,15 +63,13 @@ public:
     */                       
     ModbusClient(
         SerialInterface& serial_interface,
-        int _channel_number,
-		uint32_t cycle_per_us
+        int _channel_number
     ):
         serial_interface(serial_interface),
         channel_number(_channel_number),
-    	my_cycle_per_us ( cycle_per_us ),
-		repsonse_timeout_cycles  ( cycle_per_us * DEFAULT_RESPONSE_uS	),	// 100 milliseconds
-		interchar_timeout_cycles ( cycle_per_us * DEFAULT_INTERCHAR_uS	),
-		turnaround_delay_cycles  ( cycle_per_us * DEFAULT_TURNAROUND_uS	)
+		repsonse_timeout_cycles  ( DEFAULT_RESPONSE_uS	 ),	
+		interchar_timeout_cycles ( DEFAULT_INTERCHAR_uS	 ),
+		turnaround_delay_cycles  ( DEFAULT_TURNAROUND_uS )
     {
     	adjust_interframe_delay_us  ( 			  DEFAULT_INTERFRAME_uS );
     }
@@ -268,15 +266,8 @@ public:
      * @param delay the minimum idle time between frames, in microseconds.
     */
     void adjust_interframe_delay_us(uint32_t delay) {
-    	interframe_delay_cycles = my_cycle_per_us * delay;
+    	interframe_delay_cycles = delay;
     }
-
-    /**
-     * @brief return to default interframe delay
-     */
-    void adjust_interframe_delay_us() {
-      	interframe_delay_cycles = my_cycle_per_us * DEFAULT_INTERFRAME_uS;
-      }
 
     /**
      * @brief Adjust the baud rate
@@ -288,11 +279,11 @@ public:
 
 
     /// @brief Change the time required to elapse before a message is deemed failed. Used to reduce from the default after a handshake negotiates a higher baud
-    void adjust_response_timeout    (u32 time_in_us) { 	repsonse_timeout_cycles = my_cycle_per_us * time_in_us; };
+    void adjust_response_timeout    (u32 time_in_us) { 	repsonse_timeout_cycles = time_in_us; };
     /// @brief Change the time required to elapse between characters within a message before it is abandoned.
-	void adjust_interchar_timeout   (u32 time_in_us) { interchar_timeout_cycles = my_cycle_per_us * time_in_us; };
+	void adjust_interchar_timeout   (u32 time_in_us) { interchar_timeout_cycles = time_in_us; };
 	/// @brief Change the period of time observed between broadcast messages
-	void adjust_turnaround_delay	(u32 time_in_us) { 	turnaround_delay_cycles = my_cycle_per_us * time_in_us; };
+	void adjust_turnaround_delay	(u32 time_in_us) { 	turnaround_delay_cycles = time_in_us; };
 
     /**
      * @brief Get the device's current system time in cycles
@@ -302,9 +293,20 @@ public:
     }
 
     DiagnosticsTracker diagnostic_counters;
-    MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
 private:
+    MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
+
+    u32 repsonse_timeout_cycles;
+    u32 interchar_timeout_cycles;
+    u32 turnaround_delay_cycles;
+
+    u32 interframe_delay_cycles = 0;
+
+    /// Time that the enabled timer was started
+
+
+    volatile uint32_t timer_start_time;	// recorded in system cycles: must be checked as such
     /**
      * @brief Should be run when ready to send a new byte.
      *	Transitions to reception when done sending.
@@ -356,19 +358,6 @@ private:
             }
         }
     }
-
-	const u32 my_cycle_per_us;
-
-	u32 repsonse_timeout_cycles ;
-	u32 interchar_timeout_cycles;
-	u32 turnaround_delay_cycles ;
-
-	u32 interframe_delay_cycles  = 0;
-
-	/// Time that the enabled timer was started
-
-
-	volatile uint32_t timer_start_time;	// recorded in system cycles: must be checked as such
 
 
 /////////////////////////////////////////////////////////////

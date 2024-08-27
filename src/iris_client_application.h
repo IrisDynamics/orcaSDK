@@ -136,7 +136,6 @@ public:
         connection_state 		= ConnectionStatus::disconnected;
         cur_consec_failed_msgs 	= 0;
 		UART.adjust_baud_rate(UART_BAUD_RATE);
-		UART.adjust_interframe_delay_us();
 		UART.adjust_response_timeout(DEFAULT_RESPONSE_uS);
 		//is_paused = true;// pause to allow server to reset to disconnected state
 

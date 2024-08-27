@@ -11,7 +11,7 @@ protected:
 		modbus_app(modbus_client, "Hello")
 	{}
 
-	TestModbusClient serial_interface;
+	TestSerialInterface serial_interface;
 	ModbusClient modbus_client;
 	IrisClientApplication modbus_app;
 };

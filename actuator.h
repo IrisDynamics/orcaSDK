@@ -44,7 +44,7 @@ public:
 #if defined(WINDOWS)
 	bool set_new_comport(int _comport) {
 		//return value
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
+		std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 		bool comport_set = false;
 		int curr_comport = win_modbus_client->get_port_number();
 		//checks to see if the new comport is the same as the old one, and if the motor is connected 
@@ -56,7 +56,7 @@ public:
 	}
 
 	void disable_comport() {
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
+		std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 		win_modbus_client->disable_comport_comms();
 	}
 #endif
@@ -73,7 +73,7 @@ public:
 #elif defined(__MK20DX256__)
 			std::make_shared<k20_ModbusClient>(uart_channel),
 #elif defined(WINDOWS)
-			std::make_shared<windows_ModbusClient>(uart_channel),
+			std::make_shared<windows_SerialInterface>(uart_channel),
 #elif defined(QT_WINDOWS)
 			std::make_shared<qt_ModbusClient>(uart_channel),
 #endif
@@ -407,7 +407,7 @@ public:
 	 */
 	void isr() {
 #if defined(WINDOWS)
-		std::shared_ptr<windows_ModbusClient> win_modbus_client = std::dynamic_pointer_cast<windows_ModbusClient>(serial_interface);
+		std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 		win_modbus_client->uart_isr();
 #endif
 	}

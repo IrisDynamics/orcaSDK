@@ -1,3 +1,5 @@
+#pragma once
+
 #include "pch.h"
 #include "src/modbus_client.h"
 #include <vector>

@@ -105,7 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="modbus\ActuatorTests.cpp" />
-    <ClCompile Include="modbus\helpers\TestModbusClient.h" />
+    <ClCompile Include="modbus\helpers\TestSerialInterface.h" />
     <ClCompile Include="modbus\IrisStreamHandshakeTests.cpp" />
     <ClCompile Include="modbus\MessageQueueTests.cpp" />
     <ClCompile Include="modbus\TransactionConstructionTests.cpp" />

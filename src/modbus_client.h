@@ -199,7 +199,7 @@ public:
     		if ( messages.available_to_send() ) {
                 my_state = emission;
     			enable_response_timeout();
-                if (ready_to_send())
+                if (serial_interface.ready_to_send())
                 {
                     //while there are bytes left to send in the transaction, continue adding them to sendBuf
                     while (messages.get_active_transaction()->bytes_left_to_send()) {
@@ -208,7 +208,7 @@ public:
                         }
                     }
                 }
-    			tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
+    			serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
                 diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
     		}
     		else {
@@ -305,51 +305,6 @@ public:
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
 private:
-
-
-/////////////////////////////////////////////////////////////
-///////////////////////////////// Hardware Implementations//
-///////////////////////////////////////////////////////////
-
-
-    /**
-     * @brief Enable the transmitter in half-duplex systems (should disable the receiver)
-     * This must enable the mechanism which calls the send() function when the transmitting hardware is capable of accepting data
-     */
-    void tx_enable()
-    {
-        serial_interface.tx_enable();
-    }
-
-    /**
-     * @brief Initiates transmission of a single byte.
-	 * 		  Example: If using a UART, this function would write the passed byte to the UART TX FIFO
-     */
-    void send_byte(uint8_t data) 
-    {
-        serial_interface.send_byte(data);
-    }
-    /**
-     * @brief Returns the next byte to be received by the ModBus server.
-	 * 		  Example: If using a UART, this function would read the UART FIFO upon receiving a byte, and return that byte.
-     */
-    uint8_t receive_byte()
-    {
-        return serial_interface.receive_byte();
-    }
-    
-    // Intended to let the application layer know if our serial interface is ready to use
-    bool ready_to_send()
-    {
-        return serial_interface.ready_to_send();
-    }
-
-    bool ready_to_receive()
-    {
-        return serial_interface.ready_to_receive();
-    }
-
-    public:
     /**
      * @brief Should be run when ready to send a new byte.
      *	Transitions to reception when done sending.
@@ -360,7 +315,7 @@ private:
 
 		//send the current data byte
 		uint8_t data = active_transaction->pop_tx_buffer();
-		send_byte(data);
+		serial_interface.send_byte(data);
         diagnostic_counters.increment_diagnostic_counter(bytes_out_count);
 
 		if ( active_transaction->is_fully_sent() ) {
@@ -374,7 +329,6 @@ private:
 		}
     }
 
-
     /**
 	 * @brief Should only be run when a new byte has been received.
 	 * 		  Example: Call from UART byte received interrupt or when polling the hardware for data in the input fifo
@@ -385,9 +339,9 @@ private:
 
 		Transaction * active_transaction = messages.get_active_transaction();
 
-        while (ready_to_receive())
+        while (serial_interface.ready_to_receive())
         {
-            uint8_t byte = receive_byte();
+            uint8_t byte = serial_interface.receive_byte();
             active_transaction->load_reception(byte); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
             diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
 
@@ -402,10 +356,6 @@ private:
             }
         }
     }
-
-
-
-private:
 
 	const u32 my_cycle_per_us;
 

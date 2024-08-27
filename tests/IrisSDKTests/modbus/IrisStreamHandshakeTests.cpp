@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "src/iris_client_application.h"
-#include "modbus/helpers/TestModbusClient.h"
+#include "modbus/helpers/TestSerialInterface.h"
 
 class IrisStreamHandshakeTests : public testing::Test
 {

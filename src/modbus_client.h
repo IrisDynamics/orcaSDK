@@ -51,8 +51,6 @@
  *
  * */
 class ModbusClient {
-    SerialInterface& serial_interface;
-
 public:
 
     const int channel_number;               //!<the channels identifying number
@@ -274,6 +272,8 @@ public:
     DiagnosticsTracker diagnostic_counters;
 
 private:
+    SerialInterface& serial_interface;
+
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
     u32 repsonse_timeout_cycles;

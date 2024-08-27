@@ -24,7 +24,7 @@
 #include "mb_config.h"
 
 #if defined(WINDOWS)
-#include "platform/windows_modbus_client.h"
+#include "platform/windows_serial_interface.h"
 #endif
 
 

@@ -137,7 +137,8 @@ public:
 
 
 				// If the length was unknown assume this was the expected termination of the response until it is validated
-				if( !active_transaction->is_expected_length_known() ){
+                // TODO: Remove this once we have good test coverage of different modbus messages. I have reason to believe this never evaluates to true in a system without bugs
+				if( !active_transaction->is_expected_length_known() ){ 
 					active_transaction->validate_response(diagnostic_counters);
 				}
 				// If the length was known and an interchar timeout occurred (ie the message got messed up)
@@ -479,6 +480,14 @@ private:
     {
         enable_interframe_delay();
         if (logging) log_transaction_response(transaction);
+        if (!transaction->is_reception_valid() && transaction->is_important()) {
+            if (transaction->get_num_retries() < 5)
+            {
+                Transaction retry_transaction;
+                retry_transaction.generate_retry(transaction);
+                enqueue_transaction(retry_transaction);
+            }
+        }
     }
 
 };

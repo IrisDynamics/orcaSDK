@@ -163,3 +163,67 @@ TEST_F(ModbusClientTests, AppendsWrongCRCWhenMessageCRCIsIncorrect)
 	std::string logString = "10000\trx\t01\t03\t04\t0c\t00\t00\tWrong CRC. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
+
+TEST_F(ModbusClientTests, IfAnImportantMessageFailsForAnyReasonARetryTransactionIsGenerated)
+{
+	Transaction test_transaction;
+	test_transaction.mark_important();
+	uint8_t data_bytes[2] = {
+			'\x4',
+			'\xc'
+	};
+	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
+
+	modbus_client.enqueue_transaction(test_transaction);
+	modbus_client.run_out();
+
+	std::deque<char> incoming_message{
+		'\x1', '\x3', '\x4', '\xc', '\x00', '\x00'
+	};
+	serial_interface.consume_new_message(incoming_message);
+	modbus_client.run_in();
+
+	ASSERT_EQ(1, modbus_client.diagnostic_counters.Get(diagnostic_counter_t::crc_error_count)); // Ensure the transaction failed
+
+	modbus_client.dequeue_transaction();
+
+	serial_interface.sendBuffer.clear();
+	serial_interface.pass_time(2001);
+	modbus_client.run_out();
+
+	std::vector<char> expected_output{ '\x1', '\x3', '\x4', '\xc', '\xf3', '\x1d' };
+	ASSERT_EQ(expected_output, serial_interface.sendBuffer);
+}
+
+TEST_F(ModbusClientTests, ImportantMessagesAreGivenUpOnAfterFiveFailedRetries)
+{
+	Transaction test_transaction;
+	test_transaction.mark_important();
+	uint8_t data_bytes[2] = {
+			'\x4',
+			'\xc'
+	};
+	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
+
+	modbus_client.enqueue_transaction(test_transaction);
+	modbus_client.run_out();
+
+	constexpr int num_allowed_retries = 5;
+	for (int i = 0; i < num_allowed_retries + 1; i++)
+	{
+		std::deque<char> incoming_message{
+			'\x1', '\x3', '\x4', '\xc', '\x00', '\x00'
+		};
+		serial_interface.consume_new_message(incoming_message);
+		modbus_client.run_in();
+
+		modbus_client.dequeue_transaction();
+
+		serial_interface.sendBuffer.clear();
+		serial_interface.pass_time(2001);
+		modbus_client.run_out();
+	}
+
+	std::vector<char> expected_output{};
+	ASSERT_EQ(expected_output, serial_interface.sendBuffer);
+}

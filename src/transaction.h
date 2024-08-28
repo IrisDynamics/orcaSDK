@@ -234,7 +234,10 @@ public:
 
 
     int is_expected_length_known () { return reception_length != -1; }
-
+    int get_expected_length()
+    {
+        return reception_length;
+    }
 
     /**
      * @brief Set the appropriate error bit in the reception_validity field to indicate an invalid response
@@ -370,6 +373,34 @@ public:
         return reception_validity;
     }
 
+    void mark_important()
+    {
+        important = true;
+    }
+
+    bool is_important()
+    {
+        return important;
+    }
+
+    void generate_retry(Transaction* last_transaction)
+    {
+        mark_important();
+        num_retries = last_transaction->get_num_retries() + 1;
+        reception_length = last_transaction->get_expected_length();
+        uint8_t* prev_tx_buffer = last_transaction->get_raw_tx_data();
+        for (int i = 0; i < last_transaction->get_tx_buffer_size(); i++)
+        {
+            tx_buffer[i] = prev_tx_buffer[i];
+        }
+        tx_buffer_size = last_transaction->get_tx_buffer_size();
+    }
+
+    int get_num_retries()
+    {
+        return num_retries;
+    }
+
 private:
 
     int tx_buffer_size = 0;               //The number of bytes stored in request
@@ -392,6 +423,9 @@ private:
 #else
     uint8_t rx_buffer[256] = { 0 }; //The received response to the transmitted request
 #endif 
+
+    bool important = false;
+    int num_retries = 0;
 
     enum TRANSMIT_STATE {
         unused = 33,			// not a valid transaction to send

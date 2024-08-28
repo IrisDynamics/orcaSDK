@@ -338,8 +338,36 @@ public:
         return &rx_buffer[2];
     }
 
+    uint8_t* get_raw_rx_data()
+    {
+        return rx_buffer;
+    }
+
+    /**
+     * @brief Get the size of the request. If request has not been loaded, size will be 0
+     * @return The number of bytes stored in the request array
+     */
+    int get_rx_buffer_size() {
+        return rx_buffer_size;
+    }
+
     uint8_t* get_tx_data(){
         return &tx_buffer[2];
+    }
+
+    int get_tx_buffer_size()
+    {
+        return tx_buffer_size;
+    }
+
+    uint8_t* get_raw_tx_data()
+    {
+        return tx_buffer;
+    }
+
+    uint8_t get_failure_codes()
+    {
+        return reception_validity;
     }
 
 private:
@@ -385,14 +413,6 @@ private:
     //bit 7 - invalid data <- need this??
 
     volatile int reception_length; // expected length, in bytes, of the current request
-
-    /**
-     * @brief Get the size of the request. If request has not been loaded, size will be 0
-     * @return The number of bytes stored in the request array
-     */
-    int get_rx_buffer_size() {
-        return rx_buffer_size;
-    }
 };
 
 #endif

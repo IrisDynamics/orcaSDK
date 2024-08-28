@@ -4,7 +4,7 @@
 
 namespace ModbusTesting
 {
-	void CalculateAndAppendCRC(std::deque<char>& modbus_message)
+	static void CalculateAndAppendCRC(std::deque<char>& modbus_message)
 	{
 		uint8_t array_of_bytes[256];
 		for (int i = 0; i < modbus_message.size(); i++)

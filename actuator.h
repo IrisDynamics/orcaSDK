@@ -68,14 +68,8 @@ public:
 		const char* name
 	) :
 		Actuator(
-#ifdef IRIS_ZYNQ_7000
-			std::make_shared<Zynq7000_ModbusClient>(uart_channel),
-#elif defined(__MK20DX256__)
-			std::make_shared<k20_ModbusClient>(uart_channel),
-#elif defined(WINDOWS)
-			std::make_shared<windows_SerialInterface>(uart_channel),
-#elif defined(QT_WINDOWS)
-			std::make_shared<qt_ModbusClient>(uart_channel),
+#if defined(WINDOWS)
+		std::make_shared<windows_SerialInterface>(uart_channel),
 #endif
 		uart_channel,
 		name)

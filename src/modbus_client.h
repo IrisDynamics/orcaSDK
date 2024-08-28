@@ -28,9 +28,10 @@
 #include "serial_interface.h"
 #include "diagnostics_tracker.h"
 #include "message_queue.h"
-#ifdef __MK20DX256__
-#include <Arduino.h>
-#endif
+#include "tools/LogInterface.h"
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 
 /**
@@ -126,15 +127,14 @@ public:
 
 			case TIMER_ID::repsonse_timeout:
                 active_transaction = messages.get_active_transaction();
-				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
                 diagnostic_counters.increment_diagnostic_counter(return_server_no_response_count);
 				active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
+                conclude_transaction(active_transaction);
 				break;
 
 			case TIMER_ID::interchar_timeout:
                 active_transaction = messages.get_active_transaction();
 
-				enable_interframe_delay();			// will allow run_out to send the next message once this expires (note this disables the current timer)
 
 				// If the length was unknown assume this was the expected termination of the response until it is validated
 				if( !active_transaction->is_expected_length_known() ){
@@ -147,6 +147,7 @@ public:
                     diagnostic_counters.increment_diagnostic_counter(ignoring_state_error);
 				}
 
+                conclude_transaction(active_transaction);
 				break;
 
 
@@ -180,9 +181,24 @@ public:
                 if (serial_interface.ready_to_send())
                 {
                     //while there are bytes left to send in the transaction, continue adding them to sendBuf
-                    while (messages.get_active_transaction()->bytes_left_to_send()) {
-                         send();
+                    Transaction* active_transaction = messages.get_active_transaction();
+                    while (active_transaction->bytes_left_to_send()) {
+                        //send the current data byte
+                        uint8_t data = active_transaction->pop_tx_buffer();
+                        serial_interface.send_byte(data);
+                        diagnostic_counters.increment_diagnostic_counter(bytes_out_count);
+
+                        if (active_transaction->is_fully_sent()) {
+
+                            if (active_transaction->is_broadcast_message()) { //is it a broadcast message?
+                                enable_turnaround_delay();
+                            }
+                            else {
+                                enable_response_timeout();
+                            }
+                        }
                     }
+                    if (logging) log_transaction_transmission(active_transaction);
                 }
     			serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
                 diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
@@ -269,10 +285,18 @@ public:
         return serial_interface.get_system_cycles();
     }
 
+    void begin_logging(std::shared_ptr<LogInterface> _log)
+    {
+        log = _log;
+        logging = true;
+    }
+
     DiagnosticsTracker diagnostic_counters;
 
 private:
     SerialInterface& serial_interface;
+
+    std::shared_ptr<LogInterface> log;
 
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
@@ -281,6 +305,8 @@ private:
     u32 turnaround_delay_cycles;
 
     u32 interframe_delay_cycles = 0;
+
+    bool logging = false;
 
     /// Time that the enabled timer was started
 
@@ -328,8 +354,8 @@ private:
             // If this was the last character for this message
             if (active_transaction->received_expected_number_of_bytes())
             {
-                enable_interframe_delay();// used to signal the earliest start time of the next message
                 active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+                conclude_transaction(active_transaction);
             }
             else {
                 enable_interchar_timeout();
@@ -415,6 +441,46 @@ private:
     	}
 
 		return TIMER_ID::none;
+    }
+
+    void log_transaction_transmission(Transaction* transaction)
+    {
+        std::stringstream message;
+        message << serial_interface.get_system_cycles() << "\ttx";
+        uint8_t* tx_data = transaction->get_raw_tx_data();
+        for (int i = 0; i < transaction->get_tx_buffer_size(); i++)
+        {
+            message << "\t" << std::setfill('0') << std::setw(2) << std::noshowbase << std::hex << (int)tx_data[i];
+        }
+        message << "\n";
+        log->write(message.str());
+    }
+
+    void log_transaction_response(Transaction* transaction)
+    {
+        std::stringstream message;
+        message << serial_interface.get_system_cycles() << "\trx";
+        uint8_t* rx_data = transaction->get_raw_rx_data();
+        for (int i = 0; i < transaction->get_rx_buffer_size(); i++)
+        {
+            message << "\t" << std::setfill('0') << std::setw(2) << std::noshowbase << std::hex << (int)rx_data[i];
+        }
+
+        uint8_t failure_codes = transaction->get_failure_codes();
+        if (failure_codes) message << "\t";
+        if (failure_codes & (1 << Transaction::RESPONSE_TIMEOUT_ERROR)) message << "Timed out. ";
+        if (failure_codes & (1 << Transaction::INTERCHAR_TIMEOUT_ERROR)) message << "Unexpected interchar. ";
+        if (failure_codes & (1 << Transaction::UNEXPECTED_RESPONDER)) message << "Wrong address. ";
+        if (failure_codes & (1 << Transaction::CRC_ERROR)) message << "Wrong CRC. ";
+
+        message << "\n";
+        log->write(message.str());
+    }
+
+    void conclude_transaction(Transaction* transaction)
+    {
+        enable_interframe_delay();
+        if (logging) log_transaction_response(transaction);
     }
 
 };

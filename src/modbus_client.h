@@ -452,7 +452,6 @@ private:
         {
             message << "\t" << std::setfill('0') << std::setw(2) << std::noshowbase << std::hex << (int)tx_data[i];
         }
-        message << "\n";
         log->write(message.str());
     }
 
@@ -473,7 +472,6 @@ private:
         if (failure_codes & (1 << Transaction::UNEXPECTED_RESPONDER)) message << "Wrong address. ";
         if (failure_codes & (1 << Transaction::CRC_ERROR)) message << "Wrong CRC. ";
 
-        message << "\n";
         log->write(message.str());
     }
 

@@ -27,6 +27,7 @@
 #include "src/iris_client_application.h"
 
 #include "src/actuator_config.h"
+#include "tools/Log.h"
 #include <memory>
 
 
@@ -37,6 +38,7 @@
 class Actuator : public IrisClientApplication {
 
 	std::shared_ptr<SerialInterface> serial_interface;
+	std::shared_ptr<LogInterface> log;
 
 public:
 	ModbusClient modbus_client;
@@ -69,18 +71,22 @@ public:
 	) :
 		Actuator(
 #if defined(WINDOWS)
-		std::make_shared<windows_SerialInterface>(uart_channel),
+			std::make_shared<windows_SerialInterface>(uart_channel),
+			std::make_shared<Log>(),
 #endif
-		uart_channel,
-		name)
+			uart_channel,
+			name
+		)
 	{}
 
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
+		std::shared_ptr<LogInterface> log,
 		int uart_channel,
 		const char* name
 	) :
 		serial_interface(serial_interface),
+		log(log),
 		modbus_client(*serial_interface, uart_channel),
 		IrisClientApplication(modbus_client, name)
 	{}
@@ -764,6 +770,16 @@ public:
 	*/
 	uint16_t get_orca_reg_content(uint16_t offset){
 		return orca_reg_contents[offset];
+	}
+
+	void begin_serial_logging()
+	{
+#ifdef WINDOWS
+		std::shared_ptr<Log> app_log = std::dynamic_pointer_cast<Log>(log);
+		app_log->set_verbose_mode(false);
+		app_log->open(my_name);
+#endif
+		modbus_client.begin_logging(log);
 	}
 
 private:

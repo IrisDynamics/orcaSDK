@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "modbus/helpers/TestSerialInterface.h"
+#include "modbus/helpers/TestLog.h"
 #include "actuator.h"
 #include <memory>
 #include "helpers/modbus_helpers.h"
@@ -11,10 +12,12 @@ class ActuatorTests : public testing::Test
 protected:
 	ActuatorTests() :
 		serial_interface(std::make_shared<TestSerialInterface>()),
-		motor(serial_interface, -1, "Hello")
+		log(std::make_shared<TestLog>()),
+		motor(serial_interface, log, -1, "Hello")
 	{}
 
 	std::shared_ptr<TestSerialInterface> serial_interface;
+	std::shared_ptr<TestLog> log;
 	Actuator motor;
 };
 

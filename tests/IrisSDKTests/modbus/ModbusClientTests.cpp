@@ -34,7 +34,7 @@ TEST_F(ModbusClientTests, ModbusClientOutputsOutgoingBytesToLogFileIfLoggingEnab
 
 	modbus_client.run_out();
 
-	std::string logString = "10000\ttx\t01\t03\t04\t0c\tf3\t1d\n";
+	std::string logString = "10000\ttx\t01\t03\t04\t0c\tf3\t1d";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -60,7 +60,7 @@ TEST_F(ModbusClientTests, ModbusClientOutputsIncomingBytesToLogFileIfLoggingEnab
 	serial_interface.pass_time(500);
 	modbus_client.run_in();
 
-	std::string logString = "10500\trx\t01\t03\t04\t0c\tf3\t1d\n";
+	std::string logString = "10500\trx\t01\t03\t04\t0c\tf3\t1d";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -82,7 +82,7 @@ TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
 	serial_interface.pass_time(DEFAULT_RESPONSE_uS + 1);
 	modbus_client.run_in();
 
-	std::string logString = "60001\trx\tTimed out. \n";
+	std::string logString = "60001\trx\tTimed out. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -109,7 +109,7 @@ TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
 	serial_interface.pass_time(DEFAULT_INTERCHAR_uS + 1);
 	modbus_client.run_in();
 
-	std::string logString = "26001\trx\t01\tUnexpected interchar. \n";
+	std::string logString = "26001\trx\t01\tUnexpected interchar. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -135,7 +135,7 @@ TEST_F(ModbusClientTests, AppendsWrongAddressWhenOutgoingAddressDoesntMatchIncom
 	serial_interface.consume_new_message(incoming_message);
 	modbus_client.run_in();
 
-	std::string logString = "10000\trx\t02\t03\t04\t0c\tf3\t59\tWrong address. \n";
+	std::string logString = "10000\trx\t02\t03\t04\t0c\tf3\t59\tWrong address. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -160,6 +160,6 @@ TEST_F(ModbusClientTests, AppendsWrongCRCWhenMessageCRCIsIncorrect)
 	serial_interface.consume_new_message(incoming_message);
 	modbus_client.run_in();
 
-	std::string logString = "10000\trx\t01\t03\t04\t0c\t00\t00\tWrong CRC. \n";
+	std::string logString = "10000\trx\t01\t03\t04\t0c\t00\t00\tWrong CRC. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }

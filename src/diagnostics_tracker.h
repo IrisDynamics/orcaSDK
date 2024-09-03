@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <array>
+#include <iostream>
 
 /**
  * @brief Description of the different diagnostic counters

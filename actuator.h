@@ -272,10 +272,15 @@ public:
 	 */
 	void flush()
 	{
+		bool current_paused_state = stream_paused;
+		set_stream_paused(true);
+
 		while (modbus_client.get_queue_size() > 0)
 		{
 			run();
 		}
+
+		set_stream_paused(current_paused_state);
 	}
 
 	/**

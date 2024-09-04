@@ -718,8 +718,8 @@ public:
 	 * 
 	 * @param reg_address register address
 	 */
-	void read_register(uint16_t reg_address){    
-		read_holding_registers_fn(connection_config.server_address, reg_address, 1);
+	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::not_important) {
+		read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority);
 	}
 	
 	/**
@@ -728,8 +728,8 @@ public:
 	 * @param reg_address register address from the orca's memory map
 	 * @param num_registers number of sequential registers to read
 	 */
-	void read_registers(uint16_t reg_address, uint16_t num_registers) {
-		read_holding_registers_fn(connection_config.server_address, reg_address, num_registers);
+	void read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority = MessagePriority::not_important) {
+		read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority);
 	}
 
 	/**
@@ -738,8 +738,8 @@ public:
 	 * @param reg_address register address
 	 * @param reg_data data to be added to the register
 	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data){    
-		write_single_register_fn(connection_config.server_address, reg_address, reg_data);
+	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::not_important){
+		write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority);
 	}
 
 	/**
@@ -749,17 +749,17 @@ public:
 	 * * @param num_registers number of sequential registers to write
 	 * @param reg_data pointer to an array of data to be added to the registers
 	 */
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data) {
-		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data);
+	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::not_important) {
+		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority);
 	}
 
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data) {
+	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::not_important) {
 		uint8_t data[126];
 		for (int i = 0; i < num_registers; i++) {
 			data[i*2] = reg_data[i] >> 8;
 			data[i * 2 + 1] = reg_data[i];
 		}
-		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data);
+		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data, priority);
 	}
 
 	/**

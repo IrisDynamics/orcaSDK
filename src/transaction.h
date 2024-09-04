@@ -86,6 +86,7 @@ public:
         tx_buffer_index = 0;
         tx_buffer_size = 0;
         rx_buffer_size = 0;
+        important = false;
     }
 
     /**

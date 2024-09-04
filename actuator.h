@@ -276,13 +276,12 @@ public:
 	void run_out() {
 
 		// This object can queue messages on the UART with the either the handshake or the connected run loop
-		if ( is_enabled() ) {
+		if ( is_enabled() && !stream_paused) {
 			if (connection_state != ConnectionStatus::connected) {
 				modbus_handshake();
 			}
 			else {
 				enqueue_motor_frame();
-
 			}
 		}
 		// This function results in the UART sending any data that has been queued
@@ -782,6 +781,11 @@ public:
 		modbus_client.begin_logging(log);
 	}
 
+	void set_stream_paused(bool paused)
+	{
+		stream_paused = paused;
+	}
+
 private:
 
 	uint16_t orca_reg_contents[ORCA_REG_SIZE];
@@ -803,7 +807,7 @@ private:
 	uint16_t motor_read_addr = 0;
 	uint16_t motor_read_width = 1;
 
-
+	bool stream_paused = false;
 
 	// These counters are used to find the success and failure rate of the comms
 	int32_t success_msg_counter = 0, failed_msg_counter = 0;

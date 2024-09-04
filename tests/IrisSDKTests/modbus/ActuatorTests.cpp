@@ -378,3 +378,31 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 	std::vector<char> out_buffer{};
 	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
 }
+
+TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
+{
+	motor.enable();
+	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.set_mode(Actuator::PositionMode);
+
+	motor.set_position_um(1); // This sets the stream timeout timer
+
+	motor.set_stream_paused(true); // Disable the queuing of new stream messages
+
+	motor.run_out(); // This sends the change mode command
+
+	std::deque<char> echo_of_mode_register_write{
+		'\x1', '\x6', '\0', '\x3', '\0', '\x3', '\x39', '\xcb'
+	};
+	serial_interface->consume_new_message(echo_of_mode_register_write);
+	motor.run_in();
+	serial_interface->sendBuffer.clear();
+	serial_interface->pass_time(2001);
+
+
+	motor.run_out();
+
+	std::vector<char> out_buffer{};
+
+	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
+}

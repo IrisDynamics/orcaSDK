@@ -28,7 +28,7 @@
 #include "serial_interface.h"
 #include "diagnostics_tracker.h"
 #include "message_queue.h"
-#include "tools/LogInterface.h"
+#include "../tools/LogInterface.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>

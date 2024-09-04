@@ -321,3 +321,60 @@ TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueues
 	std::vector<char> position_stream_command = { '\x1', '\x64', '\x1e', '\0', '\0', '\0', '\x1', '\x6a', '\x26' };
 	EXPECT_EQ(position_stream_command, serial_interface->sendBuffer);
 }
+
+TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFailed)
+{
+	constexpr int unimportant_register_address = 180;
+	motor.read_register(unimportant_register_address, MessagePriority::important);
+	motor.run_out();
+	serial_interface->pass_time(50001);
+	motor.run_in(); // Motor experiences time out
+
+	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
+
+	serial_interface->pass_time(2001);
+
+	motor.run_out(); // Motor should re-queue original read
+
+	std::deque<char> returned_data {
+		'\x1', '\x3', '\x2', '\x0', '\x5'
+	};
+	ModbusTesting::CalculateAndAppendCRC(returned_data);
+	serial_interface->consume_new_message(returned_data);
+
+	motor.run_in();
+
+	EXPECT_EQ(5, motor.get_orca_reg_content(180));
+}
+
+TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedImportant)
+{
+	constexpr int unimportant_register_address = 180;
+	motor.read_register(unimportant_register_address, MessagePriority::important);
+	motor.run_out();
+	std::deque<char> returned_data{
+		'\x1', '\x3', '\x2', '\x0', '\x5'
+	};
+	ModbusTesting::CalculateAndAppendCRC(returned_data);
+	serial_interface->consume_new_message(returned_data);
+
+	motor.run_in();
+
+	serial_interface->pass_time(2001);
+
+	motor.read_register(unimportant_register_address, MessagePriority::not_important);
+
+	motor.run_out(); 
+
+	serial_interface->pass_time(50001);
+	
+	motor.run_in();
+
+	serial_interface->sendBuffer.clear();
+	serial_interface->pass_time(2001);
+
+	motor.run_out();
+
+	std::vector<char> out_buffer{};
+	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
+}

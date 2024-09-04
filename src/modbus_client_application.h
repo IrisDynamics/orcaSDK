@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include "function_code_parameters.h"
 #include "modbus_client.h"
+#include "MessagePriority.h"
 
 namespace ModbusSubFunctionCodes
 {
@@ -110,11 +111,12 @@ public:
      * @param num_registers The quanity of holding registers to read
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers) {
+	int read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, MessagePriority priority = MessagePriority::not_important) {
 		//parameter checking
 		if(num_registers < 1 || num_registers > MAX_NUM_READ_REG) return 0;
 
 		uint8_t data_bytes[4] = {uint8_t(starting_address >> 8), uint8_t(starting_address), uint8_t(num_registers >> 8), uint8_t(num_registers)};
+		if (priority == MessagePriority::important) my_temp_transaction.mark_important();
         my_temp_transaction.load_transmission_data(
         		device_address, ModbusFunctionCodes::read_holding_registers, data_bytes, 4,
 				5 + (num_registers*2));
@@ -130,7 +132,7 @@ public:
      * @param data The value to write to the register
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-    int write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data){
+    int write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data, MessagePriority priority = MessagePriority::not_important){
 		//exception checking
 		if(data < 0 || data > MAX_WRITE_VALUE) {
 
@@ -138,6 +140,7 @@ public:
 		}
 
 		uint8_t data_bytes[4] = {uint8_t(address >> 8), uint8_t(address), uint8_t(data >> 8), uint8_t(data)};
+		if (priority == MessagePriority::important) my_temp_transaction.mark_important();
 		my_temp_transaction.load_transmission_data(
 				device_address, ModbusFunctionCodes::write_single_register, data_bytes, 4,
 				WRITE_OR_GET_COUNTER_RESPONSE_LEN);
@@ -154,7 +157,7 @@ public:
      * @param data An array of data that will be written, in order, to the registers beginning at starting_address
 	 * @return An integer, 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data) {
+	int write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data, MessagePriority priority = MessagePriority::not_important) {
 		//exception checking
 		if(num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return 0;
 
@@ -164,6 +167,7 @@ public:
 											  uint8_t(num_registers >> 8), 
 											  uint8_t(num_registers), 
 											  num_bytes };
+		if (priority == MessagePriority::important) my_temp_transaction.mark_important();
 		my_temp_transaction.load_transmission_data(
 				device_address, ModbusFunctionCodes::write_multiple_registers, data_bytes, 5, data, num_bytes,
 				WRITE_OR_GET_COUNTER_RESPONSE_LEN);

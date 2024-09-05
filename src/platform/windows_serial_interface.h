@@ -32,8 +32,8 @@
 #include <timeapi.h>
 #include <vector>
 #include <sstream>
-#include "src/modbus_client.h"
-#include "src/transaction.h"
+#include "../modbus_client.h"
+#include "../transaction.h"
 #include <mutex>
 #include <deque>
 

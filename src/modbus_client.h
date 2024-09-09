@@ -487,6 +487,10 @@ private:
                 retry_transaction.generate_retry(transaction);
                 enqueue_transaction(retry_transaction);
             }
+            else
+            {
+                std::cout << "Failed to send important transaction" << std::endl;
+            }
         }
     }
 

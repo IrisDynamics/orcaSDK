@@ -132,7 +132,7 @@ public:
 	* note some modes require a constant stream to stay in that mode (eg. force, position)
 	*/
 	void set_mode(MotorMode orca_mode) {
-		write_register(CTRL_REG_3, (uint8_t)orca_mode);
+		write_register(CTRL_REG_3, (uint8_t)orca_mode, MessagePriority::important);
 		comms_mode = orca_mode;
 	}
 	/**
@@ -679,7 +679,7 @@ public:
 							uint8_t (0),
 							uint8_t((type<<1) | (next_id << 3) | auto_next)
 							};
-		write_registers(KIN_MOTION_0 + (6*ID), 6, data);
+		write_registers(KIN_MOTION_0 + (6*ID), 6, data, MessagePriority::important);
 	}
 
 	/** @brief update the spring effect in a single function
@@ -725,7 +725,7 @@ public:
 	* @ID Identification of the motion to be triggered
 	*/
 	void trigger_kinematic_motion(int ID) {
-		write_register(KIN_SW_TRIGGER, ID);
+		write_register(KIN_SW_TRIGGER, ID, MessagePriority::important);
 	}
 
 	/**

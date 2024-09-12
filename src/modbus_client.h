@@ -480,7 +480,7 @@ private:
     {
         enable_interframe_delay();
         if (logging) log_transaction_response(transaction);
-        if (!transaction->is_reception_valid() && transaction->is_important()) {
+        if ((!transaction->is_reception_valid() || transaction->is_error_response()) && transaction->is_important()) {
             if (transaction->get_num_retries() < 5)
             {
                 Transaction retry_transaction;

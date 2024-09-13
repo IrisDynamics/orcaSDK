@@ -21,19 +21,20 @@
 
 #pragma once
 
-#include "device_config.h"
+#include <chrono>
 
 /**
  *	@class	Timer Timer.h "irisSDK_libraries/Timer.h" 
  *	@brief	An object intended to be used as a countdown timer (But does support counting up). Offers a selection of simple operations. 
  */
 class Timer {
-	uint32_t start_time = 0;
-	uint32_t duration = 0;
+	std::chrono::time_point<std::chrono::system_clock> start_time;
+	std::chrono::milliseconds duration{ 0 };
+
 
 public:
 	Timer() {
-		start_time = millis();
+		start_time = std::chrono::system_clock::now();
 	}
 
 	/**
@@ -41,15 +42,15 @@ public:
 	 *	@param[in]  uint32_t _duration - The duration of the timer in milliseconds. 
 	 */
 	void set(uint32_t _duration) {
-		start_time = millis();
-		duration = _duration;
+		start_time = std::chrono::system_clock::now();
+		duration = std::chrono::milliseconds{ _duration };
 	}
 
 	/**
 	 *	@brief		Restarts the timer, but does not modify duration. 
 	 */
 	void reset() {
-		start_time = millis();
+		start_time = std::chrono::system_clock::now();
 	}
 
 	/**
@@ -59,7 +60,7 @@ public:
 	 *	@note		bool - If the timer has not yet been set, it is treated as if it has expired. 
 	 */
 	bool has_expired() {
-		return (start_time + duration) <= millis();
+		return (start_time + duration) <= std::chrono::system_clock::now();
 	}
 
 	/**
@@ -71,7 +72,7 @@ public:
 	 */
 	uint32_t time_remaining() {
 		if (has_expired()) return 0;
-		return (start_time + duration) - millis();
+		return ((start_time + duration) - std::chrono::system_clock::now()).count();
 	}
 
 	/**
@@ -82,6 +83,6 @@ public:
 	 *	If the timer has not yet been set, returns time since object construction. 
 	 */
 	uint32_t time_elapsed() {
-		return millis() - start_time;
+		return (std::chrono::system_clock::now() - start_time).count();
 	}
 };

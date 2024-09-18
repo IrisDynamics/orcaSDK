@@ -28,7 +28,7 @@
 
 #include "diagnostics_tracker.h"
 #include "transaction.h"
-#include <deque>
+#include <list>
 
 
 /**
@@ -79,6 +79,19 @@ public:
             return true;
         }
         return false;
+    }
+
+    void insert_next(Transaction message)
+    {
+        message.mark_queued();
+        if (transaction_buffer.size() > 0)
+        {
+            transaction_buffer.insert(++transaction_buffer.begin(), message);
+        }
+        else
+        {
+            transaction_buffer.push_front(message);
+        }
     }
 
     /**
@@ -145,7 +158,7 @@ public:
 
 private:
     DiagnosticsTracker& diagnostics_tracker;
-    std::deque<Transaction> transaction_buffer;  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
+    std::list<Transaction> transaction_buffer;  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
     //int back_index = 0;       //!<index of next available empty spot
     //int front_index = 0;      //!<index of item in front of queue
     //int active_index = 0;

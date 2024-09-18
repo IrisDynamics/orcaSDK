@@ -227,3 +227,48 @@ TEST_F(ModbusClientTests, ImportantMessagesAreGivenUpOnAfterFiveFailedRetries)
 	std::vector<char> expected_output{};
 	ASSERT_EQ(expected_output, serial_interface.sendBuffer);
 }
+
+TEST_F(ModbusClientTests, ImportantMessageRetriesAreInsertedAtTheFrontOfTheQueue)
+{
+	//Insert transaction one
+	Transaction test_transaction_one;
+	test_transaction_one.mark_important();
+	uint8_t data_bytes_0[2] = {
+			'\x4',
+			'\xc'
+	};
+	test_transaction_one.load_transmission_data(1, 3, data_bytes_0, 2, 6);
+
+	modbus_client.enqueue_transaction(test_transaction_one);
+	modbus_client.run_out();
+
+	//Insert transaction two
+	Transaction test_transaction_two;
+	uint8_t data_bytes_1[2] = {
+			'\x1',
+			'\x1'
+	};
+	test_transaction_two.load_transmission_data(1, 3, data_bytes_1, 2, 6);
+
+	modbus_client.enqueue_transaction(test_transaction_two);
+	modbus_client.run_out();
+
+
+	std::deque<char> incoming_message{
+		'\x1', '\x3', '\x4', '\xc', '\x00', '\x00'
+	};
+	serial_interface.consume_new_message(incoming_message);
+	modbus_client.run_in();
+
+	ASSERT_EQ(1, modbus_client.diagnostic_counters.Get(diagnostic_counter_t::crc_error_count)); // Ensure the transaction failed
+
+	modbus_client.dequeue_transaction();
+
+	serial_interface.sendBuffer.clear();
+	serial_interface.pass_time(2001);
+	modbus_client.run_out();
+
+	// Expect retry of transaction one
+	std::vector<char> expected_output{ '\x1', '\x3', '\x4', '\xc', '\xf3', '\x1d' };
+	ASSERT_EQ(expected_output, serial_interface.sendBuffer);
+}

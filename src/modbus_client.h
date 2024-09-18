@@ -485,7 +485,7 @@ private:
             {
                 Transaction retry_transaction;
                 retry_transaction.generate_retry(transaction);
-                enqueue_transaction(retry_transaction);
+                messages.insert_next(retry_transaction);
             }
             else
             {

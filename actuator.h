@@ -361,7 +361,7 @@ public:
 					orca_reg_contents[FORCE_REG_OFFSET] 	= (response.get_rx_data()[ 6] << 8) | response.get_rx_data()[ 7];
 					orca_reg_contents[POWER_REG_OFFSET] 	= (response.get_rx_data()[ 8] << 8) | response.get_rx_data()[ 9];
 					orca_reg_contents[TEMP_REG_OFFSET] 		= (response.get_rx_data()[10]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] 	= (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
+					orca_reg_contents[SHAFT_ACCEL_MMPSS] 	= (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
 					orca_reg_contents[ERROR_REG_OFFSET] 	= (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
 					break;
 				

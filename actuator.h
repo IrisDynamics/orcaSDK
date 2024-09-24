@@ -802,9 +802,9 @@ public:
 		stream_paused = paused;
 	}
 
+	uint16_t orca_reg_contents[ORCA_REG_SIZE];
 private:
 
-	uint16_t orca_reg_contents[ORCA_REG_SIZE];
 
 	StreamMode stream_mode = MotorCommand;
 	MotorMode comms_mode = SleepMode;

@@ -111,7 +111,7 @@ public:
      * @param num_registers The quanity of holding registers to read
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, MessagePriority priority = MessagePriority::important) {
+	int read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, MessagePriority priority) {
 		//parameter checking
 		if(num_registers < 1 || num_registers > MAX_NUM_READ_REG) return 0;
 
@@ -132,7 +132,7 @@ public:
      * @param data The value to write to the register
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-    int write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data, MessagePriority priority = MessagePriority::important){
+    int write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data, MessagePriority priority){
 		//exception checking
 		if(data < 0 || data > MAX_WRITE_VALUE) {
 
@@ -157,7 +157,7 @@ public:
      * @param data An array of data that will be written, in order, to the registers beginning at starting_address
 	 * @return An integer, 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data, MessagePriority priority = MessagePriority::important) {
+	int write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data, MessagePriority priority) {
 		//exception checking
 		if(num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return 0;
 
@@ -189,7 +189,7 @@ public:
 	int read_write_multiple_registers_fn(uint8_t device_address, 
 										 uint16_t read_starting_address, uint16_t read_num_registers,
 										 uint16_t write_starting_address, uint16_t write_num_registers,
-										 uint8_t* data, MessagePriority priority = MessagePriority::important)
+										 uint8_t* data, MessagePriority priority)
 	{	
 		//check for exceptions
 		if(read_num_registers < 1 || read_num_registers > MAX_NUM_READ_REG) return 0;

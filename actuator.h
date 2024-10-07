@@ -132,7 +132,7 @@ public:
 	* note some modes require a constant stream to stay in that mode (eg. force, position)
 	*/
 	void set_mode(MotorMode orca_mode) {
-		write_register(CTRL_REG_3, (uint8_t)orca_mode, MessagePriority::important);
+		write_register(CTRL_REG_3, (uint8_t)orca_mode);
 		comms_mode = orca_mode;
 	}
 	/**
@@ -679,7 +679,7 @@ public:
 							uint8_t (0),
 							uint8_t((type<<1) | (next_id << 3) | auto_next)
 							};
-		write_registers(KIN_MOTION_0 + (6*ID), 6, data, MessagePriority::important);
+		write_registers(KIN_MOTION_0 + (6*ID), 6, data);
 	}
 
 	/** @brief update the spring effect in a single function
@@ -725,7 +725,7 @@ public:
 	* @ID Identification of the motion to be triggered
 	*/
 	void trigger_kinematic_motion(int ID) {
-		write_register(KIN_SW_TRIGGER, ID, MessagePriority::important);
+		write_register(KIN_SW_TRIGGER, ID);
 	}
 
 	/**
@@ -733,7 +733,7 @@ public:
 	 * 
 	 * @param reg_address register address
 	 */
-	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::not_important) {
+	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important) {
 		read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority);
 	}
 	
@@ -743,7 +743,7 @@ public:
 	 * @param reg_address register address from the orca's memory map
 	 * @param num_registers number of sequential registers to read
 	 */
-	void read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority = MessagePriority::not_important) {
+	void read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority = MessagePriority::important) {
 		read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority);
 	}
 
@@ -753,7 +753,7 @@ public:
 	 * @param reg_address register address
 	 * @param reg_data data to be added to the register
 	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::not_important){
+	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important){
 		write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority);
 	}
 
@@ -764,11 +764,11 @@ public:
 	 * * @param num_registers number of sequential registers to write
 	 * @param reg_data pointer to an array of data to be added to the registers
 	 */
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::not_important) {
+	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important) {
 		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority);
 	}
 
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::not_important) {
+	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important) {
 		uint8_t data[126];
 		for (int i = 0; i < num_registers; i++) {
 			data[i*2] = reg_data[i] >> 8;

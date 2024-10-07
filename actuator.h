@@ -975,9 +975,9 @@ private:
 				uint8_t(register_value >> 8),
 				uint8_t(register_value)
 		};
+		Transaction my_temp_transaction;
 		my_temp_transaction.load_transmission_data(device_address, motor_command, data_bytes, 5, get_app_reception_length(motor_command));
 		int check = modbus_client.enqueue_transaction(my_temp_transaction);
-		my_temp_transaction.reset_transaction();
 		return check;
 	}
 
@@ -988,9 +988,9 @@ private:
 				uint8_t(width)
 		};
 
+		Transaction my_temp_transaction;
 		my_temp_transaction.load_transmission_data(device_address, motor_read, data_bytes, 3, get_app_reception_length(motor_read));
 		int check = modbus_client.enqueue_transaction(my_temp_transaction);
-		my_temp_transaction.reset_transaction();
 		return check;
 	}
 
@@ -1005,9 +1005,9 @@ private:
 				uint8_t(register_value)
 		};
 
+		Transaction my_temp_transaction;
 		my_temp_transaction.load_transmission_data(device_address, motor_write, data_bytes, 7, get_app_reception_length(motor_write));
 		int check = modbus_client.enqueue_transaction(my_temp_transaction);
-		my_temp_transaction.reset_transaction();
 		return check;
 	}
 

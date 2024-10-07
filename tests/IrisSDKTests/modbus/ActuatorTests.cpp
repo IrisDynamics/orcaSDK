@@ -167,7 +167,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLocalCacheOnReceive)
 {
 	uint8_t data[2] = { 0x01, 0x01 };
-	motor.read_write_multiple_registers_fn(1, 97, 2, 180, 1, data);
+	motor.read_write_registers(97, 2, 180, 1, data);
 	motor.run_out();
 
 	std::vector<char> expected_sent_buffer{

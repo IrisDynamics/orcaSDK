@@ -778,6 +778,30 @@ public:
 	}
 
 	/**
+	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
+	 * 
+	 *	@param read_starting_address The starting address of registers to read from
+	 *  @param read_num_registers How many registers that should be read
+	 *  @param write_starting_address The startin address of registers to write to
+	 *  @param write_num_registers How many registers that should be written to
+	 *  @param write_data Pointer to an array containing the byte data that should be written
+	 */
+	void read_write_registers(
+		uint16_t read_starting_address, uint16_t read_num_registers,
+		uint16_t write_starting_address, uint16_t write_num_registers,
+		uint8_t* write_data,
+		MessagePriority priority = MessagePriority::important)
+	{
+		read_write_multiple_registers_fn(
+			connection_config.server_address,
+			read_starting_address, read_num_registers,
+			write_starting_address, write_num_registers,
+			write_data,
+			priority
+		);
+	}
+
+	/**
 	* @brief Return the contents of the given register from the controller's copy of the motor's memory map. 
 	* 
 	* @param offset the register that will be read

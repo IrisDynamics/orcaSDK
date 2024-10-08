@@ -45,16 +45,15 @@
   *      The state machine will reset to the disconnected state if a number of consecutive failed messages are detected.
   *      The number of failed messages which constitutes a disconnection can be modified by adjusting the max_consec_failed_msgs variable from the ConnectionConfig struct before calling set_connection_config().
  */
-class IrisClientApplication : public ModbusClientApplication {
+class IrisClientApplication {
 
 public:
 
 	IrisClientApplication(ModbusClient& _UART, const char* name) :
-
-		ModbusClientApplication(_UART),
 		UART(_UART),
 		my_name(name),
-		pause_time_cycles(DEFAULT_CONNECTION_PAUSE_uS)
+		pause_time_cycles(DEFAULT_CONNECTION_PAUSE_uS),
+		modbus_message_constructor(_UART)
     { }
 
 
@@ -344,6 +343,8 @@ private:
 	volatile uint32_t  pause_timer_start;
 	const uint32_t pause_time_cycles;
 
+	ModbusClientApplication modbus_message_constructor;
+
 	/**
 	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer
 	*/
@@ -370,7 +371,7 @@ private:
 	*/
 	int enqueue_ping_msg() {
 		uint8_t data[8] = { 1,2,4,8,16,32,64,128 };
-		return return_query_data_fn(connection_config.server_address, data, 0); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+		return modbus_message_constructor.return_query_data_fn(connection_config.server_address, data, 0); //pass in num_data as 0 so nothing from data array will be loaded into transmission
 	}
 
 	/**

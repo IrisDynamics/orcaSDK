@@ -85,10 +85,11 @@ public:
 		int uart_channel,
 		const char* name
 	) :
+		IrisClientApplication(modbus_client, name),
 		serial_interface(serial_interface),
 		log(log),
 		modbus_client(*serial_interface, uart_channel),
-		IrisClientApplication(modbus_client, name)
+		modbus_message_constructor(modbus_client)
 	{}
 
 	/**
@@ -734,7 +735,7 @@ public:
 	 * @param reg_address register address
 	 */
 	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important) {
-		read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority);
+		modbus_message_constructor.read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority);
 	}
 	
 	/**
@@ -744,7 +745,7 @@ public:
 	 * @param num_registers number of sequential registers to read
 	 */
 	void read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority = MessagePriority::important) {
-		read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority);
+		modbus_message_constructor.read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority);
 	}
 
 	/**
@@ -754,7 +755,7 @@ public:
 	 * @param reg_data data to be added to the register
 	 */
 	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important){
-		write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority);
+		modbus_message_constructor.write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority);
 	}
 
 	/**
@@ -765,7 +766,7 @@ public:
 	 * @param reg_data pointer to an array of data to be added to the registers
 	 */
 	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important) {
-		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority);
+		modbus_message_constructor.write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority);
 	}
 
 	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important) {
@@ -774,7 +775,7 @@ public:
 			data[i*2] = reg_data[i] >> 8;
 			data[i * 2 + 1] = reg_data[i];
 		}
-		write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data, priority);
+		modbus_message_constructor.write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data, priority);
 	}
 
 	/**
@@ -792,7 +793,7 @@ public:
 		uint8_t* write_data,
 		MessagePriority priority = MessagePriority::important)
 	{
-		read_write_multiple_registers_fn(
+		modbus_message_constructor.read_write_multiple_registers_fn(
 			connection_config.server_address,
 			read_starting_address, read_num_registers,
 			write_starting_address, write_num_registers,
@@ -827,6 +828,7 @@ public:
 	}
 
 private:
+	ModbusClientApplication modbus_message_constructor;
 
 	uint16_t orca_reg_contents[ORCA_REG_SIZE];
 

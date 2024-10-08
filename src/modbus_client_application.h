@@ -217,10 +217,6 @@ public:
 
 	}
 
-
-protected:
-	ModbusClient& UART;
-
 	/**
 	 * @brief Format a return_query_data request, sub-function code 00, and add the request to the buffer queue
 	 * @param device_address The address of the server device that will accept the transaction, 0 if broadcast
@@ -239,6 +235,8 @@ protected:
 		return ret;
 	}
 
+private:
+	ModbusClient& UART;
 };
 
 

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "src/iris_client_application.h"
+#include "src/modbus_client_application.h"
 #include "modbus/helpers/TestSerialInterface.h"
 #include "actuator.h"
 
@@ -8,12 +8,12 @@ class TransactionConstructionTests : public testing::Test
 protected:
 	TransactionConstructionTests() :
 		modbus_client(serial_interface, -1),
-		modbus_app(modbus_client, "Hello")
+		modbus_app(modbus_client)
 	{}
 
 	TestSerialInterface serial_interface;
 	ModbusClient modbus_client;
-	IrisClientApplication modbus_app;
+	ModbusClientApplication modbus_app;
 };
 
 TEST_F(TransactionConstructionTests, GetSingleRegisterCharacterizationTest)

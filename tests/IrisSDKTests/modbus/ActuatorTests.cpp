@@ -406,3 +406,69 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueu
 
 	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
 }
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	motor.read_registers(1, 0);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	motor.read_registers(1, 126);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLength125GetsQueued)
+{
+	motor.read_registers(1, 125);
+	motor.run_out();
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroDoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 0, unimportant_data);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthGreaterThan123DoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 124, unimportant_data);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLength123GetsQueued)
+{
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 123, unimportant_data);
+	motor.run_out();
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}

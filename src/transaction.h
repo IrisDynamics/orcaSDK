@@ -405,7 +405,7 @@ public:
 private:
 
     int tx_buffer_size = 0;               //The number of bytes stored in request
-    uint8_t tx_buffer_index = 0;              //Index of the next byte from request to pop() and transmit
+    int tx_buffer_index = 0;              //Index of the next byte from request to pop() and transmit
 #ifdef __MK20DX256__
     uint8_t tx_buffer[64] = { 0 }; //The data to transmit
 #elif defined(ATMEGA328)

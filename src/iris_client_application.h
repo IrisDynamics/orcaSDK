@@ -52,8 +52,7 @@ public:
 	IrisClientApplication(ModbusClient& _UART, const char* name) :
 		UART(_UART),
 		my_name(name),
-		pause_time_cycles(DEFAULT_CONNECTION_PAUSE_uS),
-		modbus_message_constructor(_UART)
+		pause_time_cycles(DEFAULT_CONNECTION_PAUSE_uS)
     { }
 
 
@@ -343,8 +342,6 @@ private:
 	volatile uint32_t  pause_timer_start;
 	const uint32_t pause_time_cycles;
 
-	ModbusClientApplication modbus_message_constructor;
-
 	/**
 	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer
 	*/
@@ -371,7 +368,8 @@ private:
 	*/
 	int enqueue_ping_msg() {
 		uint8_t data[8] = { 1,2,4,8,16,32,64,128 };
-		return modbus_message_constructor.return_query_data_fn(connection_config.server_address, data, 0); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+		Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(connection_config.server_address, data, 0); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+		return UART.enqueue_transaction(ping_transaction);
 	}
 
 	/**

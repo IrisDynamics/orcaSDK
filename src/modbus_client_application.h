@@ -97,12 +97,7 @@ namespace ModbusFunctionCodes
  *    Return a 1 if the function is successful, return a 0 if an exception occurs.
  */
 
-class ModbusClientApplication {
-
-public: 
-	ModbusClientApplication(ModbusClient& _UART) :
-		UART(_UART)
-	{}
+namespace DefaultModbusFunctions {
 
 	/**
 	 * @brief Format a read_holding_registers request, function code 03, and add the request to the buffer queue
@@ -111,18 +106,14 @@ public:
      * @param num_registers The quanity of holding registers to read
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, MessagePriority priority) {
-		//parameter checking
-		if(num_registers < 1 || num_registers > MAX_NUM_READ_REG) return 0;
-
+	static Transaction read_holding_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, MessagePriority priority) {
 		uint8_t data_bytes[4] = {uint8_t(starting_address >> 8), uint8_t(starting_address), uint8_t(num_registers >> 8), uint8_t(num_registers)};
 		Transaction my_temp_transaction;
 		if (priority == MessagePriority::important) my_temp_transaction.mark_important();
         my_temp_transaction.load_transmission_data(
         		device_address, ModbusFunctionCodes::read_holding_registers, data_bytes, 4,
 				5 + (num_registers*2));
-		int ret = UART.enqueue_transaction(my_temp_transaction);
-		return ret;
+		return my_temp_transaction;
 	}
 
     /**
@@ -132,21 +123,14 @@ public:
      * @param data The value to write to the register
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-    int write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data, MessagePriority priority){
-		//exception checking
-		if(data < 0 || data > MAX_WRITE_VALUE) {
-
-			return 0;
-		}
-
+	static Transaction write_single_register_fn(uint8_t device_address, uint16_t address, uint16_t data, MessagePriority priority){
 		uint8_t data_bytes[4] = {uint8_t(address >> 8), uint8_t(address), uint8_t(data >> 8), uint8_t(data)};
 		Transaction my_temp_transaction;
 		if (priority == MessagePriority::important) my_temp_transaction.mark_important();
 		my_temp_transaction.load_transmission_data(
 				device_address, ModbusFunctionCodes::write_single_register, data_bytes, 4,
 				WRITE_OR_GET_COUNTER_RESPONSE_LEN);
-		int ret = UART.enqueue_transaction(my_temp_transaction);
-		return ret;
+		return my_temp_transaction;
     }
 
 	/**
@@ -157,10 +141,7 @@ public:
      * @param data An array of data that will be written, in order, to the registers beginning at starting_address
 	 * @return An integer, 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data, MessagePriority priority) {
-		//exception checking
-		if(num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return 0;
-
+	static Transaction write_multiple_registers_fn(uint8_t device_address, uint16_t starting_address, uint16_t num_registers, uint8_t* data, MessagePriority priority) {
 		uint8_t num_bytes = uint8_t(num_registers)*2;
 		uint8_t data_bytes[5] = { uint8_t(starting_address >> 8), 
 											  uint8_t(starting_address), 
@@ -172,8 +153,7 @@ public:
 		my_temp_transaction.load_transmission_data(
 				device_address, ModbusFunctionCodes::write_multiple_registers, data_bytes, 5, data, num_bytes,
 				WRITE_OR_GET_COUNTER_RESPONSE_LEN);
-		int ret = UART.enqueue_transaction(my_temp_transaction);
-		return ret;
+		return my_temp_transaction;
 	}
 
 	/**
@@ -186,15 +166,11 @@ public:
      * @param data An array of data that will be written, in order, to the register(s) beginning at write_start_address
 	 * @return An integer - 1 if the transaction is formatted and added to the buffer queue successfuly, 0 if an exception occurs
 	 */
-	int read_write_multiple_registers_fn(uint8_t device_address, 
+	static Transaction read_write_multiple_registers_fn(uint8_t device_address,
 										 uint16_t read_starting_address, uint16_t read_num_registers,
 										 uint16_t write_starting_address, uint16_t write_num_registers,
 										 uint8_t* data, MessagePriority priority)
 	{	
-		//check for exceptions
-		if(read_num_registers < 1 || read_num_registers > MAX_NUM_READ_REG) return 0;
-		if(write_num_registers < 1 || write_num_registers > MAX_NUM_WRITE_REG_RW) return 0;
-
 		uint8_t write_num_bytes = uint8_t(write_num_registers)*2;
 
 		uint8_t data_bytes[9] = { uint8_t(read_starting_address >> 8), 
@@ -212,8 +188,7 @@ public:
 		my_temp_transaction.load_transmission_data(
 				device_address, ModbusFunctionCodes::read_write_multiple_registers, data_bytes, 9, data, write_num_bytes,
 				5 + read_num_registers * 2);
-		int ret = UART.enqueue_transaction(my_temp_transaction);
-		return ret;
+		return my_temp_transaction;
 
 	}
 
@@ -223,20 +198,15 @@ public:
 	 * @param data The data to send and have echoed back from the server device
 	 * @param num_data The quantity of data bytes being added to the transaction
 	*/
-	int return_query_data_fn(uint8_t device_address, uint8_t* data, int num_data) {
-
+	static Transaction return_query_data_fn(uint8_t device_address, uint8_t* data, int num_data) {
 		uint8_t data_bytes[2] = { uint8_t(ModbusSubFunctionCodes::return_query_data << 8), uint8_t(ModbusSubFunctionCodes::return_query_data) };
 		Transaction my_temp_transaction;
 		my_temp_transaction.mark_important();
 		my_temp_transaction.load_transmission_data(
 			device_address, ModbusFunctionCodes::diagnostics, data_bytes, 2, data, num_data,
 			num_data + 6);
-		int ret = UART.enqueue_transaction(my_temp_transaction);
-		return ret;
+		return my_temp_transaction;
 	}
-
-private:
-	ModbusClient& UART;
 };
 
 

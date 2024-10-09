@@ -847,7 +847,6 @@ private:
 	// Used to hold the last commanded force and position commands from the user of this object
 	int32_t force_command;
 	int32_t position_command;
-	uint32_t haptic_command;
 	//Used to hold the last data to stream in motor write and read streams
 	uint32_t motor_write_data = 0;
 	uint16_t motor_write_addr = 0;

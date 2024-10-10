@@ -55,7 +55,7 @@ public:
         CRC_ERROR              	= 6,
     } error_id;
 
-    Transaction() = default;
+    constexpr Transaction() = default;
 
 #ifdef IRISCONTROLS
     void printme() {
@@ -92,12 +92,12 @@ public:
     /**
      * @brief Loads the passed data into a transmission
     */
-    void load_transmission_data(uint8_t address, uint8_t function_code, uint8_t *data, int num_data, int num_expected_rx){
+    constexpr void load_transmission_data(uint8_t address, uint8_t function_code, uint8_t *data, int num_data, int num_expected_rx){
 		tx_buffer_size = 4 + num_data;    //1 address byte + 1 function code byte + 2 CRC bytes = 4 bytes
 		tx_buffer_index = 0;
 		tx_buffer[0] = address;
 		tx_buffer[1] = function_code;
-		int i;
+		int i = 0;
 		for(i = 2; i < num_data + 2; i++) tx_buffer[i] = data[i - 2];
 		uint16_t crc = ModbusCRC::generate(tx_buffer, tx_buffer_size - 2);
 		tx_buffer[i++] = uint8_t(crc >> 8);
@@ -109,12 +109,12 @@ public:
      * @brief Loads the passed data into a transmission
      * Overloaded for variable length transmission
     */
-    void load_transmission_data(uint8_t address, uint8_t function_code, uint8_t *framing_data, int num_framing_data, uint8_t *write_data, int num_write_data, int num_expected_rx){
+    constexpr void load_transmission_data(uint8_t address, uint8_t function_code, uint8_t *framing_data, int num_framing_data, uint8_t *write_data, int num_write_data, int num_expected_rx){
         tx_buffer_size = 4 + num_framing_data + num_write_data;    //1 address byte + 1 function code byte + 2 CRC bytes = 4 bytes
         tx_buffer_index = 0;
         tx_buffer[0] = address;
         tx_buffer[1] = function_code;
-        int i;
+        int i = 0;
         for(i = 2; i < num_framing_data + 2; i++) tx_buffer[i] = framing_data[i - 2];
         for(i = num_framing_data + 2; i < num_write_data + num_framing_data + 2; i++) tx_buffer[i] = write_data[i - (num_framing_data + 2)];
         uint16_t crc = ModbusCRC::generate(tx_buffer, tx_buffer_size - 2);
@@ -374,7 +374,7 @@ public:
         return reception_validity;
     }
 
-    void mark_important()
+    constexpr void mark_important()
     {
         important = true;
     }
@@ -435,9 +435,9 @@ private:
         ready_to_process,				// marked as done (either received or error encountered) as received or timed out
         dequeued,				// marked as having been removed from the queue (but not reset)
     };
-    volatile TRANSMIT_STATE my_state = unused;
+    TRANSMIT_STATE my_state = unused;
 
-    volatile uint8_t reception_validity = 0b00000000;  //each bit of reception_validity indicates a different error in the response, bit = 0 means no error, bit = 1 means error detected
+    uint8_t reception_validity = 0b00000000;  //each bit of reception_validity indicates a different error in the response, bit = 0 means no error, bit = 1 means error detected
     //bit 0 - noise error
     //bit 1 - framing error
     //bit 2 - parity error
@@ -447,7 +447,7 @@ private:
     //bit 6 - CRC error
     //bit 7 - invalid data <- need this??
 
-    volatile int reception_length; // expected length, in bytes, of the current request
+    int reception_length = 0; // expected length, in bytes, of the current request
 };
 
 #endif

@@ -367,8 +367,7 @@ private:
 	*
 	*/
 	int enqueue_ping_msg() {
-		uint8_t data[8] = { 1,2,4,8,16,32,64,128 };
-		Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(connection_config.server_address, data, 0); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+		constexpr Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(1/*connection_config.server_address*/); //pass in num_data as 0 so nothing from data array will be loaded into transmission
 		return UART.enqueue_transaction(ping_transaction);
 	}
 

@@ -407,6 +407,19 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueu
 	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
 }
 
+TEST_F(ActuatorTests, WhenStreamPauseIsCalledModbusHandshakeDoesntOccur)
+{
+	motor.enable();
+
+	motor.set_stream_paused(true); // Disable the queuing of new stream messages
+
+	motor.run_out(); // This sends the change mode command
+
+	std::vector<char> out_buffer{};
+
+	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
+}
+
 TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
 {
 	std::vector<char> empty_out_buffer{};

@@ -43,17 +43,9 @@ public:
 	ModbusClient modbus_client;
 
 #if defined(WINDOWS)
-	bool set_new_comport(int _comport) {
-		//return value
+	void set_new_comport(int _comport) {
 		std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
-		bool comport_set = false;
-		int curr_comport = win_modbus_client->get_port_number();
-		//checks to see if the new comport is the same as the old one, and if the motor is connected 
-		//if the comports are different and the motor is not connected then the comport will be updated. 
-		if (!(_comport == curr_comport && is_connected())) {
-			win_modbus_client->set_new_comport(_comport);
-		}
-		return comport_set;
+		win_modbus_client->set_new_comport(_comport);
 	}
 
 	void disable_comport() {

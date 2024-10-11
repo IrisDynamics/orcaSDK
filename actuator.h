@@ -1117,7 +1117,6 @@ public:
 	{
 		if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
 			is_paused = false;
-			new_data(); // clear new data flag
 			num_discovery_pings_received = 0;
 			enqueue_ping_msg();
 
@@ -1142,7 +1141,6 @@ public:
 
 		switch (connection_state) {
 		case ConnectionStatus::disconnected:
-			initiate_handshake();
 			break;
 		case ConnectionStatus::discovery:
 			if (response.is_echo_response() && response.is_reception_valid()) {
@@ -1216,12 +1214,6 @@ public:
 			break;
 		}
 	}
-
-	void consume_new_message()
-	{
-		response = modbus_client.dequeue_transaction();
-		new_data_flag = true;		// communicate to other layers that new data was received
-	}
 private:
 	/**
 	 * @brief Description of the possible connection states between the client and a server
@@ -1229,8 +1221,6 @@ private:
 	 *        ModbusClient only responsible for moving to the 'disconnecting' state upon missed responses or errors
 	*/
 	const char* my_name;
-	// Points to the last dequeued transaction from the modbus client
-	Transaction response;
 
 	// This is used to determine when a connection has terminated and the ConnectionStatus should change to disconnecting
 	int cur_consec_failed_msgs = 0;          //!< current number of consecutive failed messages
@@ -1268,20 +1258,6 @@ private:
 
 private:
 
-	/**
-	 * @brief returns true when a new message was parsed or has failed since the last time this was called and returned true
-	 *
-	 * This function must return true when a new transaction has been claimed
-	 * since this function returned true last
-	 */
-	bool new_data() {
-		bool return_value = new_data_flag;
-		new_data_flag = false;
-		return return_value;
-	}
-
-	volatile bool new_data_flag = false;
-
 	int num_discovery_pings_received = 0;
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -1310,7 +1286,6 @@ private:
 		return 0;
 	}
 
-
 	/**
 	* @brief Format a Transaction to check the communication with a certain server
 	* @return 1 if the request was added to the queue, 0 if the queue was full
@@ -1320,7 +1295,6 @@ private:
 		constexpr Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(1/*connection_config.server_address*/); //pass in num_data as 0 so nothing from data array will be loaded into transmission
 		return modbus_client.enqueue_transaction(ping_transaction);
 	}
-
 
 #pragma endregion
 

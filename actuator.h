@@ -113,7 +113,7 @@ public:
 		Inertia = 1 << 5,
 		Osc0	= 1 << 6,
 		Osc1	= 1	<< 7
-	}HapticEffect;
+	} HapticEffect;
 
 
 
@@ -281,16 +281,7 @@ public:
 	 * This function must be externally paced... i.e. called at the frequency that transmission should be sent
 	 */
 	void run_out() {
-
-		// This object can queue messages on the UART with the either the handshake or the connected run loop
-		if ( is_enabled() && !stream_paused) {
-			if (connection_state != ConnectionStatus::connected) {
-				modbus_handshake();
-			}
-			else {
-				enqueue_motor_frame();
-			}
-		}
+		handle_stream();
 		// This function results in the UART sending any data that has been queued
 		modbus_client.run_out();
 	}
@@ -319,92 +310,94 @@ public:
 					disconnect();
 				}
 			}
-
-			
-
 			// Response was valid
 			else {
 
 				cur_consec_failed_msgs = 0;
 				success_msg_counter++;
 
-				switch (response.get_rx_function_code()) {
-
-				case ModbusFunctionCodes::read_holding_registers:
-				case ModbusFunctionCodes::read_write_multiple_registers: {
-					// add the received data to the local copy of the memory map
-					u16 register_start_address 		= (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
-					u16 num_registers 				= (response.get_tx_data()[2] << 8) + response.get_tx_data()[3];
-					for ( int i = 0; i < num_registers; i++ ) {
-						u16 register_data 			= (response.get_rx_data()[1 + i*2] << 8) + response.get_rx_data()[2 + i*2];
-						orca_reg_contents[register_start_address + i] = register_data;
-					}
-					break;
-				}
-				case ModbusFunctionCodes::write_single_register:
-					// nothing to do
-					break;
-
-				case motor_command:
-					orca_reg_contents[POS_REG_H_OFFSET] 	= (response.get_rx_data()[ 0] << 8) | response.get_rx_data()[ 1];
-					orca_reg_contents[POS_REG_OFFSET]  		= (response.get_rx_data()[ 2] << 8) | response.get_rx_data()[ 3];
-					orca_reg_contents[FORCE_REG_H_OFFSET] 	= (response.get_rx_data()[ 4] << 8) | response.get_rx_data()[ 5];
-					orca_reg_contents[FORCE_REG_OFFSET] 	= (response.get_rx_data()[ 6] << 8) | response.get_rx_data()[ 7];
-					orca_reg_contents[POWER_REG_OFFSET] 	= (response.get_rx_data()[ 8] << 8) | response.get_rx_data()[ 9];
-					orca_reg_contents[TEMP_REG_OFFSET] 		= (response.get_rx_data()[10]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] 	= (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
-					orca_reg_contents[ERROR_REG_OFFSET] 	= (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
-					break;
-				
-				case motor_read: {
-					u16 register_start_address = (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
-					u8 width = response.get_tx_data()[2];
-					u16 register_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
-					orca_reg_contents[register_start_address] = register_data;
-					if (width > 1) {
-						register_data = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
-						orca_reg_contents[register_start_address + 1] = register_data;
-					}
-					orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[4];
-					orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
-					orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-					orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
-					orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
-					orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
-					orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[15]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[16] << 8) | response.get_rx_data()[17];
-					orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[18] << 8) | response.get_rx_data()[19];
-				}
-					break; 
-				case motor_write:
-					orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[0];
-					orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
-					orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
-					orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
-					orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-					orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
-					orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[11]);
-					orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];
-					orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[14] << 8) | response.get_rx_data()[15];
-					break;
-
-				case ModbusFunctionCodes::read_coils                   :
-				case ModbusFunctionCodes::read_discrete_inputs         :
-				case ModbusFunctionCodes::read_input_registers         :
-				case ModbusFunctionCodes::write_single_coil            :
-				case ModbusFunctionCodes::read_exception_status        :
-				case ModbusFunctionCodes::diagnostics                  :
-				case ModbusFunctionCodes::get_comm_event_counter       :
-				case ModbusFunctionCodes::get_comm_event_log           :
-				case ModbusFunctionCodes::write_multiple_coils         :
-				case ModbusFunctionCodes::write_multiple_registers     :
-				case ModbusFunctionCodes::report_server_id             :
-				case ModbusFunctionCodes::mask_write_register          :
-				default:
-					// todo: warn about un-implemented function codes being received
-					break;
-				}
+				handle_transaction_response(response);
 			}
+		}
+	}
+
+	void handle_transaction_response(Transaction response)
+	{
+		switch (response.get_rx_function_code()) {
+
+		case ModbusFunctionCodes::read_holding_registers:
+		case ModbusFunctionCodes::read_write_multiple_registers: {
+			// add the received data to the local copy of the memory map
+			u16 register_start_address = (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
+			u16 num_registers = (response.get_tx_data()[2] << 8) + response.get_tx_data()[3];
+			for (int i = 0; i < num_registers; i++) {
+				u16 register_data = (response.get_rx_data()[1 + i * 2] << 8) + response.get_rx_data()[2 + i * 2];
+				orca_reg_contents[register_start_address + i] = register_data;
+			}
+			break;
+		}
+		case ModbusFunctionCodes::write_single_register:
+			// nothing to do
+			break;
+
+		case motor_command:
+			orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[0] << 8) | response.get_rx_data()[1];
+			orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[2] << 8) | response.get_rx_data()[3];
+			orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[4] << 8) | response.get_rx_data()[5];
+			orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[6] << 8) | response.get_rx_data()[7];
+			orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[8] << 8) | response.get_rx_data()[9];
+			orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[10]);
+			orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
+			orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
+			break;
+
+		case motor_read: {
+			u16 register_start_address = (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
+			u8 width = response.get_tx_data()[2];
+			u16 register_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
+			orca_reg_contents[register_start_address] = register_data;
+			if (width > 1) {
+				register_data = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
+				orca_reg_contents[register_start_address + 1] = register_data;
+			}
+			orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[4];
+			orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
+			orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
+			orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
+			orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
+			orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
+			orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[15]);
+			orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[16] << 8) | response.get_rx_data()[17];
+			orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[18] << 8) | response.get_rx_data()[19];
+		}
+					   break;
+		case motor_write:
+			orca_reg_contents[MODE_OF_OPERATION] = response.get_rx_data()[0];
+			orca_reg_contents[POS_REG_H_OFFSET] = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
+			orca_reg_contents[POS_REG_OFFSET] = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
+			orca_reg_contents[FORCE_REG_H_OFFSET] = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
+			orca_reg_contents[FORCE_REG_OFFSET] = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
+			orca_reg_contents[POWER_REG_OFFSET] = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
+			orca_reg_contents[TEMP_REG_OFFSET] = (response.get_rx_data()[11]);
+			orca_reg_contents[VOLTAGE_REG_OFFSET] = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];
+			orca_reg_contents[ERROR_REG_OFFSET] = (response.get_rx_data()[14] << 8) | response.get_rx_data()[15];
+			break;
+
+		case ModbusFunctionCodes::read_coils:
+		case ModbusFunctionCodes::read_discrete_inputs:
+		case ModbusFunctionCodes::read_input_registers:
+		case ModbusFunctionCodes::write_single_coil:
+		case ModbusFunctionCodes::read_exception_status:
+		case ModbusFunctionCodes::diagnostics:
+		case ModbusFunctionCodes::get_comm_event_counter:
+		case ModbusFunctionCodes::get_comm_event_log:
+		case ModbusFunctionCodes::write_multiple_coils:
+		case ModbusFunctionCodes::write_multiple_registers:
+		case ModbusFunctionCodes::report_server_id:
+		case ModbusFunctionCodes::mask_write_register:
+		default:
+			// todo: warn about un-implemented function codes being received
+			break;
 		}
 	}
 
@@ -1042,6 +1035,19 @@ public:
 		return 1;   //todo : standardize error value
 	}
 
+	void handle_stream()
+	{
+		// This object can queue messages on the UART with the either the handshake or the connected run loop
+		if (is_enabled() && !stream_paused) {
+			if (connection_state != ConnectionStatus::connected) {
+				modbus_handshake();
+			}
+			else {
+				enqueue_motor_frame();
+			}
+		}
+	}
+
 	/**
 	 * @brief Determine if communication with a server is enabled or not
 	 *
@@ -1065,15 +1071,10 @@ public:
 		enabled = false;
 		if (is_connected()) {
 			enqueue_change_connection_status_fn(connection_config.server_address, false, 0, 0);
-
 		}
 		disconnect();
 	}
 
-private:
-
-
-	public:
 		ConnectionConfig connection_config;
 
 
@@ -1110,6 +1111,18 @@ private:
 
 		volatile ConnectionStatus connection_state = ConnectionStatus::disconnected;
 
+		void initiate_handshake()
+		{
+			if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
+				is_paused = false;
+				new_data(); // clear new data flag
+				num_discovery_pings_received = 0;
+				enqueue_ping_msg();
+
+				connection_state = ConnectionStatus::discovery;
+			}
+		}
+
 		/**
 		 * @brief Perform the next step in the handshake routine with a server device.
 		 *
@@ -1127,19 +1140,8 @@ private:
 
 			switch (connection_state) {
 			case ConnectionStatus::disconnected:
-				if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
-					is_paused = false;
-					new_data(); // clear new data flag
-					num_discovery_pings_received = 0;
-					enqueue_ping_msg();
-
-					connection_state = ConnectionStatus::discovery;
-				}
-				else {
-					// run_in() should be pulling any residual messages off the queue as they are received or timeout.
-				}
+				initiate_handshake();
 				break;
-
 			case ConnectionStatus::discovery:
 
 				// Note that the run_in() function should claim any responses that are ready,
@@ -1228,7 +1230,7 @@ private:
 			response = modbus_client.dequeue_transaction();
 			new_data_flag = true;		// communicate to other layers that new data was received
 		}
-protected:
+private:
 	/**
 	 * @brief Description of the possible connection states between the client and a server
 	 *        Main state machine can be found in IrisClientApplication.
@@ -1244,21 +1246,6 @@ protected:
 	enum connection_function_codes_e {
 		change_connection_status = 65
 	};
-
-	///**
-	// * @brief Determine the length of the request for an application specific function code
-	// *
-	// * @param fn_code application specific function code
-	// * @return int - length of request
-	// */
-	//int get_app_reception_length(uint8_t fn_code) {
-	//	switch (fn_code) {
-	//	case Actuator::change_connection_status:
-	//		return 12;
-	//	default:
-	//		return -1;
-	//	}
-	//}
 
 	bool enabled = false;
 

@@ -301,7 +301,9 @@ public:
 		modbus_client.run_in();
 
 		if ( modbus_client.is_response_ready() ) {
-			consume_new_message();
+			Transaction response = modbus_client.dequeue_transaction();
+
+			if (enabled && !stream_paused && !is_connected()) modbus_handshake(response);
 
 			if ( !response.is_reception_valid() ) {
 				cur_consec_failed_msgs++;
@@ -1039,11 +1041,11 @@ public:
 	{
 		// This object can queue messages on the UART with the either the handshake or the connected run loop
 		if (is_enabled() && !stream_paused) {
-			if (connection_state != ConnectionStatus::connected) {
-				modbus_handshake();
-			}
-			else {
+			if (connection_state == ConnectionStatus::connected) {
 				enqueue_motor_frame();
+			}
+			else if (connection_state == ConnectionStatus::disconnected) {
+				initiate_handshake();
 			}
 		}
 	}
@@ -1136,7 +1138,7 @@ public:
 		 *  and the state is now Connected.
 		 * If the negotiation fails, the state returns to discovery.
 		*/
-		void modbus_handshake() {
+		void modbus_handshake(Transaction response) {
 
 			switch (connection_state) {
 			case ConnectionStatus::disconnected:
@@ -1147,7 +1149,6 @@ public:
 				// Note that the run_in() function should claim any responses that are ready,
 				// set a new_data flag and save the transaction to the response member
 
-				if (new_data()) {
 
 					if (response.is_echo_response() && response.is_reception_valid()) {
 
@@ -1167,13 +1168,12 @@ public:
 						disconnect();
 						start_pause_timer();
 					}
-				}
 				break;
 
 
 			case ConnectionStatus::synchronization:
 
-				if (new_data() && !response.is_reception_valid()) {
+				if (!response.is_reception_valid()) {
 					// this allows queued data to timeout or be received before reattempting a connection
 					disconnect();
 				}
@@ -1192,8 +1192,6 @@ public:
 
 
 			case ConnectionStatus::negotiation:
-
-				if (new_data()) {
 
 					// Server responded to our change connection request with its realized baud and delay
 					if (response.get_rx_function_code() == change_connection_status && response.is_reception_valid()) {
@@ -1218,7 +1216,6 @@ public:
 					else {
 						disconnect();
 					}
-				}
 			case ConnectionStatus::connected:
 				// connection successful
 				break;

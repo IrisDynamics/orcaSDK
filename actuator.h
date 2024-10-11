@@ -1111,7 +1111,7 @@ public:
 		connected,	// streaming commands to the server
 	};
 
-	volatile ConnectionStatus connection_state = ConnectionStatus::disconnected;
+	ConnectionStatus connection_state = ConnectionStatus::disconnected;
 
 	void initiate_handshake()
 	{
@@ -1265,13 +1265,13 @@ private:
 	///////////////////////////////////////////////////////////////////////////
 
 	bool is_paused = false;
-	volatile uint32_t  pause_timer_start;
+	uint32_t  pause_timer_start;
 	const uint32_t pause_time_cycles;
 
 	/**
 	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer
 	*/
-	virtual void start_pause_timer() {
+	void start_pause_timer() {
 		pause_timer_start = modbus_client.get_system_cycles();
 		is_paused = 1;
 	}
@@ -1279,7 +1279,7 @@ private:
 	* @brief Check the progress of the 200 millisecond interval (pause timer)
 	* @return The remaining time in the interval, 0 if the interval is not set or has finished
 	*/
-	virtual bool has_pause_timer_expired() {
+	bool has_pause_timer_expired() {
 		if (!is_paused || (u32)(modbus_client.get_system_cycles() - pause_timer_start) >= pause_time_cycles) {//(pause_time_us*CYCLES_PER_MICROSECOND)){
 			return 1;
 		}

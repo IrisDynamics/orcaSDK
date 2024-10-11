@@ -23,8 +23,7 @@
 #ifndef ACTUATOR_H_
 #define ACTUATOR_H_
 
-
-#include "src/iris_client_application.h"
+#include "src/modbus_client_application.h"
 
 #include "src/actuator_config.h"
 #include "tools/Log.h"
@@ -35,7 +34,7 @@
    @class Actuator
    @brief Object that abstracts the communications between the client and a Orca motor server.
  */
-class Actuator : public IrisClientApplication {
+class Actuator {
 
 	std::shared_ptr<SerialInterface> serial_interface;
 	std::shared_ptr<LogInterface> log;
@@ -85,10 +84,10 @@ public:
 		int uart_channel,
 		const char* name
 	) :
-		IrisClientApplication(modbus_client, name),
 		serial_interface(serial_interface),
 		log(log),
-		modbus_client(*serial_interface, uart_channel)
+		modbus_client(*serial_interface, uart_channel),
+		pause_time_cycles(DEFAULT_CONNECTION_PAUSE_uS)
 	{}
 
 	/**
@@ -862,7 +861,7 @@ private:
 	/**
 	 * @brief Requests the actuator synchronize its memory map with the controller
 	 */
-	void synchronize_memory_map() override {
+	void synchronize_memory_map() {
 		read_registers(PARAM_REG_START     	, PARAM_REG_SIZE     			) ;
 		read_registers(ERROR_0				, ADC_DATA_COLLISION-ERROR_0	) ;
 		//read_registers(STATOR_CAL_REG_START	, STATOR_CAL_REG_SIZE			) ;
@@ -874,7 +873,7 @@ private:
 	/**
 	 * @brief Resets the memory map array to zeros
 	 */
-	void desynchronize_memory_map() override {
+	void desynchronize_memory_map() {
 		for(int i=0; i < ORCA_REG_SIZE; i++){
 			orca_reg_contents[i] = 0;
 		}
@@ -953,6 +952,8 @@ private:
 			return 24;
 		case motor_write:
 			return 20;
+		case Actuator::change_connection_status:
+			return 12;
 		default:
 			return -1;
 		}
@@ -1017,6 +1018,340 @@ private:
 		int check = modbus_client.enqueue_transaction(my_temp_transaction);
 		return check;
 	}
+
+#pragma region IRIS_CLIENT_APPLICATION
+public:
+	/**
+	 * @brief Configurable parameters for the handshake sequence and connection maintenance. Should be set when disabled
+	*/
+	struct ConnectionConfig {
+		uint8_t server_address = 1;
+		int req_num_discovery_pings = 3; //3      //number of sucessful comms check messages required to move to next step in handshake sequence
+		int max_consec_failed_msgs = 10;      //number of failed/missed messages to trigger disconnect
+		uint32_t target_baud_rate_bps = 625000;
+		uint16_t target_delay_us = 80;
+		uint32_t response_timeout_us = 8000;  /// this timeout will be used to override the default response timeout after a handshake succeeds and a new baud rate is negotiated.
+	};
+
+	/**
+	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
+	 *
+	 * @param config ConnectionConfig object
+	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
+	*/
+	int set_connection_config(Actuator::ConnectionConfig config) {
+
+		if (config.server_address < 1 || config.server_address > 247) {
+			return 0;   //todo : standardize error value
+		}
+
+		connection_config = config;
+
+		return 1;   //todo : standardize error value
+	}
+
+	/**
+	 * @brief Determine if communication with a server is enabled or not
+	 *
+	 * @return boolean - the enabled status (true if enabled, false otherwise)
+	*/
+	bool is_enabled() {
+		return enabled;
+	}
+
+	/**
+	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
+	*/
+	void enable() {
+		enabled = true;
+	}
+
+	/**
+	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
+	*/
+	void disable() {
+		enabled = false;
+		if (is_connected()) {
+			enqueue_change_connection_status_fn(connection_config.server_address, false, 0, 0);
+
+		}
+		disconnect();
+	}
+
+private:
+
+
+	public:
+		ConnectionConfig connection_config;
+
+
+
+		/**
+		 * @brief Determine whether a server has successfully connected with this client
+		 * @return true if the server is in the connected state, false otherwise
+		*/
+		bool is_connected() {
+			return connection_state == ConnectionStatus::connected;
+		}
+
+		/**
+		 * @brief Reset variables and move into the disconnected state
+		*/
+		void disconnect() {
+			//reset states
+			connection_state = ConnectionStatus::disconnected;
+			cur_consec_failed_msgs = 0;
+			modbus_client.adjust_baud_rate(UART_BAUD_RATE);
+			modbus_client.adjust_response_timeout(DEFAULT_RESPONSE_uS);
+			//is_paused = true;// pause to allow server to reset to disconnected state
+
+			//start_pause_timer();
+			desynchronize_memory_map();
+		}
+		enum class ConnectionStatus {
+			disconnected,	// reset state
+			discovery, 	// sending discovery pings, negotiating baud rate and delay
+			synchronization,
+			negotiation,
+			connected,	// streaming commands to the server
+		};
+
+		volatile ConnectionStatus connection_state = ConnectionStatus::disconnected;
+
+		/**
+		 * @brief Perform the next step in the handshake routine with a server device.
+		 *
+		 * This function wants to progress from disconnected to connected through its various steps.
+		 * The state will remain in disconnected until the UARTs message queue is totally empty...ie all messages a received or timeout.
+		 * The state then becomes discovery where pings are sent until a number which is set in the config structure are successfully consecutively received
+		 * Following enough successful pings, we attempt to synchronize the server's memory map (if applicable) by queuing read register request(s).
+		 * If all requested read register messages are well received, a change connection status message is sent which requests the baud and interframe delay detailed by the config structure.
+		 * The state is now negotiation until the server responds. If the response is successful,
+		 *  the uart baud and interframe delays are adjusted based on what the server resports it realized
+		 *  and the state is now Connected.
+		 * If the negotiation fails, the state returns to discovery.
+		*/
+		void modbus_handshake() {
+
+			switch (connection_state) {
+			case ConnectionStatus::disconnected:
+				if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
+					is_paused = false;
+					new_data(); // clear new data flag
+					num_discovery_pings_received = 0;
+					enqueue_ping_msg();
+
+					connection_state = ConnectionStatus::discovery;
+				}
+				else {
+					// run_in() should be pulling any residual messages off the queue as they are received or timeout.
+				}
+				break;
+
+			case ConnectionStatus::discovery:
+
+				// Note that the run_in() function should claim any responses that are ready,
+				// set a new_data flag and save the transaction to the response member
+
+				if (new_data()) {
+
+					if (response.is_echo_response() && response.is_reception_valid()) {
+
+						num_discovery_pings_received++;
+
+						if (num_discovery_pings_received >= connection_config.req_num_discovery_pings) {
+							synchronize_memory_map();			// loads many read messages onto the queue
+							connection_state = ConnectionStatus::synchronization;
+
+						}
+						else {
+							enqueue_ping_msg();
+						}
+					}
+					// new response was failed, or the wrong kind of response
+					else {
+						disconnect();
+						start_pause_timer();
+					}
+				}
+				break;
+
+
+			case ConnectionStatus::synchronization:
+
+				if (new_data() && !response.is_reception_valid()) {
+					// this allows queued data to timeout or be received before reattempting a connection
+					disconnect();
+				}
+				else {
+
+					if (modbus_client.get_queue_size() == 0) {
+						enqueue_change_connection_status_fn(
+							connection_config.server_address,
+							true,
+							connection_config.target_baud_rate_bps,
+							connection_config.target_delay_us);
+						connection_state = ConnectionStatus::negotiation;
+					}
+				}
+				break;
+
+
+			case ConnectionStatus::negotiation:
+
+				if (new_data()) {
+
+					// Server responded to our change connection request with its realized baud and delay
+					if (response.get_rx_function_code() == change_connection_status && response.is_reception_valid()) {
+						uint8_t* rx_data = response.get_rx_data();
+						modbus_client.adjust_baud_rate(
+							(uint32_t(rx_data[2]) << 24)
+							| (uint32_t(rx_data[3]) << 16)
+							| (uint32_t(rx_data[4]) << 8)
+							| (uint32_t(rx_data[5]) << 0)); //set baud
+
+						modbus_client.adjust_interframe_delay_us(
+
+							(uint16_t(rx_data[6]) << 8) | rx_data[7]); //set delay
+
+						// Reduce timeouts
+						modbus_client.adjust_response_timeout(connection_config.response_timeout_us);
+
+						connection_state = ConnectionStatus::connected;
+
+					}
+					// Server failed to respond to our change connection request
+					else {
+						disconnect();
+					}
+				}
+			case ConnectionStatus::connected:
+				// connection successful
+				break;
+			}
+		}
+
+		void consume_new_message()
+		{
+			response = modbus_client.dequeue_transaction();
+			new_data_flag = true;		// communicate to other layers that new data was received
+		}
+protected:
+	/**
+	 * @brief Description of the possible connection states between the client and a server
+	 *        Main state machine can be found in IrisClientApplication.
+	 *        ModbusClient only responsible for moving to the 'disconnecting' state upon missed responses or errors
+	*/
+	const char* my_name;
+	// Points to the last dequeued transaction from the modbus client
+	Transaction response;
+
+	// This is used to determine when a connection has terminated and the ConnectionStatus should change to disconnecting
+	int cur_consec_failed_msgs = 0;          //!< current number of consecutive failed messages
+
+	enum connection_function_codes_e {
+		change_connection_status = 65
+	};
+
+	///**
+	// * @brief Determine the length of the request for an application specific function code
+	// *
+	// * @param fn_code application specific function code
+	// * @return int - length of request
+	// */
+	//int get_app_reception_length(uint8_t fn_code) {
+	//	switch (fn_code) {
+	//	case Actuator::change_connection_status:
+	//		return 12;
+	//	default:
+	//		return -1;
+	//	}
+	//}
+
+	bool enabled = false;
+
+	/**
+	 * @brief Format a change_connection_status request, user-defined function code 65, and add the request to the buffer queue
+	 * @param device_address
+	 * @param connect true to connect the server, false to disconnect
+	 * @param baud_rate_bps
+	 * @param delay_us
+	*/
+	int enqueue_change_connection_status_fn(uint8_t device_address, bool connect, uint32_t baud_rate_bps, uint16_t delay_us) {
+		Transaction transaction;
+		uint16_t requested_state = connect ? 0xFF00 : 0;
+
+		uint8_t data[8] = { uint8_t(requested_state >> 8),
+							uint8_t(requested_state),
+							uint8_t(baud_rate_bps >> 24),
+							uint8_t(baud_rate_bps >> 16),
+							uint8_t(baud_rate_bps >> 8),
+							uint8_t(baud_rate_bps),
+							uint8_t(delay_us >> 8),
+							uint8_t(delay_us) };
+
+		transaction.load_transmission_data(device_address, change_connection_status, data, 8, get_app_reception_length(change_connection_status));
+		int check = modbus_client.enqueue_transaction(transaction);
+		return check;
+	}
+
+private:
+
+	/**
+	 * @brief returns true when a new message was parsed or has failed since the last time this was called and returned true
+	 *
+	 * This function must return true when a new transaction has been claimed
+	 * since this function returned true last
+	 */
+	bool new_data() {
+		bool return_value = new_data_flag;
+		new_data_flag = false;
+		return return_value;
+	}
+
+	volatile bool new_data_flag = false;
+
+	int num_discovery_pings_received = 0;
+
+	/////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////  Pause Timer  ///
+	///////////////////////////////////////////////////////////////////////////
+
+	bool is_paused = false;
+	volatile uint32_t  pause_timer_start;
+	const uint32_t pause_time_cycles;
+
+	/**
+	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer
+	*/
+	virtual void start_pause_timer() {
+		pause_timer_start = modbus_client.get_system_cycles();
+		is_paused = 1;
+	}
+	/**
+	* @brief Check the progress of the 200 millisecond interval (pause timer)
+	* @return The remaining time in the interval, 0 if the interval is not set or has finished
+	*/
+	virtual bool has_pause_timer_expired() {
+		if (!is_paused || (u32)(modbus_client.get_system_cycles() - pause_timer_start) >= pause_time_cycles) {//(pause_time_us*CYCLES_PER_MICROSECOND)){
+			return 1;
+		}
+		return 0;
+	}
+
+
+	/**
+	* @brief Format a Transaction to check the communication with a certain server
+	* @return 1 if the request was added to the queue, 0 if the queue was full
+	*
+	*/
+	int enqueue_ping_msg() {
+		constexpr Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(1/*connection_config.server_address*/); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+		return modbus_client.enqueue_transaction(ping_transaction);
+	}
+
+
+#pragma endregion
 
 
 	////////////////////////////////////////////////////////////////////

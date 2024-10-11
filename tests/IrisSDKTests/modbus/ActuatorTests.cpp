@@ -145,23 +145,29 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->pass_time(2001);
 	motor.run_out();
 
+	std::vector<char> output = {
+		'\x01', //Orca address
+		65, //Manage High-speed Stream message ID
+		'\xff', '\0', // Enable and apply parameters
+		'\0', '\x9', '\x89', '\x68', // Target baud rate (650000bps)
+		'\0', '\x50', // Target Response delay (80ms)
+		'\x25', '\x28' // CRC
+	};
+	ASSERT_EQ(output, serial_interface->sendBuffer);
+
 	//-----Negotiation-----
 	// The motor sends exactly one stream negotiation message and 
 	// expects a valid response. After receiving it, it updates
 	// relevant local parameters and goes to connected state.
 	std::deque<char> stream_negotiation_response{
-			'\x01', //Orca address
-			65, //Manage High-speed Stream message ID
-			'\xff', '\0', // Echo of enable and apply parameters
-			'\0', '\0', '\0', '\xff', // Target baud rate (255bps)
-			'\0', '\xa0', // Target Response delay (128ms)
-			'\x62', '\xdd' // CRC calculated for custom response
+			output.begin(), output.end()
 	};
 	serial_interface->consume_new_message(stream_negotiation_response);
 	motor.run_in();
 	motor.run_out();
 
 	EXPECT_TRUE(motor.is_connected());
+	EXPECT_EQ(625000, serial_interface->adjusted_baud_rate);
 }
 
 TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLocalCacheOnReceive)
@@ -273,7 +279,7 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::ForceMode);
 
 	EXPECT_EQ(Actuator::ForceMode, motor.get_mode());
@@ -287,7 +293,7 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamComman
 TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	EXPECT_EQ(Actuator::PositionMode, motor.get_mode());
@@ -301,7 +307,7 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCom
 TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	motor.set_position_um(1); // This sets the stream timeout timer
@@ -382,7 +388,7 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	motor.set_position_um(1); // This sets the stream timeout timer

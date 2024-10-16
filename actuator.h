@@ -845,8 +845,9 @@ private:
 			orca_reg_contents[i] = 0;
 		}
 	}
-#define KIN_CMD 32 // Number that indicates a kinematic type motor frame. Not an actual register like POS_CMD and FORCE_CMD
-#define HAP_CMD 34
+
+	static constexpr int kinematic_command = 32;
+	static constexpr int haptic_command = 34;
 	void motor_stream_command() {
 		switch (comms_mode) {
 			;
@@ -868,10 +869,10 @@ private:
 			}
 			break;
 		case KinematicMode:
-			motor_command_fn(connection_config.server_address, KIN_CMD, 0);
+			motor_command_fn(connection_config.server_address, kinematic_command, 0);
 			break;
 		case HapticMode:
-			motor_command_fn(connection_config.server_address, HAP_CMD, 0);
+			motor_command_fn(connection_config.server_address, haptic_command, 0);
 			break;
 		default:
 			motor_command_fn(connection_config.server_address, 0, 0); //any register address other than force or position register_adresses will induce sleep mode and provided register_value will be ignored

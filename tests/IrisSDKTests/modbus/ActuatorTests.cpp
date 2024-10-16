@@ -13,8 +13,13 @@ protected:
 	ActuatorTests() :
 		serial_interface(std::make_shared<TestSerialInterface>()),
 		log(std::make_shared<TestLog>()),
-		motor(serial_interface, log, -1, "Hello")
+		motor(serial_interface, -1, "Hello")
 	{}
+
+	void SetUp()
+	{
+		motor.begin_serial_logging(log);
+	}
 
 	std::shared_ptr<TestSerialInterface> serial_interface;
 	std::shared_ptr<TestLog> log;

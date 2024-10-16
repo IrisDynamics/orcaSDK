@@ -10,7 +10,6 @@ protected:
 		serial_interface(std::make_shared<TestSerialInterface>()),
 		modbus_app(
 			serial_interface,
-			log, 
 			0,
 			"Hello")
 	{}
@@ -21,7 +20,6 @@ protected:
 	}
 
 	std::shared_ptr<TestSerialInterface> serial_interface;
-	std::shared_ptr<Log> log;
 	Actuator modbus_app;
 
 	void ReceiveMessageAndSendResponse(std::deque<char> message_to_receive)

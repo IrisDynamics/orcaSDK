@@ -20,7 +20,6 @@ Actuator::Actuator(
 	Actuator(
 #if defined(WINDOWS)
 		std::make_shared<windows_SerialInterface>(uart_channel),
-		std::make_shared<Log>(),
 #endif
 		uart_channel,
 		name
@@ -29,12 +28,10 @@ Actuator::Actuator(
 
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
-	std::shared_ptr<LogInterface> log,
 	int uart_channel,
 	const char* name
 ) :
 	serial_interface(serial_interface),
-	log(log),
 	modbus_client(*serial_interface, uart_channel)
 {}
 
@@ -451,10 +448,15 @@ uint16_t Actuator::get_orca_reg_content(uint16_t offset) {
 void Actuator::begin_serial_logging()
 {
 #ifdef WINDOWS
-	std::shared_ptr<Log> app_log = std::dynamic_pointer_cast<Log>(log);
+	std::shared_ptr<Log> app_log = std::make_shared<Log>();
 	app_log->set_verbose_mode(false);
 	app_log->open(my_name);
 #endif
+	begin_serial_logging(app_log);
+}
+
+void Actuator::begin_serial_logging(std::shared_ptr<LogInterface> log)
+{
 	modbus_client.begin_logging(log);
 }
 

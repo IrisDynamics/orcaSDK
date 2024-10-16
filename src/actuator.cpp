@@ -14,22 +14,19 @@ void Actuator::disable_comport() {
 
 //Constructor
 Actuator::Actuator(
-	int uart_channel,
-	const char* name
+	int uart_channel
 ) :
 	Actuator(
 #if defined(WINDOWS)
 		std::make_shared<windows_SerialInterface>(uart_channel),
 #endif
-		uart_channel,
-		name
+		uart_channel
 	)
 {}
 
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
-	int uart_channel,
-	const char* name
+	int uart_channel
 ) :
 	serial_interface(serial_interface),
 	modbus_client(*serial_interface, uart_channel)
@@ -225,10 +222,6 @@ void Actuator::handle_transaction_response(Transaction response)
 		// todo: warn about un-implemented function codes being received
 		break;
 	}
-}
-
-const char* Actuator::get_name() {
-	return my_name;
 }
 
 int Actuator::channel_number() {
@@ -450,18 +443,18 @@ uint16_t Actuator::get_orca_reg_content(uint16_t offset) {
 	return orca_reg_contents[offset];
 }
 
-void Actuator::begin_serial_logging()
+void Actuator::begin_serial_logging(const std::string& log_name)
 {
 #ifdef WINDOWS
 	std::shared_ptr<Log> app_log = std::make_shared<Log>();
 	app_log->set_verbose_mode(false);
-	app_log->open(my_name);
 #endif
-	begin_serial_logging(app_log);
+	begin_serial_logging(log_name, app_log);
 }
 
-void Actuator::begin_serial_logging(std::shared_ptr<LogInterface> log)
+void Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log)
 {
+	log->open(log_name);
 	modbus_client.begin_logging(log);
 }
 

@@ -28,6 +28,7 @@
 #include "src/actuator_config.h"
 #include "tools/Log.h"
 #include <memory>
+#include <string>
 
 
 /**
@@ -49,14 +50,12 @@ public:
 
 public:
 	Actuator(
-		int uart_channel,
-		const char* name
+		int uart_channel
 	);
 
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
-		int uart_channel,
-		const char* name
+		int uart_channel
 	);
 
 	/**
@@ -124,13 +123,6 @@ public:
 	 * Parses successful messages
 	 */
 	void run_in();
-
-	/**
-	* @brief return the name of the actuator object 
-	* 
-	* @return char* - Name of the actuator object
-	*/
-	const char* get_name();
 
 	/**
 	* @brief Returns the UART channel number in use
@@ -381,8 +373,8 @@ public:
 	*/
 	uint16_t get_orca_reg_content(uint16_t offset);
 
-	void begin_serial_logging();
-	void begin_serial_logging(std::shared_ptr<LogInterface> log);
+	void begin_serial_logging(const std::string& log_name);
+	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 
 private:
 	uint16_t orca_reg_contents[ORCA_REG_SIZE];
@@ -602,7 +594,6 @@ private:
 	 *        Main state machine can be found in IrisClientApplication.
 	 *        ModbusClient only responsible for moving to the 'disconnecting' state upon missed responses or errors
 	*/
-	const char* my_name;
 
 	// This is used to determine when a connection has terminated and the ConnectionStatus should change to disconnecting
 	int cur_consec_failed_msgs = 0;          //!< current number of consecutive failed messages
@@ -665,7 +656,7 @@ public:
 		const char* name,
 		int cycles_per_us
 	) :
-		Actuator(uart_channel, name)
+		Actuator(uart_channel)
 	{}
 };
 

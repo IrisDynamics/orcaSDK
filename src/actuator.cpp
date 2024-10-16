@@ -63,6 +63,11 @@ void Actuator::update_read_stream(uint8_t width, uint16_t register_address) {
 	motor_read_width = width;
 }
 
+void Actuator::set_force_mN(int32_t force) {
+	force_command = force;
+	stream_timeout_start = modbus_client.get_system_cycles();
+}
+
 void Actuator::set_position_um(int32_t position) {
 	position_command = position;
 	stream_timeout_start = modbus_client.get_system_cycles();

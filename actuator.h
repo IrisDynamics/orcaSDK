@@ -81,71 +81,6 @@ public:
 
 	} MotorMode;
 
-	enum {
-		ConstF	= 1 << 0,
-		Spring0 = 1 << 1,
-		Spring1 = 1 << 2,
-		Spring2 = 1 << 3,
-		Damper	= 1 << 4, 
-		Inertia = 1 << 5,
-		Osc0	= 1 << 6,
-		Osc1	= 1	<< 7
-	} HapticEffect;
-
-
-
-
-	/**
-	* @brief Write to the orca control register to change the mode of operation of the motor
-	* note some modes require a constant stream to stay in that mode (eg. force, position)
-	*/
-	void set_mode(MotorMode orca_mode);
-
-	/**
-	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
-	* *
-	* @return CommunicationMode
-	*/
-	MotorMode get_mode();
-
-	/**
-	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
-	*/
-	void set_stream_mode(StreamMode mode);
-
-	/**	
-	* @brief Get the current stream type to be sent on run out once handshake is complete
-	*/
-	StreamMode get_stream_mode();
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor write stream mode
-	*/
-	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
-	*/
-	void update_read_stream(uint8_t width, uint16_t register_address);
-
-
-	/**
-	* @brief Set/adjust the force that the motor is exerting when in motor_command stream mode
-	* 
-	* @param force force, in milli-Newtons
-	*/
-	void set_force_mN(int32_t force) {
-		force_command = force;
-		stream_timeout_start = modbus_client.get_system_cycles();
-	}
-
-	/**
-	* @brief Set/adjust the position that the motor is aiming for when in motor command stream mode
-	* 
-	* @param position position, in micrometers
-	*/
-	void set_position_um(int32_t position);
-
 	/**
 	* @brief Returns the total amount of force being sensed by the motor
 	*
@@ -159,19 +94,6 @@ public:
 	* @return uint32_t - position in micrometers
 	*/
 	int32_t get_position_um();
-
-
-	/**
-	* @brief Enable or disabled desired haptic effects.
-	*/
-	void enable_haptic_effects(uint16_t effects);
-
-	/**
-	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode. 
-	* 
-	* @param timout_us time in microseconds
-	*/
-	void set_stream_timeout(uint64_t timeout_us);
 
 	/**
 	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
@@ -203,8 +125,6 @@ public:
 	 */
 	void run_in();
 
-	void handle_transaction_response(Transaction response);
-
 	/**
 	* @brief return the name of the actuator object 
 	* 
@@ -223,6 +143,19 @@ public:
 	*@brief get the motor's mode of operations as currently updated by the local memory map
 	*/
 	uint16_t get_mode_of_operation();
+
+	/**
+	* @brief Returns the sum of all error messages being sent by the motor
+	* 
+	* @return uint16_t - sum or all active error codes
+	*/
+	uint16_t get_errors();
+
+	/**
+	 * @brief clear all errors stored on the motor
+	 * note: errors that are still found will appear again
+	 */
+	void clear_errors();
 
 	/**
 	* @brief Returns the amount of power being drawn by the motor, in Watts
@@ -244,13 +177,6 @@ public:
 	* @return uint16_t - voltage in milli-Voltage 
 	*/
 	uint16_t get_voltage_mV();
-
-	/**
-	* @brief Returns the sum of all error messages being sent by the motor
-	* 
-	* @return uint16_t - sum or all active error codes
-	*/
-	uint16_t get_errors();
 
 	/**
 	* @brief Returns the actuator serial number
@@ -297,12 +223,6 @@ public:
 	 * @brief Set the zero position of the motor to be the current position 
 	 */
 	void zero_position();
-
-	/**
-	 * @brief clear all errors stored on the motor
-	 * note: errors that are still found will appear again
-	 */
-	void clear_errors();
 
 	/**
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
@@ -355,6 +275,8 @@ public:
 	 */
 	void tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
 
+#pragma region KINEMATICS
+
 	/**
 	* @brief Set the parameters to define a kinematic motion 
 	* @param ID	Motion identifier
@@ -366,6 +288,32 @@ public:
 	*/
 	void set_kinematic_motion(int ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
 
+	/**
+	* @brief Use the software trigger to start a kinematic motion, this will also run any chained motions
+	* @ID Identification of the motion to be triggered
+	*/
+	void trigger_kinematic_motion(int ID);
+
+#pragma endregion
+
+#pragma region HAPTICS
+
+	enum {
+		ConstF = 1 << 0,
+		Spring0 = 1 << 1,
+		Spring1 = 1 << 2,
+		Spring2 = 1 << 3,
+		Damper = 1 << 4,
+		Inertia = 1 << 5,
+		Osc0 = 1 << 6,
+		Osc1 = 1 << 7
+	} HapticEffect;
+
+	/**
+	* @brief Enable or disabled desired haptic effects.
+	*/
+	void enable_haptic_effects(uint16_t effects);
+
 	/** @brief update the spring effect in a single function
 	*/
 	void set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone = 0, u16 saturation = 0, u8 coupling = 0);
@@ -374,12 +322,7 @@ public:
 	*/
 	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
 
-
-	/**
-	* @brief Use the software trigger to start a kinematic motion, this will also run any chained motions 
-	* @ID Identification of the motion to be triggered
-	*/
-	void trigger_kinematic_motion(int ID);
+#pragma endregion
 
 	/**
 	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
@@ -439,11 +382,145 @@ public:
 	uint16_t get_orca_reg_content(uint16_t offset);
 
 	void begin_serial_logging();
-
-	void set_stream_paused(bool paused);
+	void begin_serial_logging(std::shared_ptr<LogInterface> log);
 
 private:
 	uint16_t orca_reg_contents[ORCA_REG_SIZE];
+
+	void handle_transaction_response(Transaction response);
+
+#pragma region IRIS_CLIENT_APPLICATION
+public:
+	/**
+	 * @brief Configurable parameters for the handshake sequence and connection maintenance. Should be set when disabled
+	*/
+	struct ConnectionConfig {
+		uint8_t server_address = 1;
+		int req_num_discovery_pings = 3; //3      //number of sucessful comms check messages required to move to next step in handshake sequence
+		int max_consec_failed_msgs = 10;      //number of failed/missed messages to trigger disconnect
+		uint32_t target_baud_rate_bps = 625000;
+		uint16_t target_delay_us = 80;
+		uint32_t response_timeout_us = 8000;  /// this timeout will be used to override the default response timeout after a handshake succeeds and a new baud rate is negotiated.
+	};
+
+	void set_stream_paused(bool paused);
+
+	/**
+	* @brief Set/adjust the force that the motor is exerting when in motor_command stream mode
+	*
+	* @param force force, in milli-Newtons
+	*/
+	void set_force_mN(int32_t force);
+
+	/**
+	* @brief Set/adjust the position that the motor is aiming for when in motor command stream mode
+	*
+	* @param position position, in micrometers
+	*/
+	void set_position_um(int32_t position);
+
+	/**
+	* @brief Write to the orca control register to change the mode of operation of the motor
+	* note some modes require a constant stream to stay in that mode (eg. force, position)
+	*/
+	void set_mode(MotorMode orca_mode);
+
+	/**
+	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
+	* *
+	* @return CommunicationMode
+	*/
+	MotorMode get_mode();
+
+	/**
+	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
+	*/
+	void set_stream_mode(StreamMode mode);
+
+	/**	
+	* @brief Get the current stream type to be sent on run out once handshake is complete
+	*/
+	StreamMode get_stream_mode();
+
+	/**
+	* @brief This function can be continuously called and will update the values being sent when in motor write stream mode
+	*/
+	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
+
+	/**
+	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
+	*/
+	void update_read_stream(uint8_t width, uint16_t register_address);
+
+	/**
+	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode. 
+	* 
+	* @param timout_us time in microseconds
+	*/
+	void set_stream_timeout(uint64_t timeout_us);
+
+	/**
+	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
+	 *
+	 * @param config ConnectionConfig object
+	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
+	*/
+	int set_connection_config(Actuator::ConnectionConfig config);
+
+	/**
+	 * @brief Determine if communication with a server is enabled or not
+	 *
+	 * @return boolean - the enabled status (true if enabled, false otherwise)
+	*/
+	bool is_enabled();
+
+	/**
+	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
+	*/
+	void enable();
+
+	/**
+	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
+	*/
+	void disable();
+
+	/**
+		* @brief Determine whether a server has successfully connected with this client
+		* @return true if the server is in the connected state, false otherwise
+	*/
+	bool is_connected();
+
+	/**
+		* @brief Reset variables and move into the disconnected state
+	*/
+	void disconnect();
+	enum class ConnectionStatus {
+		disconnected,	// reset state
+		discovery, 	// sending discovery pings, negotiating baud rate and delay
+		synchronization,
+		negotiation,
+		connected,	// streaming commands to the server
+	};
+
+	ConnectionStatus connection_state = ConnectionStatus::disconnected;
+
+	void initiate_handshake();
+
+	/**
+		* @brief Perform the next step in the handshake routine with a server device.
+		*
+		* This function wants to progress from disconnected to connected through its various steps.
+		* The state will remain in disconnected until the UARTs message queue is totally empty...ie all messages a received or timeout.
+		* The state then becomes discovery where pings are sent until a number which is set in the config structure are successfully consecutively received
+		* Following enough successful pings, we attempt to synchronize the server's memory map (if applicable) by queuing read register request(s).
+		* If all requested read register messages are well received, a change connection status message is sent which requests the baud and interframe delay detailed by the config structure.
+		* The state is now negotiation until the server responds. If the response is successful,
+		*  the uart baud and interframe delays are adjusted based on what the server resports it realized
+		*  and the state is now Connected.
+		* If the negotiation fails, the state returns to discovery.
+	*/
+	void modbus_handshake(Transaction response);
+private:
 
 	StreamMode stream_mode = MotorCommand;
 	MotorMode comms_mode = SleepMode;
@@ -491,14 +568,14 @@ private:
 
 	/**
 	 * @brief Determine the length of the request for an application specific function code
-	 * 
+	 *
 	 * @param fn_code application specific function code
 	 * @return int - length of request
 	 */
 	int get_app_reception_length(uint8_t fn_code);
 
 	/**
-      @brief Enum of all actuator specific function codes, in decimal.
+	  @brief Enum of all actuator specific function codes, in decimal.
 	 */
 	enum orca_function_codes_e {
 		motor_command = 100,
@@ -507,11 +584,11 @@ private:
 	};
 
 	/**
-      @brief Format a motor command request, function code 0x64, and add the request to the buffer queue
+	  @brief Format a motor command request, function code 0x64, and add the request to the buffer queue
 
-      @param device_address Server device address
-      @param command_code command code to specify command mode (sleep, force, position etc.)
-      @param register_value The value to write to the register
+	  @param device_address Server device address
+	  @param command_code command code to specify command mode (sleep, force, position etc.)
+	  @param register_value The value to write to the register
 	 */
 	int motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value);
 
@@ -519,88 +596,7 @@ private:
 
 	int motor_write_fn(uint8_t device_address, uint8_t width, uint16_t register_address, uint32_t register_value);
 
-#pragma region IRIS_CLIENT_APPLICATION
-public:
-	/**
-	 * @brief Configurable parameters for the handshake sequence and connection maintenance. Should be set when disabled
-	*/
-	struct ConnectionConfig {
-		uint8_t server_address = 1;
-		int req_num_discovery_pings = 3; //3      //number of sucessful comms check messages required to move to next step in handshake sequence
-		int max_consec_failed_msgs = 10;      //number of failed/missed messages to trigger disconnect
-		uint32_t target_baud_rate_bps = 625000;
-		uint16_t target_delay_us = 80;
-		uint32_t response_timeout_us = 8000;  /// this timeout will be used to override the default response timeout after a handshake succeeds and a new baud rate is negotiated.
-	};
-
-	/**
-	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
-	 *
-	 * @param config ConnectionConfig object
-	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
-	*/
-	int set_connection_config(Actuator::ConnectionConfig config);
-
-	void handle_stream();
-
-	/**
-	 * @brief Determine if communication with a server is enabled or not
-	 *
-	 * @return boolean - the enabled status (true if enabled, false otherwise)
-	*/
-	bool is_enabled();
-
-	/**
-	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
-	*/
-	void enable();
-
-	/**
-	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
-	*/
-	void disable();
-
 	ConnectionConfig connection_config;
-
-
-
-	/**
-		* @brief Determine whether a server has successfully connected with this client
-		* @return true if the server is in the connected state, false otherwise
-	*/
-	bool is_connected();
-
-	/**
-		* @brief Reset variables and move into the disconnected state
-	*/
-	void disconnect();
-	enum class ConnectionStatus {
-		disconnected,	// reset state
-		discovery, 	// sending discovery pings, negotiating baud rate and delay
-		synchronization,
-		negotiation,
-		connected,	// streaming commands to the server
-	};
-
-	ConnectionStatus connection_state = ConnectionStatus::disconnected;
-
-	void initiate_handshake();
-
-	/**
-		* @brief Perform the next step in the handshake routine with a server device.
-		*
-		* This function wants to progress from disconnected to connected through its various steps.
-		* The state will remain in disconnected until the UARTs message queue is totally empty...ie all messages a received or timeout.
-		* The state then becomes discovery where pings are sent until a number which is set in the config structure are successfully consecutively received
-		* Following enough successful pings, we attempt to synchronize the server's memory map (if applicable) by queuing read register request(s).
-		* If all requested read register messages are well received, a change connection status message is sent which requests the baud and interframe delay detailed by the config structure.
-		* The state is now negotiation until the server responds. If the response is successful,
-		*  the uart baud and interframe delays are adjusted based on what the server resports it realized
-		*  and the state is now Connected.
-		* If the negotiation fails, the state returns to discovery.
-	*/
-	void modbus_handshake(Transaction response);
-private:
 	/**
 	 * @brief Description of the possible connection states between the client and a server
 	 *        Main state machine can be found in IrisClientApplication.
@@ -625,6 +621,8 @@ private:
 	 * @param delay_us
 	*/
 	int enqueue_change_connection_status_fn(uint8_t device_address, bool connect, uint32_t baud_rate_bps, uint16_t delay_us);
+
+	void handle_stream();
 
 private:
 

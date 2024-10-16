@@ -232,25 +232,6 @@ public:
 		modbus_client.init(UART_BAUD_RATE);
 	}
 
-	/**
-	 * @brief returns the number of successful messages between the actuator and the controller
-	 * 
-	 * @return uint16_t, number of successful messages
-	 */
-	uint16_t get_num_successful_msgs() {
-		return success_msg_counter;
-	}
-
-	/**
-	 * @brief returns the number of failed messages between the actuator and the controller
-	 * 
-	 * @return uint16_t, number of failed messages
-	 */
-	uint16_t	get_num_failed_msgs() {
-		return failed_msg_counter;
-	}
-
-
 	void run()
 	{
 		run_out();

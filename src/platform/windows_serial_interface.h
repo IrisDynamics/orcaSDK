@@ -52,16 +52,7 @@ public:
     * @brief ends the listening thread, purges the comport and closes it
     */
     ~windows_SerialInterface() {
-
-        //delete timers in the timer queue 
-        //have to signal the timer here to stop the timer 
-
-        CloseHandle(threadHandle);
-
-        FlushFileBuffers(hSerial);
-        PurgeComm(hSerial, PURGE_TXABORT);
-        PurgeComm(hSerial, PURGE_RXABORT);
-        CloseHandle(hSerial);
+        clean_up_handles();
     }
 
     uint8_t get_port_number() {
@@ -73,27 +64,16 @@ public:
     }
 
     void disable_comport_comms() {
-        //run_out();
-        //adjust_baud_rate(19200);
-        if (!threadHandle == NULL) {
-            if (SuspendThread(threadHandle) == -1) {
-                OutputDebugString((LPCWSTR) L"Unable to suspend thread");
-            }
-        }
-        if (!PurgeComm(hSerial, PURGE_TXABORT)) {
-            OutputDebugString((LPCWSTR)L"Unable to purge tx com\r\n");
-        }
-        if (!PurgeComm(hSerial, PURGE_RXABORT)) {
-            OutputDebugString((LPCWSTR)L"Unable to purge rx com\r\n");
-        }
-        if (!FlushFileBuffers(hSerial)) {
-            OutputDebugString((LPCWSTR)L"Unable to flush file buffer\r\n");
-        }
-        if (!CloseHandle(hSerial)) {
-            OutputDebugString((LPCWSTR)L"Unable to close hSerial handle\r\n");
-        }
-        //reset_state();
-        //messages.reset();
+        clean_up_handles();
+    }
+
+    void clean_up_handles()
+    {
+        FlushFileBuffers(hSerial);
+        PurgeComm(hSerial, PURGE_TXABORT);
+        PurgeComm(hSerial, PURGE_RXABORT);
+        CloseHandle(hSerial);
+
         serial_success = false;
         comms_enabled = false;
     }
@@ -166,7 +146,7 @@ public:
             OutputDebugString(cmtmtsError);
         }
 
-        start_new_listening_thread();
+        //start_new_listening_thread();
 
         //
         disconnected_msg_sent = false;
@@ -264,56 +244,42 @@ public:
     };
 
     uint8_t receive_byte() override {
-        char out_byte;
-        rcv_buffer_mx.lock();
-
-        out_byte = incoming_byte_buffer.front();
+        char out_byte = incoming_byte_buffer.front();
         incoming_byte_buffer.pop_front();
-
-        rcv_buffer_mx.unlock();
 
         return out_byte;
     }
 
     bool ready_to_receive() override {
-        bool ready = false;
-
-        rcv_buffer_mx.lock();
-
-        ready = !incoming_byte_buffer.empty();
-
-        rcv_buffer_mx.unlock();
-
-        return ready;
-    }
-
-    /**
-   * @brief Called whenever there is new data to recieve in the serial port.
-   */
-    void uart_isr() {
-        //if (my_state == reception) {
-        rcv_buffer_mx.lock();
-        
-        while (byte_ready_to_receive()) {
-            char next_byte = receive_byte_from_serial_port();
-            append_byte_to_buffer(next_byte);
-
-            //receive();
-            //    //slot called when new data arrives in the port 
-            //    //as long as the state is reception and there is data to recieve, it will be recieved. 
-            //    //receive method handles slotting data into the correct transaction.
-
-        }
-
-        rcv_buffer_mx.unlock();
-
-        //}
+        read_available_rx_bytes();
+        return !incoming_byte_buffer.empty();
     }
 
 private:
+
+    /**
+    * @brief Called whenever there is new data to recieve in the serial port.
+    */
+    void read_available_rx_bytes() {
+        constexpr int max_bytes_to_read = 512;
+        char rcv_buffer[max_bytes_to_read];
+        DWORD num_bytes_read = 0;
+
+        if (!ReadFile(hSerial, &rcv_buffer, max_bytes_to_read, &num_bytes_read, &o)) {
+            if (GetLastError() != ERROR_IO_PENDING) {
+                std::wstring readErr = L"Error recieving bytes. Error code: " + std::to_wstring(GetLastError()) + L"\n";
+                OutputDebugString(readErr.c_str());
+            }
+        }
+
+        for (int i = 0; i < num_bytes_read; i++)
+        {
+            append_byte_to_buffer(rcv_buffer[i]);
+        }
+    }
     
     std::deque<char> incoming_byte_buffer;
-    std::mutex rcv_buffer_mx;
+    //std::mutex rcv_buffer_mx;
 
     bool disconnected_msg_sent = false;
     bool motor_disconnected = false;
@@ -326,53 +292,53 @@ private:
     DCB dcbSerialParams = { 0 };
     bool serial_success = false;     //flag bool to indicate if the handle to the serial port was created successfully
 
-    //thread stuff 
-    HANDLE threadHandle;
+    ////thread stuff 
+    //HANDLE threadHandle;
 
     //for messaging
     std::vector <char> sendBuf;
     OVERLAPPED o;
 
-    /**
-     * @brief Return the next byte received by the serial port.
-     */
-    uint8_t receive_byte_from_serial_port() {
+    ///**
+    // * @brief Return the next byte received by the serial port.
+    // */
+    //uint8_t receive_byte_from_serial_port() {
 
-        char buff = 0;
-        int toRead = 1;
-        DWORD bytesRead = 0;
+    //    char buff = 0;
+    //    int toRead = 1;
+    //    DWORD bytesRead = 0;
 
-        if (!ReadFile(hSerial, &buff, toRead, &bytesRead, &o)) {
-            if (GetLastError() != ERROR_IO_PENDING) {
-                //ERROR_IO_PENDING - means the IO request was succesfully queued and will return later 
-                LPCWSTR readErr = L"Error recieving bytes\n";
-                OutputDebugString(readErr);
-                OutputDebugString((LPCWSTR)GetLastError());
-            }
-        }
+    //    if (!ReadFile(hSerial, &buff, toRead, &bytesRead, &o)) {
+    //        if (GetLastError() != ERROR_IO_PENDING) {
+    //            //ERROR_IO_PENDING - means the IO request was succesfully queued and will return later 
+    //            LPCWSTR readErr = L"Error recieving bytes\n";
+    //            OutputDebugString(readErr);
+    //            OutputDebugString((LPCWSTR)GetLastError());
+    //        }
+    //    }
 
-        return buff;
-    }
+    //    return buff;
+    //}
     
     void append_byte_to_buffer(char next_byte)
     {
         incoming_byte_buffer.push_back(next_byte);
     }
 
-    /**
-    * @brief checks the comport to determine if at least one byte is ready to be read
-    */
-    bool byte_ready_to_receive() {
+    ///**
+    //* @brief checks the comport to determine if at least one byte is ready to be read
+    //*/
+    //bool byte_ready_to_receive() {
 
-        LPDWORD lpErrors = 0;
-        COMSTAT lpStat { 0 };
-        if (!ClearCommError(hSerial, lpErrors, &lpStat)) {
-            LPCWSTR clearErr = L"Issue checking com errors - needed to check for number of incoming bytes\n";
-            OutputDebugString(clearErr);
-            return false;
-        }
-        return (lpStat.cbInQue > 0);
-    };
+    //    LPDWORD lpErrors = 0;
+    //    COMSTAT lpStat { 0 };
+    //    if (!ClearCommError(hSerial, lpErrors, &lpStat)) {
+    //        LPCWSTR clearErr = L"Issue checking com errors - needed to check for number of incoming bytes\n";
+    //        OutputDebugString(clearErr);
+    //        return false;
+    //    }
+    //    return (lpStat.cbInQue > 0);
+    //};
 
     /* @Brief  */
     int filter(unsigned int code, struct _EXCEPTION_POINTERS* ep)
@@ -421,44 +387,44 @@ private:
     }
 
 
-    // @brief Function checks if a new byte has arrived in the serial port.
-    static int check_coms(windows_SerialInterface* w) {
-        DWORD dwCommEvent{ 0 };
-        if (WaitCommEvent(w->hSerial, &dwCommEvent, NULL)) {
-            if (dwCommEvent == EV_RXCHAR) {
-                w->uart_isr();
-            }
-            else if (dwCommEvent == 0) {
-                OutputDebugString((LPCWSTR)L"Error in comm event\r\n");
-            }
-        }
-        else {
-            LPCWSTR eventErr = L"Error checking for incoming bytes\n";
-            std::cout << "Error checking for incoming bytes\n" << std::endl;
-            //OutputDebugString(eventErr);
-            int error = GetLastError();
-        }
-        return 0;
-    }
+    //// @brief Function checks if a new byte has arrived in the serial port.
+    //static int check_coms(windows_SerialInterface* w) {
+    //    DWORD dwCommEvent{ 0 };
+    //    if (WaitCommEvent(w->hSerial, &dwCommEvent, NULL)) {
+    //        if (dwCommEvent == EV_RXCHAR) {
+    //            w->uart_isr();
+    //        }
+    //        else if (dwCommEvent == 0) {
+    //            OutputDebugString((LPCWSTR)L"Error in comm event\r\n");
+    //        }
+    //    }
+    //    else {
+    //        LPCWSTR eventErr = L"Error checking for incoming bytes\n";
+    //        std::cout << "Error checking for incoming bytes\n" << std::endl;
+    //        //OutputDebugString(eventErr);
+    //        int error = GetLastError();
+    //    }
+    //    return 0;
+    //}
 
-    /**
-    * @brief Monitors the serial port for incoming bytes
-    * @note this method runs in a separate thread and continuously checks if a new byte has arrived in the serial port.
-    */
-    static DWORD WINAPI ListeningThread(LPVOID lpParam) {
-        while (1) {
-            // infinite while loop for modbus client IO
-            windows_SerialInterface* w = (windows_SerialInterface*)(lpParam);
-            check_coms(w);
-        }
-    }
+    ///**
+    //* @brief Monitors the serial port for incoming bytes
+    //* @note this method runs in a separate thread and continuously checks if a new byte has arrived in the serial port.
+    //*/
+    //static DWORD WINAPI ListeningThread(LPVOID lpParam) {
+    //    while (1) {
+    //        // infinite while loop for modbus client IO
+    //        windows_SerialInterface* w = (windows_SerialInterface*)(lpParam);
+    //        check_coms(w);
+    //    }
+    //}
 
-    void start_new_listening_thread() {
-        threadHandle = CreateThread(NULL, 0, ListeningThread, this, 0, NULL);
-        if (threadHandle == NULL) {
-            OutputDebugString((LPCWSTR)L"Unable to create listening thread\r\n");
-        }
-    }
+    //void start_new_listening_thread() {
+    //    threadHandle = CreateThread(NULL, 0, ListeningThread, this, 0, NULL);
+    //    if (threadHandle == NULL) {
+    //        OutputDebugString((LPCWSTR)L"Unable to create listening thread\r\n");
+    //    }
+    //}
 };
 
 extern windows_SerialInterface modbus_client;

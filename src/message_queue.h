@@ -152,7 +152,7 @@ public:
 	 * @brief Determine the number of messages currently in the queue
 	 * @return The number of messages in the queue
 	*/
-   int size(){
+   size_t size(){
 	   return transaction_buffer.size();
    }
 

@@ -377,7 +377,7 @@ public:
 	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 
 private:
-	uint16_t orca_reg_contents[ORCA_REG_SIZE];
+	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents;
 
 	void handle_transaction_response(Transaction response);
 

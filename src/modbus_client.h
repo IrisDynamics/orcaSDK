@@ -245,7 +245,7 @@ public:
     * @brief get number of messages in the queue
     * @return True if the queue is empty (has no messages), False otherwise.
     */
-    uint32_t get_queue_size(){
+    size_t get_queue_size(){
         return messages.size();
     }
 

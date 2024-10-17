@@ -13,7 +13,7 @@ protected:
 	ActuatorTests() :
 		serial_interface(std::make_shared<TestSerialInterface>()),
 		log(std::make_shared<TestLog>()),
-		motor(serial_interface, -1)
+		motor(-1)
 	{}
 
 	void SetUp()

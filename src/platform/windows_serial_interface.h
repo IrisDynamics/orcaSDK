@@ -190,46 +190,32 @@ public:
         if (!serial_success) return;
         char charBuf[128] = { 0 };
         DWORD dwBytesWritten = 0;
+        DWORD numItemsInBuffer = static_cast<DWORD>(sendBuf.size());
 
         //copy the contents of sendBuf over to charBuf - type issue
-        for (int i = 0; i < sendBuf.size(); i++) {
+        for (size_t i = 0; i < numItemsInBuffer; i++) {
             charBuf[i] = sendBuf[i];
         }
 
         //write the contents of charBuf to the serial port
-        if (!WriteFile(hSerial, charBuf, sendBuf.size(), &dwBytesWritten, &o)) {
+        if (!WriteFile(hSerial, charBuf, numItemsInBuffer, &dwBytesWritten, &o)) {
             if (GetLastError() != ERROR_IO_PENDING) {
 
-                //ERROR_IO_PENDING - means the IO request was succesfully queued and will return later 
-                LPCWSTR writeErr = L"Error sending bytes\n";
-                OutputDebugString(writeErr);
-
-                __try {
-                    OutputDebugString((LPCWSTR)GetLastError());
-                }
-                __except (filter(GetExceptionCode(), GetExceptionInformation())) {
-                    if (!disconnected_msg_sent) {
-                        OutputDebugString((LPCWSTR) L"Motor has been disconnected\r\n");
-                        disconnected_msg_sent = true;
-                        motor_disconnected = true;
-                    }
-                }
-                
- 
+                std::wstring error_str = L"Error sending bytes. Error code: " + std::to_wstring(GetLastError()) + L"\n";
+                OutputDebugString(error_str.c_str());
             }
         }
 
-
-        __try{
+        //__try{
             FlushFileBuffers(hSerial);
-        }
-        __except (filter(GetExceptionCode(), GetExceptionInformation())) {
-            if (!disconnected_msg_sent) {
-                OutputDebugString((LPCWSTR)L"Motor has been disconnected\r\n");
-                disconnected_msg_sent = true;
-                motor_disconnected = true;
-            }
-        }
+        //}
+        //__except (filter(GetExceptionCode(), GetExceptionInformation())) {
+        //    if (!disconnected_msg_sent) {
+        //        OutputDebugString((LPCWSTR)L"Motor has been disconnected\r\n");
+        //        disconnected_msg_sent = true;
+        //        motor_disconnected = true;
+        //    }
+        //}
 
         if (motor_disconnected) {
             if (comms_enabled) disable_comport_comms();
@@ -437,7 +423,7 @@ private:
 
     // @brief Function checks if a new byte has arrived in the serial port.
     static int check_coms(windows_SerialInterface* w) {
-        DWORD dwCommEvent;
+        DWORD dwCommEvent{ 0 };
         if (WaitCommEvent(w->hSerial, &dwCommEvent, NULL)) {
             if (dwCommEvent == EV_RXCHAR) {
                 w->uart_isr();

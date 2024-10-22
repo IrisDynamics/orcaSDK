@@ -5,7 +5,7 @@
 
 class TestLog : public LogInterface {
 public:
-	void open(const std::string& path) override {}
+	void open(const std::string&) override {}
 
 	void write(const std::string& str) override
 	{

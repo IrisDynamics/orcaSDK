@@ -129,7 +129,7 @@ public:
 	 * @brief Write a state id to control register 3, commanding the Orca to change to the selected mode.
 	 */
 	void set_mode (control_register_3_t sid) {
-		write(address, sid);
+		write(address, (uint16_t)sid);
 	}
 
 	/**

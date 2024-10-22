@@ -15,7 +15,7 @@ public:
 	};
 
 	Log(TimestampType _timestamp_type = TimestampType::CurrentDateTime) :
-		timestamp_type(_timestamp_type)
+		timestamp_type_setting(_timestamp_type)
 	{}
 	~Log() {
 		close();
@@ -35,7 +35,7 @@ public:
 	 *	@throws	std::runtime_error	If this method is called on a log without an opened file
 	 */
 	void write(const std::string& str) override {
-		write_internal(str, timestamp_type);
+		write_internal(str, timestamp_type_setting);
 	}
 
 	/**
@@ -87,7 +87,6 @@ public:
 	void add(const char* name) {
 		open(name);
 	}
-	u32 id() { return -1; }
 
 private:
 	bool verbose_mode = true;
@@ -98,7 +97,7 @@ private:
 
 	std::chrono::high_resolution_clock::time_point start_time;
 
-	TimestampType timestamp_type = TimestampType::CurrentDateTime;
+	TimestampType timestamp_type_setting = TimestampType::CurrentDateTime;
 
 	std::string as_seconds(std::chrono::duration<float> duration) {
 		return std::to_string(duration.count()) + "s";

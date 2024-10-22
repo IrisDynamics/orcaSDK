@@ -39,8 +39,7 @@ public:
     {
         if (outOfDiagnosticsRange(diagnostic_number))
         {
-            std::cout << "Writing out of bounds of diagnostic counters.\n";
-            return;
+            throw std::out_of_range("Index out of bounds. Tried to update diagnostic value out of range");
         }
 
         diagnostic_counters[diagnostic_number]++;
@@ -50,8 +49,7 @@ public:
     {
         if (outOfDiagnosticsRange(diagnostic_number))
         {
-            std::cout << "Reading out of bounds of diagnostic counters.\n";
-            return -1;
+            throw std::out_of_range("Index out of bounds. Tried to read diagnostic value out of range");
         }
 
         return diagnostic_counters[diagnostic_number];

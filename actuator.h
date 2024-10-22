@@ -161,7 +161,7 @@ public:
 	* 
 	* @return uint8_t - temperature in Celcius
 	*/
-	uint8_t get_temperature_C();
+	uint16_t get_temperature_C();
 
 	/**
 	* @brief Returns the amount of voltage the motor is recieving, in milli-Volts. 
@@ -278,19 +278,19 @@ public:
 	* @param type	0 = minimize power, 1 = maximize smoothness
 	* @param chain	Enable linking this motion to the next
 	*/
-	void set_kinematic_motion(int ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
+	void set_kinematic_motion(int8_t ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
 
 	/**
 	* @brief Use the software trigger to start a kinematic motion, this will also run any chained motions
 	* @ID Identification of the motion to be triggered
 	*/
-	void trigger_kinematic_motion(int ID);
+	void trigger_kinematic_motion(int8_t ID);
 
 #pragma endregion
 
 #pragma region HAPTICS
 
-	enum {
+	enum HapticEffect {
 		ConstF = 1 << 0,
 		Spring0 = 1 << 1,
 		Spring1 = 1 << 2,
@@ -299,7 +299,7 @@ public:
 		Inertia = 1 << 5,
 		Osc0 = 1 << 6,
 		Osc1 = 1 << 7
-	} HapticEffect;
+	};
 
 	/**
 	* @brief Enable or disabled desired haptic effects.
@@ -329,7 +329,7 @@ public:
 	 * @param reg_address register address from the orca's memory map
 	 * @param num_registers number of sequential registers to read
 	 */
-	void read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority = MessagePriority::important);
+	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
@@ -346,9 +346,9 @@ public:
 	 * * @param num_registers number of sequential registers to write
 	 * @param reg_data pointer to an array of data to be added to the registers
 	 */
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
+	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
 
-	void write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
+	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
@@ -360,8 +360,8 @@ public:
 	 *  @param write_data Pointer to an array containing the byte data that should be written
 	 */
 	void read_write_registers(
-		uint16_t read_starting_address, uint16_t read_num_registers,
-		uint16_t write_starting_address, uint16_t write_num_registers,
+		uint16_t read_starting_address, uint8_t read_num_registers,
+		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint8_t* write_data,
 		MessagePriority priority = MessagePriority::important);
 
@@ -377,7 +377,7 @@ public:
 	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 
 private:
-	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents;
+	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents{};
 
 	void handle_transaction_response(Transaction response);
 
@@ -517,8 +517,8 @@ private:
 	StreamMode stream_mode = MotorCommand;
 	MotorMode comms_mode = SleepMode;
 
-	uint32_t stream_timeout_start = 0;
-	uint32_t stream_timeout_cycles = 100000;
+	uint64_t stream_timeout_start = 0;
+	uint64_t stream_timeout_cycles = 100000;
 
 	// Used to hold the last commanded force and position commands from the user of this object
 	int32_t force_command = 0;
@@ -526,9 +526,9 @@ private:
 	//Used to hold the last data to stream in motor write and read streams
 	uint32_t motor_write_data = 0;
 	uint16_t motor_write_addr = 0;
-	uint16_t motor_write_width = 1;
+	uint8_t motor_write_width = 1;
 	uint16_t motor_read_addr = 0;
-	uint16_t motor_read_width = 1;
+	uint8_t motor_read_width = 1;
 
 	bool stream_paused = false;
 
@@ -624,8 +624,8 @@ private:
 	///////////////////////////////////////////////////////////////////////////
 
 	bool is_paused = false;
-	uint32_t  pause_timer_start = 0;
-	static constexpr uint32_t pause_time_cycles{ DEFAULT_CONNECTION_PAUSE_uS };
+	uint64_t  pause_timer_start = 0;
+	static constexpr uint64_t pause_time_cycles{ DEFAULT_CONNECTION_PAUSE_uS };
 
 	/**
 	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer
@@ -650,11 +650,11 @@ private:
 	////////////////////////////////////////////////////////////////////
 	
 public:
-	//Deprecated. Just here for backwards compatibility. Placing down here because we do not want it used
+	[[deprecated("Requests initialization of now unused parameters")]]
 	Actuator(
 		int uart_channel,
 		const char* name,
-		int cycles_per_us
+		int
 	) :
 		Actuator(uart_channel)
 	{}

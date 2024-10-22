@@ -236,7 +236,7 @@ uint16_t Actuator::get_power_W() {
 	return orca_reg_contents[POWER_REG_OFFSET];
 }
 
-uint8_t Actuator::get_temperature_C() {
+uint16_t Actuator::get_temperature_C() {
 	return orca_reg_contents[TEMP_REG_OFFSET];
 }
 
@@ -335,7 +335,7 @@ void Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t
 	write_register(CONTROL_REG_1::address, CONTROL_REG_1::position_controller_gain_set_flag);
 }
 
-void Actuator::set_kinematic_motion(int ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
+void Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
 	if (next_id == -1) {
 		next_id = ID + 1;
 	}
@@ -390,7 +390,7 @@ void Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 d
 	write_registers(O0_GAIN_N + osc_id * 4, 4, data);
 }
 
-void Actuator::trigger_kinematic_motion(int ID) {
+void Actuator::trigger_kinematic_motion(int8_t ID) {
 	write_register(KIN_SW_TRIGGER, ID);
 }
 
@@ -398,7 +398,7 @@ void Actuator::read_register(uint16_t reg_address, MessagePriority priority) {
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority));
 }
 
-void Actuator::read_registers(uint16_t reg_address, uint16_t num_registers, MessagePriority priority) {
+void Actuator::read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority) {
 	if (num_registers < 1 || num_registers > MAX_NUM_READ_REG) return;
 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority));
@@ -408,24 +408,24 @@ void Actuator::write_register(uint16_t reg_address, uint16_t reg_data, MessagePr
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority));
 }
 
-void Actuator::write_registers(uint16_t reg_address, uint16_t num_registers, uint8_t* reg_data, MessagePriority priority) {
+void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority) {
 	if (num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return;
 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority));
 }
 
-void Actuator::write_registers(uint16_t reg_address, uint16_t num_registers, uint16_t* reg_data, MessagePriority priority) {
+void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority) {
 	if (num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return;
 
 	uint8_t data[126];
 	for (int i = 0; i < num_registers; i++) {
-		data[i * 2] = reg_data[i] >> 8;
-		data[i * 2 + 1] = reg_data[i];
+		data[i * 2] = uint8_t(reg_data[i] >> 8);
+		data[i * 2 + 1] = uint8_t(reg_data[i]);
 	}
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data, priority));
 }
 
-void Actuator::read_write_registers(uint16_t read_starting_address, uint16_t read_num_registers, uint16_t write_starting_address, uint16_t write_num_registers, uint8_t* write_data, MessagePriority priority)
+void Actuator::read_write_registers(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers, uint8_t* write_data, MessagePriority priority)
 {
 	if (read_num_registers < 1 || read_num_registers > MAX_NUM_READ_REG) return;
 	if (write_num_registers < 1 || write_num_registers > MAX_NUM_WRITE_REG) return;
@@ -482,7 +482,7 @@ void Actuator::motor_stream_command() {
 	switch (comms_mode) {
 		;
 	case ForceMode: {
-		if (uint32_t(modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
+		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
 			comms_mode = SleepMode;
 		}
 		else {
@@ -491,7 +491,7 @@ void Actuator::motor_stream_command() {
 		break;
 	}
 	case PositionMode:
-		if (uint32_t(modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
+		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
 			comms_mode = SleepMode;
 		}
 		else {
@@ -761,7 +761,7 @@ void Actuator::start_pause_timer() {
 }
 
 bool Actuator::has_pause_timer_expired() {
-	if (!is_paused || (u32)(modbus_client.get_system_cycles() - pause_timer_start) >= pause_time_cycles) {//(pause_time_us*CYCLES_PER_MICROSECOND)){
+	if (!is_paused || (modbus_client.get_system_cycles() - pause_timer_start) >= pause_time_cycles) {//(pause_time_us*CYCLES_PER_MICROSECOND)){
 		return 1;
 	}
 	return 0;

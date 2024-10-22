@@ -12,7 +12,7 @@ public:
 
 	virtual void adjust_baud_rate(uint32_t baud_rate_bps) = 0;
 
-	virtual uint32_t get_system_cycles() = 0;
+	virtual uint64_t get_system_cycles() = 0;
 
 	virtual uint8_t receive_byte() = 0;
 

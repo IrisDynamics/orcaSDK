@@ -59,7 +59,7 @@ public:
 		adjusted_baud_rate = new_baud_rate;
 	}
 
-	uint32_t get_system_cycles() override { 
+	uint64_t get_system_cycles() override { 
 		return current_time; 
 	}
 
@@ -74,5 +74,5 @@ public:
 
 private:
 	std::deque<char> receive_buffer;
-	uint32_t current_time = 0;
+	uint64_t current_time = 0;
 };

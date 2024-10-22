@@ -128,7 +128,7 @@ public:
     /**
     * @brief Get the device's current system time in cycles - not using cycles, so just returns elapsed time in microseconds
     */
-    uint64_t get_system_cycles() override {
+    int64_t get_system_cycles() override {
         LARGE_INTEGER ticks;
         if (!QueryPerformanceCounter(&ticks)) {
             LPCWSTR tickErr = L"Error getting ticks for checking system time";

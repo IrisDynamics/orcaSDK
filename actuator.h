@@ -453,7 +453,7 @@ public:
 	* 
 	* @param timout_us time in microseconds
 	*/
-	void set_stream_timeout(uint64_t timeout_us);
+	void set_stream_timeout(int64_t timeout_us);
 
 	/**
 	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
@@ -521,8 +521,8 @@ private:
 	StreamMode stream_mode = MotorCommand;
 	MotorMode comms_mode = SleepMode;
 
-	uint64_t stream_timeout_start = 0;
-	uint64_t stream_timeout_cycles = 100000;
+	int64_t stream_timeout_start = 0;
+	int64_t stream_timeout_cycles = 100000;
 
 	// Used to hold the last commanded force and position commands from the user of this object
 	int32_t force_command = 0;
@@ -628,8 +628,8 @@ private:
 	///////////////////////////////////////////////////////////////////////////
 
 	bool is_paused = false;
-	uint64_t  pause_timer_start = 0;
-	static constexpr uint64_t pause_time_cycles{ DEFAULT_CONNECTION_PAUSE_uS };
+	int64_t  pause_timer_start = 0;
+	static constexpr int64_t pause_time_cycles{ DEFAULT_CONNECTION_PAUSE_uS };
 
 	/**
 	* @brief Start the pause timer. This can be done by saving the system time when the timer was started. Should not use interrupt timer

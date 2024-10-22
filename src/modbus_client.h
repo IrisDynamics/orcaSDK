@@ -282,7 +282,7 @@ public:
     /**
      * @brief Get the device's current system time in cycles
     */
-    uint64_t get_system_cycles() {
+    int64_t get_system_cycles() {
         return serial_interface.get_system_cycles();
     }
 
@@ -301,18 +301,18 @@ private:
 
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
-    uint64_t repsonse_timeout_cycles;
-    uint64_t interchar_timeout_cycles;
-    uint64_t turnaround_delay_cycles;
+    int64_t repsonse_timeout_cycles;
+    int64_t interchar_timeout_cycles;
+    int64_t turnaround_delay_cycles;
 
-    uint64_t interframe_delay_cycles = 0;
+    int64_t interframe_delay_cycles = 0;
 
     bool logging = false;
 
     /// Time that the enabled timer was started
 
 
-    uint64_t timer_start_time;	// recorded in system cycles: must be checked as such
+    int64_t timer_start_time;	// recorded in system cycles: must be checked as such
     /**
      * @brief Should be run when ready to send a new byte.
      *	Transitions to reception when done sending.
@@ -428,14 +428,14 @@ private:
      */
     TIMER_ID has_timer_expired () {
 
-    	volatile uint64_t timer_start_time_l = timer_start_time;
-    	volatile uint64_t tnow = get_system_cycles();
+    	volatile int64_t timer_start_time_l = timer_start_time;
+    	volatile int64_t tnow = get_system_cycles();
 
     	switch (my_enabled_timer) {
-    	case TIMER_ID::repsonse_timeout : if ((uint64_t)(tnow - timer_start_time_l) > repsonse_timeout_cycles  ) return TIMER_ID::repsonse_timeout ; break;
-    	case TIMER_ID::interchar_timeout: if ((uint64_t)(tnow - timer_start_time_l) > interchar_timeout_cycles ) return TIMER_ID::interchar_timeout; break;
-    	case TIMER_ID::turnaround_delay : if ((uint64_t)(tnow - timer_start_time_l) > turnaround_delay_cycles  ) return TIMER_ID::turnaround_delay ; break;
-    	case TIMER_ID::interframe_delay : if ((uint64_t)(tnow - timer_start_time_l) > interframe_delay_cycles  ) return TIMER_ID::interframe_delay ; break;
+    	case TIMER_ID::repsonse_timeout : if ((int64_t)(tnow - timer_start_time_l) > repsonse_timeout_cycles  ) return TIMER_ID::repsonse_timeout ; break;
+    	case TIMER_ID::interchar_timeout: if ((int64_t)(tnow - timer_start_time_l) > interchar_timeout_cycles ) return TIMER_ID::interchar_timeout; break;
+    	case TIMER_ID::turnaround_delay : if ((int64_t)(tnow - timer_start_time_l) > turnaround_delay_cycles  ) return TIMER_ID::turnaround_delay ; break;
+    	case TIMER_ID::interframe_delay : if ((int64_t)(tnow - timer_start_time_l) > interframe_delay_cycles  ) return TIMER_ID::interframe_delay ; break;
     	case TIMER_ID::none:
     	default:
     		break;

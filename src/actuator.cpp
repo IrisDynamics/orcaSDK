@@ -86,7 +86,7 @@ void Actuator::enable_haptic_effects(uint16_t effects) {
 	write_register(HAPTIC_STATUS, effects);
 }
 
-void Actuator::set_stream_timeout(uint64_t timeout_us) {
+void Actuator::set_stream_timeout(int64_t timeout_us) {
 	stream_timeout_cycles = timeout_us;
 }
 

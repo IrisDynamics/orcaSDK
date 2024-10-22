@@ -59,7 +59,7 @@ public:
 		adjusted_baud_rate = new_baud_rate;
 	}
 
-	uint64_t get_system_cycles() override { 
+	int64_t get_system_cycles() override { 
 		return current_time; 
 	}
 

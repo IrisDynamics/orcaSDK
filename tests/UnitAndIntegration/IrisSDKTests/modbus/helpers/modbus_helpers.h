@@ -11,10 +11,10 @@ namespace ModbusTesting
 		{
 			array_of_bytes[i] = modbus_message[i];
 		}
-		uint16_t crc = ModbusCRC::generate(array_of_bytes, modbus_message.size());
+		uint16_t crc = ModbusCRC::generate(array_of_bytes, (int)modbus_message.size());
 		
-		char high_byte = crc >> 8;
-		char low_byte = crc;
+		char high_byte = char(crc >> 8);
+		char low_byte = char(crc);
 		modbus_message.push_back(high_byte);
 		modbus_message.push_back(low_byte);
 	}

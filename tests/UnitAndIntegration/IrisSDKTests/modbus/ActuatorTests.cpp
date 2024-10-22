@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "modbus/helpers/TestSerialInterface.h"
 #include "modbus/helpers/TestLog.h"
+#include "modbus/helpers/TestClock.h"
 #include "actuator.h"
 #include <memory>
 #include "helpers/modbus_helpers.h"
@@ -12,11 +13,18 @@ class ActuatorTests : public testing::Test
 protected:
 	ActuatorTests() :
 		serial_interface(std::make_shared<TestSerialInterface>()),
+		clock(std::make_shared<TestClock>()),
 		log(std::make_shared<TestLog>()),
-		motor(serial_interface, log, -1, "Hello")
+		motor(serial_interface, clock, -1, "unimportant")
 	{}
 
+	void SetUp()
+	{
+		motor.begin_serial_logging("unimportant_name", log);
+	}
+
 	std::shared_ptr<TestSerialInterface> serial_interface;
+	std::shared_ptr<TestClock> clock;
 	std::shared_ptr<TestLog> log;
 	Actuator motor;
 };
@@ -72,17 +80,17 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
 	motor.run_in();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
 
 	//-----Synchronization-----
@@ -104,7 +112,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 
 	serial_interface->sendBuffer.clear();
 	motor.run_in();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> second_sync_message{ '\x1', '\x03', '\x01', '\xb0', '\0', '\x5', '\x85', '\xd2' };
@@ -122,7 +130,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 
 	serial_interface->sendBuffer.clear();
 	motor.run_in();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
 
 	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
@@ -142,26 +150,32 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	motor.run_in();
 
 	serial_interface->sendBuffer.clear();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 	motor.run_out();
+
+	std::vector<char> output = {
+		'\x01', //Orca address
+		65, //Manage High-speed Stream message ID
+		'\xff', '\0', // Enable and apply parameters
+		'\0', '\x9', '\x89', '\x68', // Target baud rate (650000bps)
+		'\0', '\x50', // Target Response delay (80ms)
+		'\x25', '\x28' // CRC
+	};
+	ASSERT_EQ(output, serial_interface->sendBuffer);
 
 	//-----Negotiation-----
 	// The motor sends exactly one stream negotiation message and 
 	// expects a valid response. After receiving it, it updates
 	// relevant local parameters and goes to connected state.
 	std::deque<char> stream_negotiation_response{
-			'\x01', //Orca address
-			65, //Manage High-speed Stream message ID
-			'\xff', '\0', // Echo of enable and apply parameters
-			'\0', '\0', '\0', '\xff', // Target baud rate (255bps)
-			'\0', '\xa0', // Target Response delay (128ms)
-			'\x62', '\xdd' // CRC calculated for custom response
+			output.begin(), output.end()
 	};
 	serial_interface->consume_new_message(stream_negotiation_response);
 	motor.run_in();
 	motor.run_out();
 
 	EXPECT_TRUE(motor.is_connected());
+	EXPECT_EQ(625000, serial_interface->adjusted_baud_rate);
 }
 
 TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLocalCacheOnReceive)
@@ -203,7 +217,7 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 
 	motor.run_in();
 
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 	motor.run_out();
 
@@ -243,7 +257,7 @@ TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFu
 
 	motor.run_out();
 
-	serial_interface->pass_time(50001);
+	clock->pass_time(50001);
 
 	motor.run_in();
 
@@ -263,7 +277,7 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	serial_interface->consume_new_message(new_input);
 
 	motor.run_in(); //Parse first byte
-	serial_interface->pass_time(16001);
+	clock->pass_time(16001);
 
 	motor.run_in(); //Timer times out from not receiving second byte
 
@@ -273,12 +287,12 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::ForceMode);
 
 	EXPECT_EQ(Actuator::ForceMode, motor.get_mode());
 
-	serial_interface->pass_time(100001);
+	clock->pass_time(100001);
 	motor.run_out();
 
 	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
@@ -287,12 +301,12 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamComman
 TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	EXPECT_EQ(Actuator::PositionMode, motor.get_mode());
 
-	serial_interface->pass_time(100001);
+	clock->pass_time(100001);
 	motor.run_out();
 
 	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
@@ -301,7 +315,7 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCom
 TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	motor.set_position_um(1); // This sets the stream timeout timer
@@ -314,7 +328,7 @@ TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueues
 	motor.run_in();
 	serial_interface->sendBuffer.clear();
 
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 	motor.run_out(); // This should inject a position command
 
@@ -327,12 +341,12 @@ TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFai
 	constexpr int unimportant_register_address = 180;
 	motor.read_register(unimportant_register_address, MessagePriority::important);
 	motor.run_out();
-	serial_interface->pass_time(50001);
+	clock->pass_time(50001);
 	motor.run_in(); // Motor experiences time out
 
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 	motor.run_out(); // Motor should re-queue original read
 
@@ -360,18 +374,18 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 
 	motor.run_in();
 
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 	motor.read_register(unimportant_register_address, MessagePriority::not_important);
 
 	motor.run_out(); 
 
-	serial_interface->pass_time(50001);
+	clock->pass_time(50001);
 	
 	motor.run_in();
 
 	serial_interface->sendBuffer.clear();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 	motor.run_out();
 
@@ -382,7 +396,7 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
 {
 	motor.enable();
-	motor.connection_state = IrisClientApplication::ConnectionStatus::connected;
+	motor.connection_state = Actuator::ConnectionStatus::connected;
 	motor.set_mode(Actuator::PositionMode);
 
 	motor.set_position_um(1); // This sets the stream timeout timer
@@ -397,7 +411,7 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueu
 	serial_interface->consume_new_message(echo_of_mode_register_write);
 	motor.run_in();
 	serial_interface->sendBuffer.clear();
-	serial_interface->pass_time(2001);
+	clock->pass_time(2001);
 
 
 	motor.run_out();
@@ -405,4 +419,83 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueu
 	std::vector<char> out_buffer{};
 
 	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, WhenStreamPauseIsCalledModbusHandshakeDoesntOccur)
+{
+	motor.enable();
+
+	motor.set_stream_paused(true); // Disable the queuing of new stream messages
+
+	motor.run_out(); // This sends the change mode command
+
+	std::vector<char> out_buffer{};
+
+	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	motor.read_registers(1, 0);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	motor.read_registers(1, 126);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterReadOfLength125GetsQueued)
+{
+	motor.read_registers(1, 125);
+	motor.run_out();
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroDoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 0, unimportant_data);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthGreaterThan123DoesNotGetQueued)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 124, unimportant_data);
+	motor.run_out();
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLength123GetsQueued)
+{
+	uint8_t unimportant_data[256];
+
+	motor.write_registers(1, 123, unimportant_data);
+	motor.run_out();
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
 }

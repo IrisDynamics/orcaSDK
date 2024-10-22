@@ -11,13 +11,6 @@ public:
 	TestSerialInterface()
 	{}
 
-	//Test specific setup and output
-
-	void pass_time(uint32_t new_time)
-	{
-		current_time += new_time;
-	}
-
 	void prepare_new_message(std::deque<char> new_message)
 	{
 		receive_buffer = new_message;
@@ -59,10 +52,6 @@ public:
 		adjusted_baud_rate = new_baud_rate;
 	}
 
-	uint32_t get_system_cycles() override { 
-		return current_time; 
-	}
-
 	bool ready_to_send() override {
 		return true;
 	}
@@ -74,5 +63,5 @@ public:
 
 private:
 	std::deque<char> receive_buffer;
-	uint32_t current_time = 0;
+	uint64_t current_time = 0;
 };

@@ -87,11 +87,11 @@ public:
 	 * @param	message			Pointer to the message buffer to be used for CRC generation.
 	 * @param 	message_len	 	Number of bytes in the message buffer.
 	 */
-	static uint16_t generate(uint8_t *message, int message_len) {
+	static constexpr uint16_t generate(uint8_t *message, int message_len) {
 
 		uint8_t crc_hi_byte = 0xFF;	// initialize crc bytes
 		uint8_t crc_lo_byte = 0xFF; //
-		int index; // for indexing the crc tables
+		int index = 0; // for indexing the crc tables
 
 		while(message_len--) {
 

@@ -32,6 +32,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include "clock.h"
 
 
 /**
@@ -62,9 +63,11 @@ public:
     */                       
     ModbusClient(
         SerialInterface& serial_interface,
+        Clock& clock,
         int _channel_number
     ):
         serial_interface(serial_interface),
+        clock(clock),
         channel_number(_channel_number),
 		repsonse_timeout_cycles  ( DEFAULT_RESPONSE_uS	 ),	
 		interchar_timeout_cycles ( DEFAULT_INTERCHAR_uS	 ),
@@ -245,7 +248,7 @@ public:
     * @brief get number of messages in the queue
     * @return True if the queue is empty (has no messages), False otherwise.
     */
-    uint32_t get_queue_size(){
+    size_t get_queue_size(){
         return messages.size();
     }
 
@@ -282,8 +285,8 @@ public:
     /**
      * @brief Get the device's current system time in cycles
     */
-    virtual uint32_t get_system_cycles() {
-        return serial_interface.get_system_cycles();
+    int64_t get_system_cycles() {
+        return clock.get_time_microseconds();
     }
 
     void begin_logging(std::shared_ptr<LogInterface> _log)
@@ -296,23 +299,24 @@ public:
 
 private:
     SerialInterface& serial_interface;
+    Clock& clock;
 
     std::shared_ptr<LogInterface> log;
 
     MessageQueue messages{ diagnostic_counters };            //!<a buffer for outgoing messages to facilitate timing and order of transmissions and responses
 
-    u32 repsonse_timeout_cycles;
-    u32 interchar_timeout_cycles;
-    u32 turnaround_delay_cycles;
+    int64_t repsonse_timeout_cycles;
+    int64_t interchar_timeout_cycles;
+    int64_t turnaround_delay_cycles;
 
-    u32 interframe_delay_cycles = 0;
+    int64_t interframe_delay_cycles = 0;
 
     bool logging = false;
 
     /// Time that the enabled timer was started
 
 
-    volatile uint32_t timer_start_time;	// recorded in system cycles: must be checked as such
+    int64_t timer_start_time;	// recorded in system cycles: must be checked as such
     /**
      * @brief Should be run when ready to send a new byte.
      *	Transitions to reception when done sending.
@@ -381,7 +385,7 @@ private:
 
 	};
 
-	volatile TIMER_ID my_enabled_timer = none;
+	TIMER_ID my_enabled_timer = none;
 
     /**
      * @brief Start/enable the interframe delay timer.
@@ -428,14 +432,14 @@ private:
      */
     TIMER_ID has_timer_expired () {
 
-    	volatile uint32_t timer_start_time_l = timer_start_time;
-    	volatile uint32_t tnow = get_system_cycles();
+    	volatile int64_t timer_start_time_l = timer_start_time;
+    	volatile int64_t tnow = get_system_cycles();
 
     	switch (my_enabled_timer) {
-    	case TIMER_ID::repsonse_timeout : if ((uint32_t)(tnow - timer_start_time_l) > repsonse_timeout_cycles  ) return TIMER_ID::repsonse_timeout ; break;
-    	case TIMER_ID::interchar_timeout: if ((uint32_t)(tnow - timer_start_time_l) > interchar_timeout_cycles ) return TIMER_ID::interchar_timeout; break;
-    	case TIMER_ID::turnaround_delay : if ((uint32_t)(tnow - timer_start_time_l) > turnaround_delay_cycles  ) return TIMER_ID::turnaround_delay ; break;
-    	case TIMER_ID::interframe_delay : if ((uint32_t)(tnow - timer_start_time_l) > interframe_delay_cycles  ) return TIMER_ID::interframe_delay ; break;
+    	case TIMER_ID::repsonse_timeout : if ((int64_t)(tnow - timer_start_time_l) > repsonse_timeout_cycles  ) return TIMER_ID::repsonse_timeout ; break;
+    	case TIMER_ID::interchar_timeout: if ((int64_t)(tnow - timer_start_time_l) > interchar_timeout_cycles ) return TIMER_ID::interchar_timeout; break;
+    	case TIMER_ID::turnaround_delay : if ((int64_t)(tnow - timer_start_time_l) > turnaround_delay_cycles  ) return TIMER_ID::turnaround_delay ; break;
+    	case TIMER_ID::interframe_delay : if ((int64_t)(tnow - timer_start_time_l) > interframe_delay_cycles  ) return TIMER_ID::interframe_delay ; break;
     	case TIMER_ID::none:
     	default:
     		break;
@@ -447,7 +451,7 @@ private:
     void log_transaction_transmission(Transaction* transaction)
     {
         std::stringstream message;
-        message << serial_interface.get_system_cycles() << "\ttx";
+        message << clock.get_time_microseconds() << "\ttx";
         uint8_t* tx_data = transaction->get_raw_tx_data();
         for (int i = 0; i < transaction->get_tx_buffer_size(); i++)
         {
@@ -459,7 +463,7 @@ private:
     void log_transaction_response(Transaction* transaction)
     {
         std::stringstream message;
-        message << serial_interface.get_system_cycles() << "\trx";
+        message << clock.get_time_microseconds() << "\trx";
         uint8_t* rx_data = transaction->get_raw_rx_data();
         for (int i = 0; i < transaction->get_rx_buffer_size(); i++)
         {

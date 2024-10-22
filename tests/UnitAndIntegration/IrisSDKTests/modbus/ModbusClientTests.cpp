@@ -3,18 +3,20 @@
 #include "modbus/helpers/TestSerialInterface.h"
 #include "modbus/helpers/TestLog.h"
 #include "modbus/helpers/modbus_helpers.h"
+#include "modbus/helpers/TestClock.h"
 
 class ModbusClientTests : public testing::Test
 {
 protected:
 	ModbusClientTests() :
 		log(std::make_shared<TestLog>()),
-		modbus_client(serial_interface, -1)
+		modbus_client(serial_interface, clock, -1)
 	{
 		modbus_client.begin_logging(log);
 	}
 
 	TestSerialInterface serial_interface;
+	TestClock clock;
 	std::shared_ptr<TestLog> log;
 	ModbusClient modbus_client;
 };
@@ -30,7 +32,7 @@ TEST_F(ModbusClientTests, ModbusClientOutputsOutgoingBytesToLogFileIfLoggingEnab
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 
@@ -49,7 +51,7 @@ TEST_F(ModbusClientTests, ModbusClientOutputsIncomingBytesToLogFileIfLoggingEnab
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 
@@ -57,7 +59,7 @@ TEST_F(ModbusClientTests, ModbusClientOutputsIncomingBytesToLogFileIfLoggingEnab
 		'\x1', '\x3', '\x4', '\xc', '\xf3', '\x1d'
 	};
 	serial_interface.consume_new_message(incoming_message);
-	serial_interface.pass_time(500);
+	clock.pass_time(500);
 	modbus_client.run_in();
 
 	std::string logString = "10500\trx\t01\t03\t04\t0c\tf3\t1d";
@@ -75,11 +77,11 @@ TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 
-	serial_interface.pass_time(DEFAULT_RESPONSE_uS + 1);
+	clock.pass_time(DEFAULT_RESPONSE_uS + 1);
 	modbus_client.run_in();
 
 	std::string logString = "60001\trx\tTimed out. ";
@@ -97,7 +99,7 @@ TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 
@@ -106,7 +108,7 @@ TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
 	};
 	serial_interface.consume_new_message(incoming_message);
 	modbus_client.run_in();
-	serial_interface.pass_time(DEFAULT_INTERCHAR_uS + 1);
+	clock.pass_time(DEFAULT_INTERCHAR_uS + 1);
 	modbus_client.run_in();
 
 	std::string logString = "26001\trx\t01\tUnexpected interchar. ";
@@ -124,7 +126,7 @@ TEST_F(ModbusClientTests, AppendsWrongAddressWhenOutgoingAddressDoesntMatchIncom
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 	
@@ -150,7 +152,7 @@ TEST_F(ModbusClientTests, AppendsWrongCRCWhenMessageCRCIsIncorrect)
 
 	modbus_client.enqueue_transaction(test_transaction);
 
-	serial_interface.pass_time(10000);
+	clock.pass_time(10000);
 
 	modbus_client.run_out();
 
@@ -188,7 +190,7 @@ TEST_F(ModbusClientTests, IfAnImportantMessageFailsForAnyReasonARetryTransaction
 	modbus_client.dequeue_transaction();
 
 	serial_interface.sendBuffer.clear();
-	serial_interface.pass_time(2001);
+	clock.pass_time(2001);
 	modbus_client.run_out();
 
 	std::vector<char> expected_output{ '\x1', '\x3', '\x4', '\xc', '\xf3', '\x1d' };
@@ -220,7 +222,7 @@ TEST_F(ModbusClientTests, ImportantMessagesAreGivenUpOnAfterFiveFailedRetries)
 		modbus_client.dequeue_transaction();
 
 		serial_interface.sendBuffer.clear();
-		serial_interface.pass_time(2001);
+		clock.pass_time(2001);
 		modbus_client.run_out();
 	}
 
@@ -265,7 +267,7 @@ TEST_F(ModbusClientTests, ImportantMessageRetriesAreInsertedAtTheFrontOfTheQueue
 	modbus_client.dequeue_transaction();
 
 	serial_interface.sendBuffer.clear();
-	serial_interface.pass_time(2001);
+	clock.pass_time(2001);
 	modbus_client.run_out();
 
 	// Expect retry of transaction one

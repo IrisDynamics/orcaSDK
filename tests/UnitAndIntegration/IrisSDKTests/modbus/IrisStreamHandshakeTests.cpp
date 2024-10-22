@@ -10,7 +10,8 @@ protected:
 		serial_interface(std::make_shared<TestSerialInterface>()),
 		modbus_app(
 			serial_interface,
-			0)
+			0,
+			"unimportant")
 	{}
 
 	void SetUp()

@@ -50,13 +50,17 @@ public:
 
 public:
 	Actuator(
-		int uart_channel
+		int uart_channel,
+		const char* name
 	);
 
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
-		int uart_channel
+		int uart_channel,
+		const char* name
 	);
+
+	const char* name;
 
 	/**
 	*@brief Sets the type of command that will be sent on high speed stream (ie when enable() has been used, this sets the type of message sent from enqueue motor frame)
@@ -656,7 +660,7 @@ public:
 		const char* name,
 		int
 	) :
-		Actuator(uart_channel)
+		Actuator(uart_channel, name)
 	{}
 };
 

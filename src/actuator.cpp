@@ -14,22 +14,26 @@ void Actuator::disable_comport() {
 
 //Constructor
 Actuator::Actuator(
-	int uart_channel
+	int uart_channel,
+	const char* name
 ) :
 	Actuator(
 #if defined(WINDOWS)
 		std::make_shared<windows_SerialInterface>(uart_channel),
 #endif
-		uart_channel
+		uart_channel,
+		name
 	)
 {}
 
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
-	int uart_channel
+	int uart_channel,
+	const char* name
 ) :
 	serial_interface(serial_interface),
-	modbus_client(*serial_interface, uart_channel)
+	modbus_client(*serial_interface, uart_channel),
+	name(name)
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {

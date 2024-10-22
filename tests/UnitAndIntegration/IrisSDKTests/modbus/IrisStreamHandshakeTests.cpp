@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "actuator.h"
 #include "modbus/helpers/TestSerialInterface.h"
+#include "modbus/helpers/TestClock.h"
 
 class IrisStreamHandshakeTests : public testing::Test
 {
@@ -8,8 +9,10 @@ protected:
 	IrisStreamHandshakeTests() :
 		//modbus_client(serial_interface, -1),
 		serial_interface(std::make_shared<TestSerialInterface>()),
+		clock(std::make_shared<TestClock>()),
 		modbus_app(
 			serial_interface,
+			clock,
 			0,
 			"unimportant")
 	{}
@@ -20,6 +23,7 @@ protected:
 	}
 
 	std::shared_ptr<TestSerialInterface> serial_interface;
+	std::shared_ptr<TestClock> clock;
 	Actuator modbus_app;
 
 	void ReceiveMessageAndSendResponse(std::deque<char> message_to_receive)
@@ -27,7 +31,7 @@ protected:
 		serial_interface->sendBuffer.clear();
 		serial_interface->consume_new_message(message_to_receive);
 		modbus_app.run_in();
-		serial_interface->pass_time(2001); //Interframe delay is 2000us
+		clock->pass_time(2001); //Interframe delay is 2000us
 
 		modbus_app.run_out();
 	}

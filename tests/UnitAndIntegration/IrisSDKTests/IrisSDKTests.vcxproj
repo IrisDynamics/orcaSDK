@@ -106,6 +106,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\actuator.h" />
     <ClInclude Include="modbus\helpers\modbus_helpers.h" />
+    <ClInclude Include="modbus\helpers\TestClock.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

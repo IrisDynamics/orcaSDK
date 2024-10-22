@@ -1,16 +1,18 @@
 #include "pch.h"
 #include "src/modbus_client_application.h"
 #include "modbus/helpers/TestSerialInterface.h"
+#include "modbus/helpers/TestClock.h"
 #include "actuator.h"
 
 class TransactionConstructionTests : public testing::Test
 {
 protected:
 	TransactionConstructionTests() :
-		modbus_client(serial_interface, -1)
+		modbus_client(serial_interface, clock, -1)
 	{}
 
 	TestSerialInterface serial_interface;
+	TestClock clock;
 	ModbusClient modbus_client;
 };
 

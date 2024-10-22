@@ -5,16 +5,21 @@ class BasicInteractionTests : public ::testing::Test
 {
 protected:
 	BasicInteractionTests() :
-		motor(3)
+		motor(4),
+		motor1(7),
+		motor2(9)
 	{}
 
 	void SetUp()
 	{
-		motor.set_new_comport(3);
 		motor.init();
+		//motor1.init();
+		//motor2.init();
 	}
 
 	Actuator motor;
+	Actuator motor1;
+	Actuator motor2;
 };
 
 TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {

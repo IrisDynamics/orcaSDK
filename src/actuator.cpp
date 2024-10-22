@@ -1,4 +1,5 @@
 #include "../actuator.h"
+#include "chrono_clock.h"
 
 #if defined(WINDOWS)
 void Actuator::set_new_comport(int _comport) {
@@ -21,6 +22,7 @@ Actuator::Actuator(
 #if defined(WINDOWS)
 		std::make_shared<windows_SerialInterface>(uart_channel),
 #endif
+		std::make_shared<ChronoClock>(),
 		uart_channel,
 		name
 	)
@@ -28,11 +30,13 @@ Actuator::Actuator(
 
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
+	std::shared_ptr<Clock> clock,
 	int uart_channel,
 	const char* name
 ) :
 	serial_interface(serial_interface),
-	modbus_client(*serial_interface, uart_channel),
+	clock(clock),
+	modbus_client(*serial_interface, *clock, uart_channel),
 	name(name)
 {}
 

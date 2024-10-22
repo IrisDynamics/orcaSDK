@@ -38,6 +38,7 @@
 class Actuator {
 
 	std::shared_ptr<SerialInterface> serial_interface;
+	std::shared_ptr<Clock> clock;
 
 public:
 	ModbusClient modbus_client;
@@ -56,6 +57,7 @@ public:
 
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
+		std::shared_ptr<Clock> clock,
 		int uart_channel,
 		const char* name
 	);

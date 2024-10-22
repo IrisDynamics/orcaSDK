@@ -32,6 +32,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include "clock.h"
 
 
 /**
@@ -62,9 +63,11 @@ public:
     */                       
     ModbusClient(
         SerialInterface& serial_interface,
+        Clock& clock,
         int _channel_number
     ):
         serial_interface(serial_interface),
+        clock(clock),
         channel_number(_channel_number),
 		repsonse_timeout_cycles  ( DEFAULT_RESPONSE_uS	 ),	
 		interchar_timeout_cycles ( DEFAULT_INTERCHAR_uS	 ),
@@ -283,7 +286,7 @@ public:
      * @brief Get the device's current system time in cycles
     */
     int64_t get_system_cycles() {
-        return serial_interface.get_system_cycles();
+        return clock.get_time_microseconds();
     }
 
     void begin_logging(std::shared_ptr<LogInterface> _log)
@@ -296,6 +299,7 @@ public:
 
 private:
     SerialInterface& serial_interface;
+    Clock& clock;
 
     std::shared_ptr<LogInterface> log;
 
@@ -447,7 +451,7 @@ private:
     void log_transaction_transmission(Transaction* transaction)
     {
         std::stringstream message;
-        message << serial_interface.get_system_cycles() << "\ttx";
+        message << clock.get_time_microseconds() << "\ttx";
         uint8_t* tx_data = transaction->get_raw_tx_data();
         for (int i = 0; i < transaction->get_tx_buffer_size(); i++)
         {
@@ -459,7 +463,7 @@ private:
     void log_transaction_response(Transaction* transaction)
     {
         std::stringstream message;
-        message << serial_interface.get_system_cycles() << "\trx";
+        message << clock.get_time_microseconds() << "\trx";
         uint8_t* rx_data = transaction->get_raw_rx_data();
         for (int i = 0; i < transaction->get_rx_buffer_size(); i++)
         {

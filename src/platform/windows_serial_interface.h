@@ -125,18 +125,6 @@ public:
         SetCommState(hSerial, &dcbSerialParams);
     }
 
-    /**
-    * @brief Get the device's current system time in cycles - not using cycles, so just returns elapsed time in microseconds
-    */
-    int64_t get_system_cycles() override {
-        LARGE_INTEGER ticks;
-        if (!QueryPerformanceCounter(&ticks)) {
-            LPCWSTR tickErr = L"Error getting ticks for checking system time";
-            OutputDebugString(tickErr);
-        }
-        return ticks.QuadPart / 10;
-    };
-
     uint8_t receive_byte() override {
         std::lock_guard<std::mutex> light_lock{ light_mutex };
         std::lock_guard<std::mutex> backend_lock{ backend_thread_mutex };

@@ -5,9 +5,9 @@ class BasicInteractionTests : public ::testing::Test
 {
 protected:
 	BasicInteractionTests() :
-		motor(4),
-		motor1(7),
-		motor2(9)
+		motor(4, "unimportant"),
+		motor1(7, "unimportant"),
+		motor2(9, "unimportant")
 	{}
 
 	void SetUp()

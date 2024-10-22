@@ -9,6 +9,7 @@
 #define ORCA600_REGISTERS_H_
 
 #include "types.h"
+#include "orca600_memory_map.h"
 
 
 /**

@@ -657,7 +657,7 @@ void Actuator::initiate_handshake()
 	if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
 		is_paused = false;
 		num_discovery_pings_received = 0;
-		enqueue_ping_msg();
+		enqueue_ping_msg(connection_config.server_address);
 
 		connection_state = ConnectionStatus::discovery;
 	}
@@ -679,7 +679,7 @@ void Actuator::modbus_handshake(Transaction response) {
 
 			}
 			else {
-				enqueue_ping_msg();
+				enqueue_ping_msg(connection_config.server_address);
 			}
 		}
 		// new response was failed, or the wrong kind of response
@@ -771,7 +771,7 @@ bool Actuator::has_pause_timer_expired() {
 	return 0;
 }
 
-int Actuator::enqueue_ping_msg() {
-	constexpr Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(1/*connection_config.server_address*/); //pass in num_data as 0 so nothing from data array will be loaded into transmission
+int Actuator::enqueue_ping_msg(uint8_t device_address) {
+	Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(device_address); //pass in num_data as 0 so nothing from data array will be loaded into transmission
 	return modbus_client.enqueue_transaction(ping_transaction);
 }

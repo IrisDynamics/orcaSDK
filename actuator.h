@@ -646,7 +646,7 @@ private:
 	* @return 1 if the request was added to the queue, 0 if the queue was full
 	*
 	*/
-	int enqueue_ping_msg();
+	int enqueue_ping_msg(uint8_t device_address);
 
 #pragma endregion
 

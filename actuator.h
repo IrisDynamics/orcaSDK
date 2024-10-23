@@ -44,12 +44,6 @@ class Actuator {
 public:
 	ModbusClient modbus_client;
 
-#if defined(WINDOWS)
-	void set_new_comport(int _comport);
-
-	void disable_comport();
-#endif
-
 public:
 	Actuator(
 		int uart_channel,
@@ -132,11 +126,7 @@ public:
 	void run_in();
 
 	/**
-	* @brief Returns the UART channel number in use
-	* 
-	* @return int, channel number
 	*/
-	int channel_number();
 
 	/**
 	*@brief get the motor's mode of operations as currently updated by the local memory map
@@ -156,6 +146,18 @@ public:
 	 */
 	void clear_errors();
 
+#if defined(WINDOWS)
+	void set_new_comport(int _comport);
+
+	void disable_comport();
+
+	/**
+	* @brief Returns the UART channel number in use
+	*
+	* @return int, channel number
+	*/
+	int channel_number();
+#endif
 	/**
 	* @brief Returns the amount of power being drawn by the motor, in Watts
 	* 

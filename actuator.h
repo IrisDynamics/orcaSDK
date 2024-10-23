@@ -60,15 +60,6 @@ public:
 	const char* name;
 
 	/**
-	*@brief Sets the type of command that will be sent on high speed stream (ie when enable() has been used, this sets the type of message sent from enqueue motor frame)
-	*/
-	typedef enum {
-		MotorCommand,
-		MotorRead,
-		MotorWrite
-	}StreamMode;
-
-	/**
 	 * @brief this tracks the type of motor command stream that is currently being used
 	 */
 	typedef enum {
@@ -80,6 +71,23 @@ public:
 		KinematicMode	= 5
 
 	} MotorMode;
+
+	/**
+	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
+	*/
+	void init();
+
+	/**
+	 *	@brief	The normal run loop for asynchronous (cached) motor communication.
+	 *			If you are communicating with your motor asynchronously, you must
+	 *			call this function in a regular loop.
+	 */
+	void run();
+
+	/**
+	 * @brief process all commands in modbus queue
+	 */
+	void flush();
 
 	/**
 	* @brief Returns the total amount of force being sensed by the motor
@@ -94,39 +102,6 @@ public:
 	* @return uint32_t - position in micrometers
 	*/
 	int32_t get_position_um();
-
-	/**
-	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
-	*/
-	void init();
-
-	void run();
-
-	/**
-	 * @brief process all commands in modbus queue
-	 */
-	void flush();
-
-	/**
-	 * @brief handle the motor frame transmissions cadence
-	 * @
-	 * This dispatches transmissions for motor frames when connected and dispatches handshake messages when not.
-	 * This function must be externally paced... i.e. called at the frequency that transmission should be sent
-	 */
-	void run_out();
-
-	/**
-	 * @brief Incoming message parsing and connection handling
-	 *
-	 * Polls uart polled timers
-	 * Claims responses from the message queue.
-	 * Maintains the connection state based on consecutive failed messages
-	 * Parses successful messages
-	 */
-	void run_in();
-
-	/**
-	*/
 
 	/**
 	*@brief get the motor's mode of operations as currently updated by the local memory map
@@ -158,6 +133,9 @@ public:
 	*/
 	int channel_number();
 #endif
+
+#pragma region UNCOMMON_MISC_DATA
+
 	/**
 	* @brief Returns the amount of power being drawn by the motor, in Watts
 	* 
@@ -180,47 +158,6 @@ public:
 	uint16_t get_voltage_mV();
 
 	/**
-	* @brief Returns the actuator serial number
-	* 
-	* @return uint32_t - actuator serial number
-	*/
-	uint32_t get_serial_number();
-
-	/**
-	* @brief Return the firmware major version
-	* 
-	* @return uint16_t - firmware major version
-	*/
-	uint16_t get_major_version();
-
-	/**
-	* @brief Return the firmware release state (minor version)
-	* 
-	* @return uint16_t - firmware release state
-	*/
-	uint16_t get_release_state();
-
-	/**
-	* @brief Return the firmware revision number
-	* 
-	* @return uint16_t - firmware revision number
-	*/
-	uint16_t get_revision_number();
-	
-	/**
-	* @brief Returns true if the motor's firmware version is 'at least as recent' as the version designated 
-	*		 by the parameters. 'At least as recent' can be thought of as a greater than or equal to comparison 
-	*		 with version being the most significant digit, revision number being second most significant, and 
-	*		 release state being the least significant.
-	*
-	* @param version - Desired major version number
-	* @param release_state - Desired release state (0 - alpha, 1 - beta, 2 - release)
-	* @param revision_number - Desired revision number
-	* @return bool - True if motor's firmware version is at least as recent as the version designated by the parameters
-	*/
-	bool version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
-
-	/**
 	 * @brief Set the zero position of the motor to be the current position 
 	 */
 	void zero_position();
@@ -230,6 +167,55 @@ public:
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
 	void get_latched_errors();
+
+#pragma endregion
+
+#pragma region MOTOR_ID_AND_VERSIONING
+
+	/**
+	* @brief Returns the actuator serial number
+	*
+	* @return uint32_t - actuator serial number
+	*/
+	uint32_t get_serial_number();
+
+	/**
+	* @brief Return the firmware major version
+	*
+	* @return uint16_t - firmware major version
+	*/
+	uint16_t get_major_version();
+
+	/**
+	* @brief Return the firmware release state (minor version)
+	*
+	* @return uint16_t - firmware release state
+	*/
+	uint16_t get_release_state();
+
+	/**
+	* @brief Return the firmware revision number
+	*
+	* @return uint16_t - firmware revision number
+	*/
+	uint16_t get_revision_number();
+
+	/**
+	* @brief Returns true if the motor's firmware version is 'at least as recent' as the version designated
+	*		 by the parameters. 'At least as recent' can be thought of as a greater than or equal to comparison
+	*		 with version being the most significant digit, revision number being second most significant, and
+	*		 release state being the least significant.
+	*
+	* @param version - Desired major version number
+	* @param release_state - Desired release state (0 - alpha, 1 - beta, 2 - release)
+	* @param revision_number - Desired revision number
+	* @return bool - True if motor's firmware version is at least as recent as the version designated by the parameters
+	*/
+	bool version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
+
+#pragma endregion
+
+#pragma region TUNING_AND_SAFETY
 
 	/**
 	 * @brief Set the maximum force that the motor allows
@@ -275,6 +261,8 @@ public:
 	 * @param sat maximum force (safety value)
 	 */
 	void tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
+
+#pragma endregion
 
 #pragma region KINEMATICS
 
@@ -395,8 +383,36 @@ private:
 
 	void handle_transaction_response(Transaction response);
 
+	/**
+	 * @brief handle the motor frame transmissions cadence
+	 * @
+	 * This dispatches transmissions for motor frames when connected and dispatches handshake messages when not.
+	 * This function must be externally paced... i.e. called at the frequency that transmission should be sent
+	 */
+	void run_out();
+
+	/**
+	 * @brief Incoming message parsing and connection handling
+	 *
+	 * Polls uart polled timers
+	 * Claims responses from the message queue.
+	 * Maintains the connection state based on consecutive failed messages
+	 * Parses successful messages
+	 */
+	void run_in();
+
 #pragma region IRIS_CLIENT_APPLICATION
 public:
+
+	/**
+	*@brief Sets the type of command that will be sent on high speed stream (ie when enable() has been used, this sets the type of message sent from enqueue motor frame)
+	*/
+	typedef enum {
+		MotorCommand,
+		MotorRead,
+		MotorWrite
+	} StreamMode;
+
 	/**
 	 * @brief Configurable parameters for the handshake sequence and connection maintenance. Should be set when disabled
 	*/

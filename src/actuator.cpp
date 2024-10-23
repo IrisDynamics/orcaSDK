@@ -11,6 +11,10 @@ void Actuator::disable_comport() {
 	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 	win_modbus_client->disable_comport_comms();
 }
+
+int Actuator::channel_number() {
+	return modbus_client.channel_number;
+}
 #endif
 
 //Constructor
@@ -230,10 +234,6 @@ void Actuator::handle_transaction_response(Transaction response)
 		// todo: warn about un-implemented function codes being received
 		break;
 	}
-}
-
-int Actuator::channel_number() {
-	return modbus_client.channel_number;
 }
 
 uint16_t Actuator::get_mode_of_operation() {
@@ -515,14 +515,11 @@ void Actuator::synchronize_memory_map() {
 }
 
 void Actuator::desynchronize_memory_map() {
-	for (int i = 0; i < ORCA_REG_SIZE; i++) {
-		orca_reg_contents[i] = 0;
-	}
+	orca_reg_contents.fill(0);
 }
 
 void Actuator::motor_stream_command() {
 	switch (comms_mode) {
-		;
 	case ForceMode: {
 		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
 			comms_mode = SleepMode;

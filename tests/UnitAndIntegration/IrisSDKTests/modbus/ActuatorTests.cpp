@@ -32,7 +32,7 @@ protected:
 TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 {
 	motor.read_registers(SHAFT_POS_UM, 2);
-	motor.run_out();
+	motor.run();
 	
 	std::vector<char> expected_sent_buffer{
 		'\x1', '\x3', '\x1', '\x56', '\0', '\x2', '\x25', '\xe7'
@@ -47,7 +47,7 @@ TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(65538, motor.get_position_um());
 }
@@ -61,7 +61,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	motor.enable();
 
 	//Trigger beginning of discovery
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> ping_message{
 		{ '\x1', '\b', '\0', '\0', '\x80', '\x1a' }
@@ -79,24 +79,24 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	}
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
-	motor.run_in();
+	motor.run();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
-	motor.run_in();
+	motor.run();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 	serial_interface->sendBuffer.clear();
 	serial_interface->consume_new_message(ping_echo);
-	motor.run_in();
+	motor.run();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 
 	//-----Synchronization-----
 	// Sends messages asking for memory reads for different memory regions
 	// Completes when each read returns with the correct shape and parameters
-	// and Actuator::run_in() consumes all 3 messages
+	// and Actuator::run() consumes all 3 messages
 	std::vector<char> first_sync_message{ '\x1', '\x03', '\x01', '\x90', '\0', '\x13', '\x5', '\xd6' };
 	EXPECT_EQ(first_sync_message, serial_interface->sendBuffer);
 
@@ -111,9 +111,9 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->consume_new_message(first_sync_response);
 
 	serial_interface->sendBuffer.clear();
-	motor.run_in();
+	motor.run();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> second_sync_message{ '\x1', '\x03', '\x01', '\xb0', '\0', '\x5', '\x85', '\xd2' };
 	EXPECT_EQ(second_sync_message, serial_interface->sendBuffer);
@@ -129,9 +129,9 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->consume_new_message(second_sync_response);
 
 	serial_interface->sendBuffer.clear();
-	motor.run_in();
+	motor.run();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> third_sync_message{ '\x1', '\x03', '\0', '\x80', '\0', '\x19', '\x85', '\xe8' };
 	EXPECT_EQ(third_sync_message, serial_interface->sendBuffer);
@@ -147,11 +147,11 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->consume_new_message(third_sync_response);
 	
 	//Consume the 3 ready response messages.
-	motor.run_in();
+	motor.run();
 
 	serial_interface->sendBuffer.clear();
 	clock->pass_time(2001);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> output = {
 		'\x01', //Orca address
@@ -171,8 +171,8 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 			output.begin(), output.end()
 	};
 	serial_interface->consume_new_message(stream_negotiation_response);
-	motor.run_in();
-	motor.run_out();
+	motor.run();
+	motor.run();
 
 	EXPECT_TRUE(motor.is_connected());
 	EXPECT_EQ(625000, serial_interface->adjusted_baud_rate);
@@ -182,7 +182,7 @@ TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLoca
 {
 	uint8_t data[2] = { 0x01, 0x01 };
 	motor.read_write_registers(97, 2, 180, 1, data);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> expected_sent_buffer{
 		'\x1', '\x17', '\x0', '\x61', '\0', '\x2', '\0', '\xb4', '\x0', '\x1', '\x2', '\x1', '\x1', '\x9d', '\x24'
@@ -196,7 +196,7 @@ TEST_F(ActuatorTests, ReadWriteMultipleRegistersSendsCorrectDataAndPopulatesLoca
 	ModbusTesting::CalculateAndAppendCRC(expected_response);
 	serial_interface->consume_new_message(expected_response);
 
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(motor.get_orca_reg_content(97), 0xd9d);
 	EXPECT_EQ(motor.get_orca_reg_content(98), 0xe3e);
@@ -206,7 +206,7 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 {
 	motor.read_registers(SHAFT_POS_UM, 2);
 	motor.read_registers(SHAFT_SPEED_MMPS, 2);
-	motor.run_out();
+	motor.run();
 
 	std::deque<char> first_message_response = std::deque<char>{
 		//						 low  reg(2)  high reg(65536)
@@ -215,11 +215,11 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 	ModbusTesting::CalculateAndAppendCRC(first_message_response);
 	serial_interface->consume_new_message(first_message_response);
 
-	motor.run_in();
+	motor.run();
 
 	clock->pass_time(2001);
 
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(65538, motor.get_position_um());
 
@@ -230,7 +230,7 @@ TEST_F(ActuatorTests, QueueingMultipleReadsResultsInBothCompleting)
 	ModbusTesting::CalculateAndAppendCRC(second_message_response);
 	serial_interface->consume_new_message(second_message_response);
 
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(3, motor.get_orca_reg_content(SHAFT_SPEED_MMPS));
 	EXPECT_EQ(2, motor.get_orca_reg_content(SHAFT_SHEED_H));
@@ -240,13 +240,13 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 {
 	motor.read_register(POWER);
 
-	motor.run_out();
+	motor.run();
 	std::deque<char> receive_buffer{
 		'\x1', '\x3', '\x1', '\x0', '\xff', '\x0', '\x0'
 	};
 	serial_interface->consume_new_message(receive_buffer);
 	
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[crc_error_count]);
 }
@@ -255,11 +255,11 @@ TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFu
 {
 	motor.read_register(POWER);
 
-	motor.run_out();
+	motor.run();
 
 	clock->pass_time(50001);
 
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 }
@@ -268,7 +268,7 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 {
 	motor.read_register(POWER);
 
-	motor.run_out();
+	motor.run();
 
 	std::deque<char> new_input
 	{
@@ -276,10 +276,10 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	};
 	serial_interface->consume_new_message(new_input);
 
-	motor.run_in(); //Parse first byte
+	motor.run(); //Parse first byte
 	clock->pass_time(16001);
 
-	motor.run_in(); //Timer times out from not receiving second byte
+	motor.run(); //Timer times out from not receiving second byte
 
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[unexpected_interchar]);
 }
@@ -293,7 +293,7 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamComman
 	EXPECT_EQ(Actuator::ForceMode, motor.get_mode());
 
 	clock->pass_time(100001);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
 }
@@ -307,7 +307,7 @@ TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCom
 	EXPECT_EQ(Actuator::PositionMode, motor.get_mode());
 
 	clock->pass_time(100001);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
 }
@@ -319,18 +319,18 @@ TEST_F(ActuatorTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueues
 	motor.set_mode(Actuator::PositionMode);
 
 	motor.set_position_um(1); // This sets the stream timeout timer
-	motor.run_out(); // This sends the change mode command
+	motor.run(); // This sends the change mode command
 
 	std::deque<char> echo_of_mode_register_write{
 		'\x1', '\x6', '\0', '\x3', '\0', '\x3', '\x39', '\xcb'
 	};
 	serial_interface->consume_new_message(echo_of_mode_register_write);
-	motor.run_in();
+	motor.run();
 	serial_interface->sendBuffer.clear();
 
 	clock->pass_time(2001);
 
-	motor.run_out(); // This should inject a position command
+	motor.run(); // This should inject a position command
 
 	std::vector<char> position_stream_command = { '\x1', '\x64', '\x1e', '\0', '\0', '\0', '\x1', '\x6a', '\x26' };
 	EXPECT_EQ(position_stream_command, serial_interface->sendBuffer);
@@ -340,15 +340,15 @@ TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFai
 {
 	constexpr int unimportant_register_address = 180;
 	motor.read_register(unimportant_register_address, MessagePriority::important);
-	motor.run_out();
+	motor.run();
 	clock->pass_time(50001);
-	motor.run_in(); // Motor experiences time out
+	motor.run(); // Motor experiences time out
 
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 
 	clock->pass_time(2001);
 
-	motor.run_out(); // Motor should re-queue original read
+	motor.run(); // Motor should re-queue original read
 
 	std::deque<char> returned_data {
 		'\x1', '\x3', '\x2', '\x0', '\x5'
@@ -356,7 +356,7 @@ TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFai
 	ModbusTesting::CalculateAndAppendCRC(returned_data);
 	serial_interface->consume_new_message(returned_data);
 
-	motor.run_in();
+	motor.run();
 
 	EXPECT_EQ(5, motor.get_orca_reg_content(180));
 }
@@ -365,29 +365,29 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 {
 	constexpr int unimportant_register_address = 180;
 	motor.read_register(unimportant_register_address, MessagePriority::important);
-	motor.run_out();
+	motor.run();
 	std::deque<char> returned_data{
 		'\x1', '\x3', '\x2', '\x0', '\x5'
 	};
 	ModbusTesting::CalculateAndAppendCRC(returned_data);
 	serial_interface->consume_new_message(returned_data);
 
-	motor.run_in();
+	motor.run();
 
 	clock->pass_time(2001);
 
 	motor.read_register(unimportant_register_address, MessagePriority::not_important);
 
-	motor.run_out(); 
+	motor.run(); 
 
 	clock->pass_time(50001);
 	
-	motor.run_in();
+	motor.run();
 
 	serial_interface->sendBuffer.clear();
 	clock->pass_time(2001);
 
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> out_buffer{};
 	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
@@ -403,18 +403,18 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueu
 
 	motor.set_stream_paused(true); // Disable the queuing of new stream messages
 
-	motor.run_out(); // This sends the change mode command
+	motor.run(); // This sends the change mode command
 
 	std::deque<char> echo_of_mode_register_write{
 		'\x1', '\x6', '\0', '\x3', '\0', '\x3', '\x39', '\xcb'
 	};
 	serial_interface->consume_new_message(echo_of_mode_register_write);
-	motor.run_in();
+	motor.run();
 	serial_interface->sendBuffer.clear();
 	clock->pass_time(2001);
 
 
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> out_buffer{};
 
@@ -427,7 +427,7 @@ TEST_F(ActuatorTests, WhenStreamPauseIsCalledModbusHandshakeDoesntOccur)
 
 	motor.set_stream_paused(true); // Disable the queuing of new stream messages
 
-	motor.run_out(); // This sends the change mode command
+	motor.run(); // This sends the change mode command
 
 	std::vector<char> out_buffer{};
 
@@ -439,7 +439,7 @@ TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
 	std::vector<char> empty_out_buffer{};
 
 	motor.read_registers(1, 0);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
 }
@@ -449,7 +449,7 @@ TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued
 	std::vector<char> empty_out_buffer{};
 
 	motor.read_registers(1, 126);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
 }
@@ -457,7 +457,7 @@ TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued
 TEST_F(ActuatorTests, MultipleRegisterReadOfLength125GetsQueued)
 {
 	motor.read_registers(1, 125);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> empty_out_buffer{};
 
@@ -471,7 +471,7 @@ TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroDoesNotGetQueued)
 	uint8_t unimportant_data[256];
 
 	motor.write_registers(1, 0, unimportant_data);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
 }
@@ -483,7 +483,7 @@ TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthGreaterThan123DoesNotGetQueue
 	uint8_t unimportant_data[256];
 
 	motor.write_registers(1, 124, unimportant_data);
-	motor.run_out();
+	motor.run();
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
 }
@@ -493,7 +493,7 @@ TEST_F(ActuatorTests, MultipleRegisterWriteOfLength123GetsQueued)
 	uint8_t unimportant_data[256];
 
 	motor.write_registers(1, 123, unimportant_data);
-	motor.run_out();
+	motor.run();
 
 	std::vector<char> empty_out_buffer{};
 

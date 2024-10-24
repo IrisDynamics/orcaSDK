@@ -47,7 +47,6 @@ protected:
 
 TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
 {
-	motor.set_mode(MotorMode::SleepMode);
 	ConnectionConfig config;
 	config.response_timeout_us = 100000;
 	motor.set_connection_config(config);
@@ -57,21 +56,19 @@ TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStre
 		motor.run();
 	}
 	motor.set_mode(MotorMode::ForceMode);
-	motor.read_register(MODE_OF_OPERATION);
-	motor.flush();
 
 	EXPECT_EQ(MotorMode::ForceMode, motor.get_mode());
 
-	//auto stream_start = std::chrono::steady_clock::now();
-	//while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()- stream_start) < std::chrono::milliseconds(105))
-	//{
-	//	motor.run();
-	//}
+	auto stream_start = std::chrono::steady_clock::now();
+	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()- stream_start) < std::chrono::milliseconds(105))
+	{
+		motor.run();
+	}
 
-	//motor.read_register(MODE_OF_OPERATION);
-	//motor.flush();
+	motor.read_register(MODE_OF_OPERATION);
+	motor.flush();
 
-	//EXPECT_EQ(MotorMode::SleepMode, motor.get_mode());
+	EXPECT_EQ(MotorMode::SleepMode, motor.get_mode());
 }
 
 //TEST_F(BasicInteractionTests, EnablingMotorStream) {
@@ -86,8 +83,8 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 {
 	for (int i = 0; i < 25; i++)
 	{
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::ForceMode, MODE_OF_OPERATION, 
-			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == Actuator::ForceMode); }));
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::SleepMode, MODE_OF_OPERATION, Actuator::SleepMode));
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
+			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == MotorMode::ForceMode); }));
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
 	}
 }

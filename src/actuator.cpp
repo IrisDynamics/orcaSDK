@@ -50,7 +50,11 @@ Actuator::Actuator(
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {
-	write_register(CTRL_REG_3, (uint8_t)orca_mode);
+	//write_register(CTRL_REG_3, (uint8_t)orca_mode);
+	if (!command_and_confirm(CTRL_REG_3, (uint16_t)orca_mode, MODE_OF_OPERATION, (uint16_t)orca_mode))
+	{
+		std::cout << "ERROR: Failed to switch mode suring set_mode()\n";
+	}
 	stream.update_stream_mode(orca_mode);
 }
 

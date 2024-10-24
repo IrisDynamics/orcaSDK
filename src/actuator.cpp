@@ -467,6 +467,18 @@ void Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr
 }
 
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
+bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value)
+{
+	return command_and_confirm(
+		command_register_address, 
+		command_register_value, 
+		confirm_register_address, 
+		[this, confirm_register_address, confirm_register_value]()->bool { 
+			return (get_orca_reg_content(confirm_register_address) == confirm_register_value); 
+		});
+}
+
+[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
 bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function)
 {
 	static constexpr int num_command_confirm_retries = 20;

@@ -43,7 +43,6 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 	{
 		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::ForceMode, MODE_OF_OPERATION, 
 			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == Actuator::ForceMode); }));
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::SleepMode, MODE_OF_OPERATION,
-			[this]()->bool { return (motor.get_orca_reg_content(MODE_OF_OPERATION) == Actuator::SleepMode); }));
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::SleepMode, MODE_OF_OPERATION, Actuator::SleepMode));
 	}
 }

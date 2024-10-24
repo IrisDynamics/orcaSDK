@@ -384,6 +384,8 @@ public:
 	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 	
 	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
+	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
+	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
 	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function);
 
 private:

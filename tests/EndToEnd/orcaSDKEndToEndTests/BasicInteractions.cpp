@@ -29,10 +29,21 @@ TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {
 	EXPECT_NE(0, motor.get_position_um());
 }
 
-TEST_F(BasicInteractionTests, EnablingMotorStream) {
-	motor.enable();
-	while (1)
+//TEST_F(BasicInteractionTests, EnablingMotorStream) {
+//	motor.enable();
+//	while (1)
+//	{
+//		motor.run();
+//	}
+//}
+
+TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
+{
+	for (int i = 0; i < 25; i++)
 	{
-		motor.run();
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::ForceMode, MODE_OF_OPERATION, Actuator::ForceMode));
+		EXPECT_EQ(Actuator::ForceMode, motor.get_mode_of_operation());
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, Actuator::SleepMode, MODE_OF_OPERATION, Actuator::SleepMode));
+		EXPECT_EQ(Actuator::SleepMode, motor.get_mode_of_operation());
 	}
 }

@@ -466,6 +466,28 @@ void Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr
 	modbus_client.begin_logging(log);
 }
 
+[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
+bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function)
+{
+	static constexpr int num_command_confirm_retries = 20;
+	static constexpr int num_reads_per_command_retries = 3;
+
+	bool command_was_successful = false;
+	write_register(command_register_address, command_register_value);
+	for (int i = 0; i < num_command_confirm_retries; i++)
+	{
+		if ((i % num_reads_per_command_retries) == 0) write_register(command_register_address, command_register_value);
+		read_register(confirm_register_address);
+		flush();
+		if (success_function())
+		{
+			command_was_successful = true;
+			break;
+		}
+	}
+	return command_was_successful;
+}
+
 void Actuator::set_stream_paused(bool paused)
 {
 	stream_paused = paused;

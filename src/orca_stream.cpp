@@ -132,7 +132,6 @@ void OrcaStream::update_stream_state(Transaction response)
 	}
 	// Response was valid
 	else {
-
 		cur_consec_failed_msgs = 0;
 		success_msg_counter++;
 	}
@@ -156,7 +155,7 @@ void OrcaStream::set_connection_config(ConnectionConfig config) {
 }
 
 void OrcaStream::enqueue_motor_frame() {
-	if (modbus_client.get_queue_size() >= 2) return;
+	if (modbus_client.get_queue_size() > 0) return;
 	switch (stream_mode) {
 	case MotorCommand:
 		motor_stream_command();

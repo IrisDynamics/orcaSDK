@@ -284,20 +284,6 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[unexpected_interchar]);
 }
 
-TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
-{
-	motor.enable();
-	motor.connection_state = Actuator::ConnectionStatus::connected;
-	motor.set_mode(Actuator::ForceMode);
-
-	EXPECT_EQ(Actuator::ForceMode, motor.get_mode());
-
-	clock->pass_time(100001);
-	motor.run();
-
-	EXPECT_EQ(Actuator::SleepMode, motor.get_mode());
-}
-
 TEST_F(ActuatorTests, MotorGoesToSleepIfEnoughTimePassesBetweenPositionStreamCommands)
 {
 	motor.enable();

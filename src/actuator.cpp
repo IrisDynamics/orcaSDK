@@ -45,45 +45,37 @@ Actuator::Actuator(
 	clock(clock),
 	modbus_client(*serial_interface, *clock, uart_channel),
 	name(name),
+	stream(this, modbus_client, modbus_server_address),
 	modbus_server_address(modbus_server_address)
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {
 	write_register(CTRL_REG_3, (uint8_t)orca_mode);
-	comms_mode = orca_mode;
+	stream.update_stream_mode(orca_mode);
 }
 
-Actuator::MotorMode Actuator::get_mode() {
-	return comms_mode;
+MotorMode Actuator::get_mode() {
+	return (MotorMode)get_orca_reg_content(MODE_OF_OPERATION);
 }
 
-void Actuator::set_stream_mode(StreamMode mode) {
-	stream_mode = mode;
-}
-
-Actuator::StreamMode Actuator::get_stream_mode() {
-	return stream_mode;
+void Actuator::set_stream_mode(OrcaStream::StreamMode mode) {
+	stream.set_stream_mode(mode);
 }
 
 void Actuator::update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value) {
-	motor_write_data = register_value;
-	motor_write_addr = register_address;
-	motor_write_width = width;
+	stream.update_write_stream(width, register_address, register_value);
 }
 
 void Actuator::update_read_stream(uint8_t width, uint16_t register_address) {
-	motor_read_addr = register_address;
-	motor_read_width = width;
+	stream.update_read_stream(width, register_address);
 }
 
 void Actuator::set_force_mN(int32_t force) {
-	force_command = force;
-	stream_timeout_start = modbus_client.get_system_cycles();
+	stream.set_force_mN(force);
 }
 
 void Actuator::set_position_um(int32_t position) {
-	position_command = position;
-	stream_timeout_start = modbus_client.get_system_cycles();
+	stream.set_position_um(position);
 }
 
 int32_t Actuator::get_force_mN() {
@@ -99,11 +91,12 @@ void Actuator::enable_haptic_effects(uint16_t effects) {
 }
 
 void Actuator::set_stream_timeout(int64_t timeout_us) {
-	stream_timeout_cycles = timeout_us;
+	stream.set_stream_timeout(timeout_us);
 }
 
 void Actuator::init() {
-	disconnect();	// dc is expected to return us to a good init state
+	stream.disconnect();	// dc is expected to return us to a good init state
+	desynchronize_memory_map();
 	modbus_client.init(UART_BAUD_RATE);
 }
 
@@ -127,34 +120,22 @@ void Actuator::flush()
 }
 
 void Actuator::run_out() {
-	handle_stream();
+	if (!stream_paused) stream.handle_stream();
 	// This function results in the UART sending any data that has been queued
 	modbus_client.run_out();
 }
 
 void Actuator::run_in() {
-
-
 	modbus_client.run_in();
 
 	if (modbus_client.is_response_ready()) {
 		Transaction response = modbus_client.dequeue_transaction();
 
-		if (enabled && !stream_paused && !is_connected()) modbus_handshake(response);
+		if (stream.is_enabled() && !stream_paused && !is_connected()) stream.modbus_handshake(response);
 
-		if (!response.is_reception_valid()) {
-			cur_consec_failed_msgs++;
-			failed_msg_counter++;
-			if (connection_state == ConnectionStatus::connected && cur_consec_failed_msgs >= connection_config.max_consec_failed_msgs) {
-				disconnect();
-			}
-		}
-		// Response was valid
-		else {
+		stream.update_stream_state(response);
 
-			cur_consec_failed_msgs = 0;
-			success_msg_counter++;
-
+		if (response.is_reception_valid()) {
 			handle_transaction_response(response);
 		}
 	}
@@ -522,295 +503,22 @@ void Actuator::desynchronize_memory_map() {
 	orca_reg_contents.fill(0);
 }
 
-void Actuator::motor_stream_command() {
-	switch (comms_mode) {
-	case ForceMode: {
-		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
-			comms_mode = SleepMode;
-		}
-		else {
-			motor_command_fn(connection_config.server_address, FORCE_CMD, force_command);
-		}
-		break;
-	}
-	case PositionMode:
-		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
-			comms_mode = SleepMode;
-		}
-		else {
-			motor_command_fn(connection_config.server_address, POS_CMD, position_command);
-		}
-		break;
-	case KinematicMode:
-		motor_command_fn(connection_config.server_address, kinematic_command, 0);
-		break;
-	case HapticMode:
-		motor_command_fn(connection_config.server_address, haptic_command, 0);
-		break;
-	default:
-		motor_command_fn(connection_config.server_address, 0, 0); //any register address other than force or position register_adresses will induce sleep mode and provided register_value will be ignored
-		break;
-	}
-}
-
-void Actuator::motor_stream_read() {
-	motor_read_fn(connection_config.server_address, motor_read_width, motor_read_addr);
-}
-
-void Actuator::motor_stream_write() {
-	motor_write_fn(connection_config.server_address, motor_write_width, motor_write_addr, motor_write_data);
-}
-
-void Actuator::enqueue_motor_frame() {
-	if (modbus_client.get_queue_size() >= 2) return;
-	switch (stream_mode) {
-	case MotorCommand:
-		motor_stream_command();
-		break;
-	case MotorRead:
-		motor_stream_read();
-		break;
-	case MotorWrite:
-		motor_stream_write();
-		break;
-	}
-}
-
-int Actuator::get_app_reception_length(uint8_t fn_code) {
-	switch (fn_code) {
-	case motor_command:
-		return 19;
-	case motor_read:
-		return 24;
-	case motor_write:
-		return 20;
-	case Actuator::change_connection_status:
-		return 12;
-	default:
-		return -1;
-	}
-}
-
-int Actuator::motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value) {
-	uint8_t data_bytes[5] = {
-		uint8_t(command_code),
-		uint8_t(register_value >> 24),
-		uint8_t(register_value >> 16),
-		uint8_t(register_value >> 8),
-		uint8_t(register_value)
-	};
-	Transaction my_temp_transaction;
-	my_temp_transaction.load_transmission_data(device_address, motor_command, data_bytes, 5, get_app_reception_length(motor_command));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
-}
-
-int Actuator::motor_read_fn(uint8_t device_address, uint8_t width, uint16_t register_address) {
-	uint8_t data_bytes[3] = {
-		uint8_t(register_address >> 8),
-		uint8_t(register_address),
-		uint8_t(width)
-	};
-
-	Transaction my_temp_transaction;
-	my_temp_transaction.load_transmission_data(device_address, motor_read, data_bytes, 3, get_app_reception_length(motor_read));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
-}
-
-int Actuator::motor_write_fn(uint8_t device_address, uint8_t width, uint16_t register_address, uint32_t register_value) {
-	uint8_t data_bytes[7] = {
-		uint8_t(register_address >> 8),
-		uint8_t(register_address),
-		uint8_t(width),
-		uint8_t(register_value >> 24),
-		uint8_t(register_value >> 16),
-		uint8_t(register_value >> 8),
-		uint8_t(register_value)
-	};
-
-	Transaction my_temp_transaction;
-	my_temp_transaction.load_transmission_data(device_address, motor_write, data_bytes, 7, get_app_reception_length(motor_write));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
-}
-
-int Actuator::set_connection_config(Actuator::ConnectionConfig config) {
-
-	if (config.server_address < 1 || config.server_address > 247) {
-		return 0;   //todo : standardize error value
-	}
-
-	connection_config = config;
-
-	return 1;   //todo : standardize error value
-}
-
-void Actuator::handle_stream()
-{
-	// This object can queue messages on the UART with the either the handshake or the connected run loop
-	if (is_enabled() && !stream_paused) {
-		if (connection_state == ConnectionStatus::connected) {
-			enqueue_motor_frame();
-		}
-		else if (connection_state == ConnectionStatus::disconnected) {
-			initiate_handshake();
-		}
-	}
-}
-
-bool Actuator::is_enabled() {
-	return enabled;
+void Actuator::set_connection_config(ConnectionConfig config) {
+	stream.set_connection_config(config);
 }
 
 void Actuator::enable() {
-	enabled = true;
+	stream.enable();
 }
 
 void Actuator::disable() {
-	enabled = false;
+	stream.disable();
 	if (is_connected()) {
-		enqueue_change_connection_status_fn(connection_config.server_address, false, 0, 0);
+		stream.enqueue_change_connection_status_fn(modbus_server_address, false, 0, 0);
 	}
-	disconnect();
+	stream.disconnect();
 }
 
 bool Actuator::is_connected() {
-	return connection_state == ConnectionStatus::connected;
-}
-
-void Actuator::disconnect() {
-	//reset states
-	connection_state = ConnectionStatus::disconnected;
-	cur_consec_failed_msgs = 0;
-	modbus_client.adjust_baud_rate(UART_BAUD_RATE);
-	modbus_client.adjust_response_timeout(DEFAULT_RESPONSE_uS);
-	//is_paused = true;// pause to allow server to reset to disconnected state
-
-	//start_pause_timer();
-	desynchronize_memory_map();
-}
-
-void Actuator::initiate_handshake()
-{
-	if (modbus_client.get_queue_size() == 0 && has_pause_timer_expired()) {
-		is_paused = false;
-		num_discovery_pings_received = 0;
-		enqueue_ping_msg(connection_config.server_address);
-
-		connection_state = ConnectionStatus::discovery;
-	}
-}
-
-void Actuator::modbus_handshake(Transaction response) {
-
-	switch (connection_state) {
-	case ConnectionStatus::disconnected:
-		break;
-	case ConnectionStatus::discovery:
-		if (response.is_echo_response() && response.is_reception_valid()) {
-
-			num_discovery_pings_received++;
-
-			if (num_discovery_pings_received >= connection_config.req_num_discovery_pings) {
-				synchronize_memory_map();			// loads many read messages onto the queue
-				connection_state = ConnectionStatus::synchronization;
-
-			}
-			else {
-				enqueue_ping_msg(connection_config.server_address);
-			}
-		}
-		// new response was failed, or the wrong kind of response
-		else {
-			disconnect();
-			start_pause_timer();
-		}
-		break;
-
-
-	case ConnectionStatus::synchronization:
-
-		if (!response.is_reception_valid()) {
-			// this allows queued data to timeout or be received before reattempting a connection
-			disconnect();
-		}
-		else {
-
-			if (modbus_client.get_queue_size() == 0) {
-				enqueue_change_connection_status_fn(
-					connection_config.server_address,
-					true,
-					connection_config.target_baud_rate_bps,
-					connection_config.target_delay_us);
-				connection_state = ConnectionStatus::negotiation;
-			}
-		}
-		break;
-
-
-	case ConnectionStatus::negotiation:
-
-		// Server responded to our change connection request with its realized baud and delay
-		if (response.get_rx_function_code() == change_connection_status && response.is_reception_valid()) {
-			uint8_t* rx_data = response.get_rx_data();
-			modbus_client.adjust_baud_rate(
-				(uint32_t(rx_data[2]) << 24)
-				| (uint32_t(rx_data[3]) << 16)
-				| (uint32_t(rx_data[4]) << 8)
-				| (uint32_t(rx_data[5]) << 0)); //set baud
-
-			modbus_client.adjust_interframe_delay_us(
-
-				(uint16_t(rx_data[6]) << 8) | rx_data[7]); //set delay
-
-			// Reduce timeouts
-			modbus_client.adjust_response_timeout(connection_config.response_timeout_us);
-
-			connection_state = ConnectionStatus::connected;
-
-		}
-		// Server failed to respond to our change connection request
-		else {
-			disconnect();
-		}
-	case ConnectionStatus::connected:
-		// connection successful
-		break;
-	}
-}
-
-int Actuator::enqueue_change_connection_status_fn(uint8_t device_address, bool connect, uint32_t baud_rate_bps, uint16_t delay_us) {
-	Transaction transaction;
-	uint16_t requested_state = connect ? 0xFF00 : 0;
-
-	uint8_t data[8] = { uint8_t(requested_state >> 8),
-		uint8_t(requested_state),
-		uint8_t(baud_rate_bps >> 24),
-		uint8_t(baud_rate_bps >> 16),
-		uint8_t(baud_rate_bps >> 8),
-		uint8_t(baud_rate_bps),
-		uint8_t(delay_us >> 8),
-		uint8_t(delay_us) };
-
-	transaction.load_transmission_data(device_address, change_connection_status, data, 8, get_app_reception_length(change_connection_status));
-	int check = modbus_client.enqueue_transaction(transaction);
-	return check;
-}
-
-void Actuator::start_pause_timer() {
-	pause_timer_start = modbus_client.get_system_cycles();
-	is_paused = 1;
-}
-
-bool Actuator::has_pause_timer_expired() {
-	if (!is_paused || (modbus_client.get_system_cycles() - pause_timer_start) >= pause_time_cycles) {//(pause_time_us*CYCLES_PER_MICROSECOND)){
-		return 1;
-	}
-	return 0;
-}
-
-int Actuator::enqueue_ping_msg(uint8_t device_address) {
-	Transaction ping_transaction = DefaultModbusFunctions::return_query_data_fn(device_address); //pass in num_data as 0 so nothing from data array will be loaded into transmission
-	return modbus_client.enqueue_transaction(ping_transaction);
+	return stream.is_connected();
 }

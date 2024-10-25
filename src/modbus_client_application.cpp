@@ -108,7 +108,6 @@ namespace DefaultModbusFunctions {
 	Transaction return_query_data_fn(uint8_t device_address) {
 		uint8_t data_bytes[2] = { uint8_t(ModbusSubFunctionCodes::return_query_data << 8), uint8_t(ModbusSubFunctionCodes::return_query_data) };
 		Transaction my_temp_transaction;
-		my_temp_transaction.mark_important();
 		my_temp_transaction.load_transmission_data(
 			device_address, ModbusFunctionCodes::diagnostics, data_bytes, 2, nullptr, 0, 6);
 		return my_temp_transaction;

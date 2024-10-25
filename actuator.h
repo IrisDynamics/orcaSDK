@@ -382,6 +382,8 @@ public:
 
 	/**
 	* @brief	Sets each haptic effect to enabled or disabled according to the input bits.
+	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details on this function.
 	*/
 	void enable_haptic_effects(uint16_t effects);
 
@@ -394,6 +396,8 @@ public:
 
 	/**
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
+	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details on this function.
 	 */
 	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
 

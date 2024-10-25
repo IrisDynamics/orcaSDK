@@ -216,6 +216,90 @@ public:
 
 #pragma endregion
 
+#pragma region STREAMING
+	void set_stream_paused(bool paused);
+
+	/**
+	* @brief Set/adjust the force that the motor is exerting when in motor_command stream mode
+	*
+	* @param force force, in milli-Newtons
+	*/
+	void set_force_mN(int32_t force);
+
+	/**
+	* @brief Set/adjust the position that the motor is aiming for when in motor command stream mode
+	*
+	* @param position position, in micrometers
+	*/
+	void set_position_um(int32_t position);
+
+	/**
+	* @brief Write to the orca control register to change the mode of operation of the motor
+	* note some modes require a constant stream to stay in that mode (eg. force, position)
+	*/
+	void set_mode(MotorMode orca_mode);
+
+	/**
+	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
+	* *
+	* @return CommunicationMode
+	*/
+	MotorMode get_mode();
+
+	/**
+	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
+	*/
+	void set_stream_mode(OrcaStream::StreamMode mode);
+
+	/**
+	* @brief This function can be continuously called and will update the values being sent when in motor write stream mode
+	*/
+	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
+
+	/**
+	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
+	*/
+	void update_read_stream(uint8_t width, uint16_t register_address);
+
+	/**
+	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode.
+	*
+	* @param timout_us time in microseconds
+	*/
+	void set_stream_timeout(int64_t timeout_us);
+
+	/**
+	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
+	 *
+	 * @param config ConnectionConfig object
+	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
+	*/
+	void set_connection_config(ConnectionConfig config);
+
+	/**
+	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
+	*/
+	void enable();
+
+	/**
+	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
+	*/
+	void disable();
+
+	/**
+		* @brief Determine whether the Actuator object has successfully initiated a stream with the motor
+		* @return true if the stream is in the connected state, false otherwise
+	*/
+	bool is_connected();
+
+
+	/**
+	 * @brief Requests the actuator synchronize its memory map with the controller
+	 */
+	void synchronize_memory_map();
+
+#pragma endregion
+
 #pragma region UNCOMMON_MISC_DATA
 
 	/**
@@ -398,92 +482,9 @@ public:
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
+* 
 	 */
 	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
-
-#pragma endregion
-
-#pragma region STREAMING
-	void set_stream_paused(bool paused);
-
-	/**
-	* @brief Set/adjust the force that the motor is exerting when in motor_command stream mode
-	*
-	* @param force force, in milli-Newtons
-	*/
-	void set_force_mN(int32_t force);
-
-	/**
-	* @brief Set/adjust the position that the motor is aiming for when in motor command stream mode
-	*
-	* @param position position, in micrometers
-	*/
-	void set_position_um(int32_t position);
-
-	/**
-	* @brief Write to the orca control register to change the mode of operation of the motor
-	* note some modes require a constant stream to stay in that mode (eg. force, position)
-	*/
-	void set_mode(MotorMode orca_mode);
-
-	/**
-	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
-	* *
-	* @return CommunicationMode
-	*/
-	MotorMode get_mode();
-
-	/**
-	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
-	*/
-	void set_stream_mode(OrcaStream::StreamMode mode);
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor write stream mode
-	*/
-	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
-	*/
-	void update_read_stream(uint8_t width, uint16_t register_address);
-
-	/**
-	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode.
-	*
-	* @param timout_us time in microseconds
-	*/
-	void set_stream_timeout(int64_t timeout_us);
-
-	/**
-	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
-	 *
-	 * @param config ConnectionConfig object
-	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
-	*/
-	void set_connection_config(ConnectionConfig config);
-
-	/**
-	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
-	*/
-	void enable();
-
-	/**
-	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
-	*/
-	void disable();
-
-	/**
-		* @brief Determine whether a server has successfully connected with this client
-		* @return true if the server is in the connected state, false otherwise
-	*/
-	bool is_connected();
-
-
-	/**
-	 * @brief Requests the actuator synchronize its memory map with the controller
-	 */
-	void synchronize_memory_map();
 
 #pragma endregion
 

@@ -127,6 +127,95 @@ public:
 	int channel_number();
 #endif
 
+#pragma region GENERIC_MODBUS_COMMUNICATION
+	/**
+	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
+	 *
+	 * @param reg_address register address
+	 */
+	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
+	 *
+	 * @param reg_address register address from the orca's memory map
+	 * @param num_registers number of sequential registers to read
+	 */
+	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
+	 *
+	 * @param reg_address register address
+	 * @param reg_data data to be added to the register
+	 */
+	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Request for multiple registers in the motor's memory map to be updated with a given value.
+	 *
+	 * @param reg_address register address
+	 * * @param num_registers number of sequential registers to write
+	 * @param reg_data pointer to an array of data to be added to the registers
+	 */
+	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
+	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
+	 *
+	 *	@param read_starting_address The starting address of registers to read from
+	 *  @param read_num_registers How many registers that should be read
+	 *  @param write_starting_address The startin address of registers to write to
+	 *  @param write_num_registers How many registers that should be written to
+	 *  @param write_data Pointer to an array containing the byte data that should be written
+	 */
+	void read_write_registers(
+		uint16_t read_starting_address, uint8_t read_num_registers,
+		uint16_t write_starting_address, uint8_t write_num_registers,
+		uint8_t* write_data,
+		MessagePriority priority = MessagePriority::important);
+
+	/**
+	* @brief Return the contents of the given register from the controller's copy of the motor's memory map.
+	*
+	* @param offset the register that will be read
+	* @return uint16_t - register contents
+	*/
+	uint16_t get_orca_reg_content(uint16_t offset);
+
+	/**
+	 *	@brief	Begins logging all serial communication between this application/object
+	 *			and the motor that this application is talking to
+	 *	@param	log_name	The name of the file to be written to. Assumes relative path.
+	 */
+	void begin_serial_logging(const std::string& log_name);
+	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
+
+	/**
+	 *	@brief	Writes to a register and blocks the current thread until some post-condition is observed.
+	 *	@details	Writes to command_register_address (generally a command register) with value
+	 *				command_register_value while reading from confirm_register_address. Will
+	 *				repeatedly perform this write and read while calling  success_function until
+	 *				success_function returns a value of true.
+	 *	@param	command_register_address	The register being written to
+	 *	@param	command_register_value	The value to be written
+	 *	@param	confirm_register_address	The register that should be read from for confirmation
+	 *	@param	success_function	The function that must return true for the command to have been considered a success
+	 */
+	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
+	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function);
+	/**
+	 *	@overload	bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
+	 *	@brief	Writes to a register and blocks the current thread until a read register matches a given value.
+	 *	@param	confirm_register_value	The value that the register in confirm_register_address should have
+	 *									for the command to have been considered a success
+	 */
+	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
+	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
+
+#pragma endregion
+
 #pragma region UNCOMMON_MISC_DATA
 
 	/**
@@ -292,115 +381,25 @@ public:
 	};
 
 	/**
-	* @brief Enable or disabled desired haptic effects.
+	* @brief	Sets each haptic effect to enabled or disabled according to the input bits.
 	*/
 	void enable_haptic_effects(uint16_t effects);
 
-	/** @brief update the spring effect in a single function
-	*/
+	/** 
+	 *	@brief	Configures a spring effect with the given parameters.
+	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details on this function.
+	 */
 	void set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone = 0, u16 saturation = 0, u8 coupling = 0);
 
 	/**
-	*/
+	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
+	 */
 	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
 
 #pragma endregion
 
-	/**
-	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
-	 * 
-	 * @param reg_address register address
-	 */
-	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
-	
-	/**
-	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address from the orca's memory map
-	 * @param num_registers number of sequential registers to read
-	 */
-	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
-	 * 
-	 * @param reg_address register address
-	 * @param reg_data data to be added to the register
-	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for multiple registers in the motor's memory map to be updated with a given value.
-	 *
-	 * @param reg_address register address
-	 * * @param num_registers number of sequential registers to write
-	 * @param reg_data pointer to an array of data to be added to the registers
-	 */
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
-
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
-	 * 
-	 *	@param read_starting_address The starting address of registers to read from
-	 *  @param read_num_registers How many registers that should be read
-	 *  @param write_starting_address The startin address of registers to write to
-	 *  @param write_num_registers How many registers that should be written to
-	 *  @param write_data Pointer to an array containing the byte data that should be written
-	 */
-	void read_write_registers(
-		uint16_t read_starting_address, uint8_t read_num_registers,
-		uint16_t write_starting_address, uint8_t write_num_registers,
-		uint8_t* write_data,
-		MessagePriority priority = MessagePriority::important);
-
-	/**
-	* @brief Return the contents of the given register from the controller's copy of the motor's memory map. 
-	* 
-	* @param offset the register that will be read
-	* @return uint16_t - register contents
-	*/
-	uint16_t get_orca_reg_content(uint16_t offset);
-
-	void begin_serial_logging(const std::string& log_name);
-	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
-	
-	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
-	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function);
-
-private:
-	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents{};
-
-	OrcaStream stream;
-
-	const uint8_t modbus_server_address;
-
-	void handle_transaction_response(Transaction response);
-
-	/**
-	 * @brief handle the motor frame transmissions cadence
-	 * @
-	 * This dispatches transmissions for motor frames when connected and dispatches handshake messages when not.
-	 * This function must be externally paced... i.e. called at the frequency that transmission should be sent
-	 */
-	void run_out();
-
-	/**
-	 * @brief Incoming message parsing and connection handling
-	 *
-	 * Polls uart polled timers
-	 * Claims responses from the message queue.
-	 * Maintains the connection state based on consecutive failed messages
-	 * Parses successful messages
-	 */
-	void run_in();
-
-#pragma region IRIS_CLIENT_APPLICATION
-public:
-
+#pragma region STREAMING
 	void set_stream_paused(bool paused);
 
 	/**
@@ -446,8 +445,8 @@ public:
 	void update_read_stream(uint8_t width, uint16_t register_address);
 
 	/**
-	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode. 
-	* 
+	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode.
+	*
 	* @param timout_us time in microseconds
 	*/
 	void set_stream_timeout(int64_t timeout_us);
@@ -481,20 +480,42 @@ public:
 	 * @brief Requests the actuator synchronize its memory map with the controller
 	 */
 	void synchronize_memory_map();
+
+#pragma endregion
+
 private:
+	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents{};
+
+	OrcaStream stream;
+
+	const uint8_t modbus_server_address;
+
+	void handle_transaction_response(Transaction response);
+
+	/**
+	 * @brief handle the motor frame transmissions cadence
+	 * @
+	 * This dispatches transmissions for motor frames when connected and dispatches handshake messages when not.
+	 * This function must be externally paced... i.e. called at the frequency that transmission should be sent
+	 */
+	void run_out();
+
+	/**
+	 * @brief Incoming message parsing and connection handling
+	 *
+	 * Polls uart polled timers
+	 * Claims responses from the message queue.
+	 * Maintains the connection state based on consecutive failed messages
+	 * Parses successful messages
+	 */
+	void run_in();
+
 	bool stream_paused = false;
 
 	/**
 	 * @brief Resets the memory map array to zeros
 	 */
 	void desynchronize_memory_map();
-
-private:
-
-#pragma endregion
-
-
-	////////////////////////////////////////////////////////////////////
 	
 public:
 	[[deprecated("Requests initialization of now unused parameters")]]

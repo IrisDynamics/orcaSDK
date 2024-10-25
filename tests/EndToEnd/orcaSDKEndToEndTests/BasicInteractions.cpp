@@ -16,40 +16,58 @@ protected:
 	Actuator motor;
 };
 
-//TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {
-//	EXPECT_EQ(0, motor.get_position_um());
-//	motor.read_registers(SHAFT_POS_UM, 2);
-//	motor.flush();
-//	EXPECT_NE(0, motor.get_position_um());
-//}
-//
-////TODO[Aiden, Oct 23 2024]: This behaviour can be checked as a unit test and should be
-//TEST_F(BasicInteractionTests, AfterInitRegistersAreSetToZero) {
-//	motor.read_registers(SHAFT_POS_UM, 2);
-//	motor.flush();
-//	EXPECT_NE(0, motor.get_position_um());
-//	motor.disable_comport();
-//	motor.init();
-//	EXPECT_EQ(0, motor.get_position_um());
-//}
-//
-//TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
-//{
-//	motor.read_registers(SHAFT_POS_UM, 2);
-//	motor.flush();
-//	EXPECT_NE(0, motor.get_position_um());
-//	motor.disable_comport();
-//	motor.init();
-//	motor.read_register(STATOR_TEMP);
-//	motor.flush();
-//	EXPECT_NE(0, motor.get_orca_reg_content(STATOR_TEMP));
-//}
+TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {
+	EXPECT_EQ(0, motor.get_position_um());
+	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.flush();
+	EXPECT_NE(0, motor.get_position_um());
+}
 
+//TODO[Aiden, Oct 23 2024]: This behaviour can be checked as a unit test and should be
+TEST_F(BasicInteractionTests, AfterInitRegistersAreSetToZero) {
+	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.flush();
+	EXPECT_NE(0, motor.get_position_um());
+	motor.disable_comport();
+	motor.init();
+	EXPECT_EQ(0, motor.get_position_um());
+}
+
+TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
+{
+	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.flush();
+	EXPECT_NE(0, motor.get_position_um());
+	motor.disable_comport();
+	motor.init();
+	motor.read_register(STATOR_TEMP);
+	motor.flush();
+	EXPECT_NE(0, motor.get_orca_reg_content(STATOR_TEMP));
+}
+
+TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
+{
+	motor.enable();
+	while (!motor.is_connected())
+	{
+		motor.run();
+	}
+	for (int i = 0; i < 20; i++)
+	{
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
+			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == MotorMode::ForceMode); }));
+		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
+	}
+}
+
+
+//These following three stream tests should be unit or integration tests, but it's
+// difficult to get the orca into a connected state without following the full
+// handshake or breaking encapsulation. We should search for a way to make this 
+// easier, because end to end tests may become too long to integrate into regular
+// development cycles.
 TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
 {
-	ConnectionConfig config;
-	config.response_timeout_us = 100000;
-	motor.set_connection_config(config);
 	motor.enable();
 	while (!motor.is_connected())
 	{
@@ -60,7 +78,7 @@ TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStre
 	EXPECT_EQ(MotorMode::ForceMode, motor.get_mode());
 
 	auto stream_start = std::chrono::steady_clock::now();
-	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()- stream_start) < std::chrono::milliseconds(105))
+	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(105))
 	{
 		motor.run();
 	}
@@ -69,22 +87,49 @@ TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStre
 	motor.flush();
 
 	EXPECT_EQ(MotorMode::SleepMode, motor.get_mode());
+
+	motor.disable();
+	motor.flush();
 }
 
-//TEST_F(BasicInteractionTests, EnablingMotorStream) {
-//	motor.enable();
-//	while (1)
-//	{
-//		motor.run();
-//	}
-//}
 
-TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
+TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {
-	for (int i = 0; i < 25; i++)
+	motor.enable();
+	while (!motor.is_connected())
 	{
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
-			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == MotorMode::ForceMode); }));
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
+		motor.run();
 	}
+	motor.set_mode(MotorMode::PositionMode);
+
+	motor.set_position_um(2); // This sets the stream timeout timer
+
+	motor.run(); //Inject position command
+	motor.read_register(POS_CMD);
+
+	motor.flush();
+
+	EXPECT_EQ(2, motor.get_orca_reg_content(POS_CMD));
+}
+
+TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
+{
+	motor.enable();
+	while (!motor.is_connected())
+	{
+		motor.run();
+	}
+	motor.set_mode(MotorMode::PositionMode);
+
+	motor.write_register(POS_CMD, 0);
+	motor.set_stream_paused(true); // Disable the queuing of new stream messages
+
+	motor.set_position_um(2); // This sets the stream timeout timer
+
+	motor.run(); // This sends the change mode command
+	motor.read_register(POS_CMD);
+
+	motor.flush();
+
+	EXPECT_EQ(0, motor.get_orca_reg_content(POS_CMD));
 }

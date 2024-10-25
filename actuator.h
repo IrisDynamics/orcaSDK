@@ -31,6 +31,8 @@
 #include <string>
 
 #include <functional>
+#include "src/orca_stream_config.h"
+#include "src/orca_modes.h"
 
 /**
    @class Actuator
@@ -47,30 +49,19 @@ public:
 public:
 	Actuator(
 		int uart_channel,
-		const char* name
+		const char* name,
+		uint8_t modbus_server_address = 1
 	);
 
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
 		std::shared_ptr<Clock> clock,
 		int uart_channel,
-		const char* name
+		const char* name,
+		uint8_t modbus_server_address = 1
 	);
 
 	const char* name;
-
-	/**
-	 * @brief this tracks the type of motor command stream that is currently being used
-	 */
-	typedef enum {
-
-		SleepMode		= 1,
-		ForceMode		= 2,
-		PositionMode	= 3,
-		HapticMode		= 4,
-		KinematicMode	= 5
-
-	} MotorMode;
 
 	/**
 	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
@@ -412,18 +403,6 @@ public:
 		MotorRead,
 		MotorWrite
 	} StreamMode;
-
-	/**
-	 * @brief Configurable parameters for the handshake sequence and connection maintenance. Should be set when disabled
-	*/
-	struct ConnectionConfig {
-		uint8_t server_address = 1;
-		int req_num_discovery_pings = 3; //3      //number of sucessful comms check messages required to move to next step in handshake sequence
-		int max_consec_failed_msgs = 10;      //number of failed/missed messages to trigger disconnect
-		uint32_t target_baud_rate_bps = 625000;
-		uint16_t target_delay_us = 80;
-		uint32_t response_timeout_us = 8000;  /// this timeout will be used to override the default response timeout after a handshake succeeds and a new baud rate is negotiated.
-	};
 
 	void set_stream_paused(bool paused);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 class SerialInterface {
 public:
 	virtual void init(int baud) = 0;

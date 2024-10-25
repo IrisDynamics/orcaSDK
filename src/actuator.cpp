@@ -20,7 +20,8 @@ int Actuator::channel_number() {
 //Constructor
 Actuator::Actuator(
 	int uart_channel,
-	const char* name
+	const char* name,
+	uint8_t modbus_server_address
 ) :
 	Actuator(
 #if defined(WINDOWS)
@@ -28,7 +29,8 @@ Actuator::Actuator(
 #endif
 		std::make_shared<ChronoClock>(),
 		uart_channel,
-		name
+		name,
+		modbus_server_address
 	)
 {}
 
@@ -36,12 +38,14 @@ Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
 	std::shared_ptr<Clock> clock,
 	int uart_channel,
-	const char* name
+	const char* name,
+	uint8_t modbus_server_address
 ) :
 	serial_interface(serial_interface),
 	clock(clock),
 	modbus_client(*serial_interface, *clock, uart_channel),
-	name(name)
+	name(name),
+	modbus_server_address(modbus_server_address)
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {
@@ -403,23 +407,23 @@ void Actuator::trigger_kinematic_motion(int8_t ID) {
 }
 
 void Actuator::read_register(uint16_t reg_address, MessagePriority priority) {
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(connection_config.server_address, reg_address, 1, priority));
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 1, priority));
 }
 
 void Actuator::read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority) {
 	if (num_registers < 1 || num_registers > MAX_NUM_READ_REG) return;
 
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(connection_config.server_address, reg_address, num_registers, priority));
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, num_registers, priority));
 }
 
 void Actuator::write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority) {
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(connection_config.server_address, reg_address, reg_data, priority));
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(modbus_server_address, reg_address, reg_data, priority));
 }
 
 void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority) {
 	if (num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return;
 
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, reg_data, priority));
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_address, num_registers, reg_data, priority));
 }
 
 void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority) {
@@ -430,7 +434,7 @@ void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint
 		data[i * 2] = uint8_t(reg_data[i] >> 8);
 		data[i * 2 + 1] = uint8_t(reg_data[i]);
 	}
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(connection_config.server_address, reg_address, num_registers, data, priority));
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_address, num_registers, data, priority));
 }
 
 void Actuator::read_write_registers(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers, uint8_t* write_data, MessagePriority priority)
@@ -439,7 +443,7 @@ void Actuator::read_write_registers(uint16_t read_starting_address, uint8_t read
 	if (write_num_registers < 1 || write_num_registers > MAX_NUM_WRITE_REG) return;
 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_write_multiple_registers_fn(
-		connection_config.server_address,
+		modbus_server_address,
 		read_starting_address, read_num_registers,
 		write_starting_address, write_num_registers,
 		write_data,

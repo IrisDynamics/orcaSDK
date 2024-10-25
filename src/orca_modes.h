@@ -1,0 +1,11 @@
+#pragma once
+
+typedef enum {
+
+	SleepMode = 1,
+	ForceMode = 2,
+	PositionMode = 3,
+	HapticMode = 4,
+	KinematicMode = 5
+
+} MotorMode;

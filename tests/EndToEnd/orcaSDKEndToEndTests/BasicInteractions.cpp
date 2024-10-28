@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "actuator.h"
+#include "orcaSDK/actuator.h"
 
 class BasicInteractionTests : public ::testing::Test
 {

@@ -2,7 +2,7 @@
 
 #include "modbus_client.h"
 #include "orca_stream_config.h"
-#include "src/orca_modes.h"
+#include "orca_modes.h"
 
 class Actuator;
 

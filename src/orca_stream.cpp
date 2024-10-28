@@ -1,6 +1,6 @@
-#include "actuator.h"
 #include "orca_stream.h"
-#include "orca600_api/orca600_memory_map.h"
+#include "../actuator.h"
+#include "../orca600_api/orca600_memory_map.h"
 
 OrcaStream::OrcaStream(Actuator* motor, ModbusClient& modbus_client, uint8_t modbus_server_address) :
 	motor(motor),

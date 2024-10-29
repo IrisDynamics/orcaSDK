@@ -175,7 +175,7 @@ private:
             }
             else {
                 std::wstring error_str = L"Error initiating a write. Error code: " + std::to_wstring(GetLastError()) + L"\n";
-                OutputDebugString(error_str.c_str());
+                OutputDebugStringW(error_str.c_str());
             }
         }
         else
@@ -195,7 +195,7 @@ private:
             if (error_code != ERROR_OPERATION_ABORTED) //Aborting may occur as part of disconnecting
             {
                 std::wstring error_str = L"Error writing bytes. Error code: " + std::to_wstring(GetLastError()) + L"\n";
-                OutputDebugString(error_str.c_str());
+                OutputDebugStringW(error_str.c_str());
             }
         }
 
@@ -223,7 +223,7 @@ private:
                 break;
             default:
                 std::wstring error_str = L"Error initiating read. Error code: " + std::to_wstring(GetLastError()) + L"\n";
-                OutputDebugString(error_str.c_str());
+                OutputDebugStringW(error_str.c_str());
                 break;
             }
         }
@@ -248,7 +248,7 @@ private:
                 break;
             default:
                 std::wstring error_str = L"Error writing bytes. Error code: " + std::to_wstring(GetLastError()) + L"\n";
-                OutputDebugString(error_str.c_str());
+                OutputDebugStringW(error_str.c_str());
                 break;
             }
         }
@@ -279,7 +279,7 @@ private:
         if (serial_success)
         {
             LPCWSTR getErr = L"Calling init, but comport already acquired\n";
-            OutputDebugString(getErr);
+            OutputDebugStringW(getErr);
             return;
         } 
         else if(!acquire_port(channel_number)) {
@@ -294,7 +294,7 @@ private:
         dcbSerialParams.DCBlength = sizeof(DCB);
         if (!GetCommState(hSerial, &dcbSerialParams)) {
             LPCWSTR getErr = L"Error getting current port state\n";
-            OutputDebugString(getErr);
+            OutputDebugStringW(getErr);
         }
         //set new state
         dcbSerialParams.BaudRate = baud;
@@ -304,19 +304,19 @@ private:
         // dcbSerialParams.fRtsControl = RTS_CONTROL_ENABLE;
         if (!SetCommState(hSerial, &dcbSerialParams)) {
             LPCWSTR paramErr = L"Error setting serial port state\n";
-            OutputDebugString(paramErr);
+            OutputDebugStringW(paramErr);
         }
 
         //set comm Mask - will notify when a byte arrives in the port 
         if (!SetCommMask(hSerial, EV_RXCHAR)) {
             LPCWSTR maskErr = L"Error setting port com mask\n";
-            OutputDebugString(maskErr);
+            OutputDebugStringW(maskErr);
         }
 
         //set comm Mask - will notify when a byte arrives in the port 
         if (!SetCommTimeouts(hSerial, &timeouts)) {
             LPCWSTR maskErr = L"Error setting com timeouts\n";
-            OutputDebugString(maskErr);
+            OutputDebugStringW(maskErr);
         }
 
         //set everything to a clear state 
@@ -340,7 +340,7 @@ private:
         HANDLE hSerialCheck = CreateFileA(portName, GENERIC_READ | GENERIC_WRITE | OPEN_ALWAYS, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);  //FILE_FLAG_OVERLAPPED //FILE_ATTRIBUTE_NORMAL
         if (hSerialCheck == INVALID_HANDLE_VALUE) {
             std::wstring portErr = L"Error opening comport. Error number: " + std::to_wstring(GetLastError()) + L"\n";
-            OutputDebugString(portErr.c_str());
+            OutputDebugStringW(portErr.c_str());
             serial_success = false;
         }
         else {
@@ -407,7 +407,7 @@ static void reset_overlapped_struct(OVERLAPPED& o)
     o.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (o.hEvent == NULL) {
         LPCWSTR eventErr = L"Error setting overlapped event\n";
-        OutputDebugString(eventErr);
+        OutputDebugStringW(eventErr);
     }
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tools/LogInterface.h"
+#include "tools/log_interface.h"
 #include <iostream>
 #include <fstream>
 #include <ctime>

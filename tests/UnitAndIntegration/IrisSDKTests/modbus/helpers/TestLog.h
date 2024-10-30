@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "tools/LogInterface.h"
+#include "tools/log_interface.h"
 
 class TestLog : public LogInterface {
 public:

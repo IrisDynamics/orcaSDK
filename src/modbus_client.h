@@ -28,7 +28,7 @@
 #include "serial_interface.h"
 #include "diagnostics_tracker.h"
 #include "message_queue.h"
-#include "../tools/LogInterface.h"
+#include "../tools/log_interface.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -276,11 +276,11 @@ public:
 
 
     /// @brief Change the time required to elapse before a message is deemed failed. Used to reduce from the default after a handshake negotiates a higher baud
-    void adjust_response_timeout    (u32 time_in_us) { 	repsonse_timeout_cycles = time_in_us; };
+    void adjust_response_timeout    (uint32_t time_in_us) { 	repsonse_timeout_cycles = time_in_us; };
     /// @brief Change the time required to elapse between characters within a message before it is abandoned.
-	void adjust_interchar_timeout   (u32 time_in_us) { interchar_timeout_cycles = time_in_us; };
+	void adjust_interchar_timeout   (uint32_t time_in_us) { interchar_timeout_cycles = time_in_us; };
 	/// @brief Change the period of time observed between broadcast messages
-	void adjust_turnaround_delay	(u32 time_in_us) { 	turnaround_delay_cycles = time_in_us; };
+	void adjust_turnaround_delay	(uint32_t time_in_us) { 	turnaround_delay_cycles = time_in_us; };
 
     /**
      * @brief Get the device's current system time in cycles

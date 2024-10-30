@@ -29,7 +29,6 @@
 
 #include <stdint.h>
 #include "mb_crc.h"
-#include "types.h"
 
 /** For Debugging with Iriscontrols **/
 //#define IRISCONTROLS

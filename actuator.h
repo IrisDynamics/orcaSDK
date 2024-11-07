@@ -49,16 +49,27 @@ public:
 	ModbusClient modbus_client;
 
 public:
+	/**
+	 *	@brief	Constructs the object, if you don't know which constructor to use, use this one.
+	 *	@param	serial_port_channel	The channel (E.g. 'COM_{X}') that the object should attempt to
+	 *								obtain by default.
+	 *	@param	name	The name of the object, can be obtained later through the 
+						public member variable Actuator::name
+	 */
 	Actuator(
-		int uart_channel,
+		int serial_port_channel,
 		const char* name,
 		uint8_t modbus_server_address = 1
 	);
 
+	/**
+	 *	@brief	Constructs the object, passing in custom implementations for serial communication
+	 *			and clocks. Useful for testing or for using this object on unsupported platforms.
+	 */
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
 		std::shared_ptr<Clock> clock,
-		int uart_channel,
+		int serial_port_channel,
 		const char* name,
 		uint8_t modbus_server_address = 1
 	);
@@ -71,14 +82,28 @@ public:
 	void init();
 
 	/**
-	 *	@brief	The normal run loop for asynchronous (cached) motor communication.
-	 *			If you are communicating with your motor asynchronously, you must
-	 *			call this function in a regular loop.
+	 *	@brief	The normal run loop for motor communication. Checks for incoming serial data and 
+	 *			sends queued serial data. If you are communicating with your motor asynchronously, you must
+	 *			call this function in a regular loop. If you are using a high speed stream, and if
+	 *			there are no queued messages, injects stream commands according to the motor mode
+	 *			from the most recent call to set_mode().
 	 */
 	void run();
 
 	/**
-	 * @brief process all commands in modbus queue
+	 * @brief	Flushes all queued messages, blocking the current thread of execution 
+	 *			until all queued messages have completed.
+	 * @note	While this function blocks until all messages complete, it doesn't necessarily
+	 *			block until all commands are fully processed. For example, a mode change
+	 *			command may be acknowledged by the motor without being immediately processed.
+	 *			This acknowledgement will be considered a completed message by this client.
+	 *			To block until commands are successfully processed, additional post-conditions
+	 *			should be checked. See command_and_confirm() for an alternative to flush() in 
+	 *			this case.
+	 * @note	A completed message does not mean a successful message. A message may
+	 *			be considered complete if it times out due to too much delay between
+	 *			sending a message and receiving a response, for example. See modbus documentation
+	 *			for a list of failure types.
 	 */
 	void flush();
 
@@ -194,10 +219,10 @@ public:
 
 	/**
 	 *	@brief	Writes to a register and blocks the current thread until some post-condition is observed.
-	 *	@details	Writes to command_register_address (generally a command register) with value
-	 *				command_register_value while reading from confirm_register_address. Will
-	 *				repeatedly perform this write and read while calling  success_function until
-	 *				success_function returns a value of true.
+	 *	@details	Writes to modbus address <command_register_address> with value
+	 *				<command_register_value> while reading from <confirm_register_address>. Will
+	 *				repeatedly perform this write and read while calling <success_function> until
+	 *				it returns a value of true.
 	 *	@param	command_register_address	The register being written to
 	 *	@param	command_register_value	The value to be written
 	 *	@param	confirm_register_address	The register that should be read from for confirmation
@@ -217,6 +242,10 @@ public:
 #pragma endregion
 
 #pragma region STREAMING
+	/**
+	 *	@brief	If called with parameter true, pauses automatic injection of stream
+	 *			commands during calls to run()
+	 */
 	void set_stream_paused(bool paused);
 
 	/**
@@ -234,8 +263,8 @@ public:
 	void set_position_um(int32_t position);
 
 	/**
-	* @brief Write to the orca control register to change the mode of operation of the motor
-	* note some modes require a constant stream to stay in that mode (eg. force, position)
+	* @brief	Write to the orca control register to change the mode of operation of the motor.
+	*			Also changes what type of command stream will be sent during high speed streaming.
 	*/
 	void set_mode(MotorMode orca_mode);
 
@@ -312,7 +341,7 @@ public:
 	/**
 	* @brief Returns the temperature of the motor in Celcius
 	* 
-	* @return uint8_t - temperature in Celcius
+	* @return uint16_t - temperature in Celcius
 	*/
 	uint16_t get_temperature_C();
 

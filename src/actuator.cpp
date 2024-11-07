@@ -19,16 +19,16 @@ int Actuator::channel_number() {
 
 //Constructor
 Actuator::Actuator(
-	int uart_channel,
+	int serial_port_channel,
 	const char* name,
 	uint8_t modbus_server_address
 ) :
 	Actuator(
 #if defined(WINDOWS)
-		std::make_shared<windows_SerialInterface>(uart_channel),
+		std::make_shared<windows_SerialInterface>(serial_port_channel),
 #endif
 		std::make_shared<ChronoClock>(),
-		uart_channel,
+		serial_port_channel,
 		name,
 		modbus_server_address
 	)
@@ -37,13 +37,13 @@ Actuator::Actuator(
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
 	std::shared_ptr<Clock> clock,
-	int uart_channel,
+	int serial_port_channel,
 	const char* name,
 	uint8_t modbus_server_address
 ) :
 	serial_interface(serial_interface),
 	clock(clock),
-	modbus_client(*serial_interface, *clock, uart_channel),
+	modbus_client(*serial_interface, *clock, serial_port_channel),
 	name(name),
 	stream(this, modbus_client, modbus_server_address),
 	modbus_server_address(modbus_server_address)

@@ -77,11 +77,6 @@ public:
 	const char* name;
 
 	/**
-	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
-	*/
-	void init();
-
-	/**
 	 *	@brief	The normal run loop for motor communication. Checks for incoming serial data and 
 	 *			sends queued serial data. If you are communicating with your motor asynchronously, you must
 	 *			call this function in a regular loop. If you are using a high speed stream, and if
@@ -107,66 +102,9 @@ public:
 	 */
 	void flush();
 
-	/**
-	* @brief Returns the total amount of force being sensed by the motor
-	*
-	* @return uint32_t - force in milli-Newtons
-	*/
-	int32_t get_force_mN();
+	int32_t read_wide_register_blocking(uint16_t register_address);                                                                                                                              
 
-	/**
-	* @brief Returns the position of the shaft in the motor (distance from the zero position) in micrometers.
-	*
-	* @return uint32_t - position in micrometers
-	*/
-	int32_t get_position_um();
-
-	/**
-	*@brief get the motor's mode of operations as currently updated by the local memory map
-	*/
-	uint16_t get_mode_of_operation();
-
-	/**
-	* @brief Returns the sum of all error messages being sent by the motor
-	* 
-	* @return uint16_t - sum or all active error codes
-	*/
-	uint16_t get_errors();
-
-	/**
-	 * @brief clear all errors stored on the motor
-	 * note: errors that are still found will appear again
-	 */
-	void clear_errors();
-
-#if defined(WINDOWS)
-	void set_new_comport(int _comport);
-
-	void disable_comport();
-
-	/**
-	* @brief Returns the UART channel number in use
-	*
-	* @return int, channel number
-	*/
-	int channel_number();
-#endif
-
-#pragma region GENERIC_MODBUS_COMMUNICATION
-	/**
-	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address
-	 */
-	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address from the orca's memory map
-	 * @param num_registers number of sequential registers to read
-	 */
-	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+	uint16_t read_register_blocking(uint16_t register_address);
 
 	/**
 	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
@@ -174,7 +112,15 @@ public:
 	 * @param reg_address register address
 	 * @param reg_data data to be added to the register
 	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
+	void write_register_blocking(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
+	
+	/**
+	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
+	 *
+	 * @param reg_address register address from the orca's memory map
+	 * @param num_registers number of sequential registers to read
+	 */
+	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Request for multiple registers in the motor's memory map to be updated with a given value.
@@ -183,8 +129,7 @@ public:
 	 * * @param num_registers number of sequential registers to write
 	 * @param reg_data pointer to an array of data to be added to the registers
 	 */
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
+	void write_multiple_registers_blocking(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
@@ -195,11 +140,36 @@ public:
 	 *  @param write_num_registers How many registers that should be written to
 	 *  @param write_data Pointer to an array containing the byte data that should be written
 	 */
-	void read_write_registers(
+	void read_write_registers_blocking(
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint8_t* write_data,
 		MessagePriority priority = MessagePriority::important);
+
+
+	/**
+	* @brief Returns the total amount of force being sensed by the motor
+	*
+	* @return uint32_t - force in milli-Newtons
+	*/
+	int32_t get_streamed_force_mN();
+
+	/**
+	* @brief Returns the position of the shaft in the motor (distance from the zero position) in micrometers.
+	*
+	* @return uint32_t - position in micrometers
+	*/
+	int32_t get_streamed_position_um();
+
+	/**
+	* @brief Returns the sum of all error messages being sent by the motor
+	* 
+	* @return uint16_t - sum or all active error codes
+	*/
+	uint16_t get_streamed_errors();
+
+#pragma region GENERIC_MODBUS_COMMUNICATION
+
 
 	/**
 	* @brief Return the contents of the given register from the controller's copy of the motor's memory map.

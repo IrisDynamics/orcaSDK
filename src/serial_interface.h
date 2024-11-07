@@ -9,6 +9,8 @@
  */
 class SerialInterface {
 public:
+	virtual ~SerialInterface() = default;
+
 	/**
 	 *	@brief	Obtains the currently indicate serial port. Setting baud rate
 	 *			based on the passed parameter.

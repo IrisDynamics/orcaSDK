@@ -23,10 +23,10 @@
 #ifndef ACTUATOR_H_
 #define ACTUATOR_H_
 
-#include "src/modbus_client_application.h"
+#include "src/standard_modbus_functions.h"
 
 #include "src/actuator_config.h"
-#include "tools/Log.h"
+#include "tools/log.h"
 #include <memory>
 #include <string>
 

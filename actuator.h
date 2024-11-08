@@ -185,6 +185,15 @@ public:
 		flush();
 	}
 
+	void write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important)
+	{
+		uint16_t split_data[2]{
+			uint16_t(write_data),
+			uint16_t(write_data >> 16)
+		};
+		write_multiple_registers_blocking(reg_address, 2, split_data, priority);
+	}
+
 	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
 	{
 		uint8_t data[128];

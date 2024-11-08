@@ -88,6 +88,19 @@ TEST_F(ActuatorIntegrationTests, PerformingWriteSendsSingleByteWriteMessage)
 	EXPECT_EQ(expected_send, serial_interface->sendBuffer);
 }
 
+TEST_F(ActuatorIntegrationTests, DoubleWideWriteConstructsCorrectSerialMessage)
+{
+	clock->set_auto_time_pass(10000); //Force timeout, only care about send
+
+	motor.write_wide_register_blocking(USER_MAX_FORCE, 100000, MessagePriority::not_important);
+
+	std::vector<char> expected_send{
+		'\x1', '\x10', '\x0', '\x8C', '\x0', '\x2', '\x4', '\x86', '\xa0', '\x0', '\x1', '\x13', '\x30',
+	};
+
+	EXPECT_EQ(expected_send, serial_interface->sendBuffer);
+}
+
 TEST_F(ActuatorIntegrationTests, PerformingMultipleWriteSendsMultipleWriteMessage)
 {
 	clock->set_auto_time_pass(10000); //Force timeout, only care about send

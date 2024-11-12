@@ -153,52 +153,67 @@ public:
 #endif
 
 #pragma region GENERIC_MODBUS_COMMUNICATION
-	/**
-	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address
-	 */
-	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 
 	/**
-	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
+	 * @brief Reads a double-wide register from the motor. 
 	 *
-	 * @param reg_address register address from the orca's memory map
-	 * @param num_registers number of sequential registers to read
+	 * @param reg_address The lower register address of the double-wide register
 	 */
-	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+	int32_t read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+	
+	/**
+	 * @brief Reads a register from the motor.
+	 *
+	 * @param reg_address The register address
+	 */
+	uint16_t read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 
 	/**
-	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
+	 * @brief Reads multiple registers from the motor.
 	 *
-	 * @param reg_address register address
-	 * @param reg_data data to be added to the register
+	 * @param reg_start_address The starting register address
+	 * @param num_registers How many registers to read
 	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
+	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
 
 	/**
-	 * @brief Request for multiple registers in the motor's memory map to be updated with a given value.
+	 * @brief Writes a register from the motor.
 	 *
-	 * @param reg_address register address
-	 * * @param num_registers number of sequential registers to write
-	 * @param reg_data pointer to an array of data to be added to the registers
+	 * @param reg_address The register address
+	 * @param write_data The value to be written
 	 */
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
+	void write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important);
 
 	/**
-	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
+	 * @brief Writes a register to the motor.
 	 *
-	 *	@param read_starting_address The starting address of registers to read from
-	 *  @param read_num_registers How many registers that should be read
-	 *  @param write_starting_address The startin address of registers to write to
-	 *  @param write_num_registers How many registers that should be written to
-	 *  @param write_data Pointer to an array containing the byte data that should be written
+	 * @param reg_address The lower address of the double-wide register 
+	 * @param write_data The value to be written
 	 */
-	void read_write_registers(
+	void write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Writes multiple register values to the motor.
+	 *
+	 * @param reg_start_address The starting register address to be written to
+	 * @param num_registers How many registers to read
+	 * @param write_data An array containing the value to be written
+	 */
+	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Simultaneously reads a set of values from the motor and writes a set of values to the motor.
+	 *
+	 * @param read_starting_address The starting register address to be read from
+	 * @param read_num_registers The amount of registers to read
+	 * @param write_starting_address The starting register address to be written to
+	 * @param write_num_registers The amount of registers to write
+	 * @param write_data An array containing the values to be written
+	 */
+	std::vector<uint16_t> read_write_multiple_registers_blocking(
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
-		uint8_t* write_data,
+		uint16_t* write_data,
 		MessagePriority priority = MessagePriority::important);
 
 	/**
@@ -229,7 +244,7 @@ public:
 	 *	@param	success_function	The function that must return true for the command to have been considered a success
 	 */
 	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function);
+	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function);
 	/**
 	 *	@overload	bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
 	 *	@brief	Writes to a register and blocks the current thread until a read register matches a given value.
@@ -321,12 +336,6 @@ public:
 	*/
 	bool is_connected();
 
-
-	/**
-	 * @brief Requests the actuator synchronize its memory map with the controller
-	 */
-	void synchronize_memory_map();
-
 #pragma endregion
 
 #pragma region UNCOMMON_MISC_DATA
@@ -361,7 +370,7 @@ public:
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
-	void get_latched_errors();
+	uint16_t get_latched_errors();
 
 #pragma endregion
 

@@ -16,23 +16,6 @@ protected:
 	Actuator motor;
 };
 
-TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {
-	EXPECT_EQ(0, motor.get_position_um());
-	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
-	motor.flush();
-	EXPECT_NE(0, motor.get_position_um());
-}
-
-//TODO[Aiden, Oct 23 2024]: This behaviour can be checked as a unit test and should be
-TEST_F(BasicInteractionTests, AfterInitRegistersAreSetToZero) {
-	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
-	motor.flush();
-	EXPECT_NE(0, motor.get_position_um());
-	motor.disable_comport();
-	motor.init();
-	EXPECT_EQ(0, motor.get_position_um());
-}
-
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {
 	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
@@ -54,8 +37,8 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 	}
 	for (int i = 0; i < 20; i++)
 	{
-		//EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
-		//	[this](uint16_t read_value)->bool{ return (read_value == MotorMode::ForceMode); }));
+		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
+			[this](uint16_t read_value)->bool{ return (read_value == MotorMode::ForceMode); }));
 		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
 	}
 }

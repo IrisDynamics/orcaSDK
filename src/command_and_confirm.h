@@ -1,8 +1,8 @@
 #include "../actuator.h"
 
 
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries = 15);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries = 15);
 
 /**
  *	@overload	bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
@@ -11,7 +11,7 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 	*									for the command to have been considered a success
 	*/
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value)
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries)
 {
 	return command_and_confirm(
 		motor,
@@ -35,9 +35,8 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 	*	@param	success_function	The function that must return true for the command to have been considered a success
 	*/
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function)
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries)
 {
-	static constexpr int num_command_confirm_retries = 15;
 	static constexpr int num_reads_per_command_retries = 3;
 
 	bool command_was_successful = false;

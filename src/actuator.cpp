@@ -81,6 +81,90 @@ void Actuator::set_position_um(int32_t position) {
 	stream.set_position_um(position);
 }
 
+int32_t Actuator::read_wide_register_blocking(uint16_t reg_address, MessagePriority priority)
+{
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 2, priority));
+	flush();
+	return ((int32_t)orca_reg_contents[reg_address + 1] << 16) + orca_reg_contents[reg_address];
+}
+
+uint16_t Actuator::read_register_blocking(uint16_t reg_address, MessagePriority priority)
+{
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 1, priority));
+	flush();
+	return orca_reg_contents[reg_address];
+}
+
+std::vector<uint16_t> Actuator::read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority)
+{
+	if (num_registers == 0) return {};
+
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_start_address, num_registers, priority));
+	flush();
+	std::vector<uint16_t> output_vec;
+	for (size_t i = 0; i < num_registers; i++)
+	{
+		output_vec.push_back(orca_reg_contents[reg_start_address + i]);
+	}
+	return output_vec;
+}
+
+void Actuator::write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority)
+{
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(modbus_server_address, reg_address, write_data, priority));
+	flush();
+}
+
+void Actuator::write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority)
+{
+	uint16_t split_data[2]{
+		uint16_t(write_data),
+		uint16_t(write_data >> 16)
+	};
+	write_multiple_registers_blocking(reg_address, 2, split_data, priority);
+}
+
+void Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority)
+{
+	if (num_registers == 0) return;
+
+	uint8_t data[128];
+	for (int i = 0; i < num_registers; i++) {
+		data[i * 2] = uint8_t(write_data[i] >> 8);
+		data[i * 2 + 1] = uint8_t(write_data[i]);
+	}
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_start_address, num_registers, data, priority));
+	flush();
+}
+
+std::vector<uint16_t> Actuator::read_write_multiple_registers_blocking(
+	uint16_t read_starting_address, uint8_t read_num_registers,
+	uint16_t write_starting_address, uint8_t write_num_registers,
+	uint16_t* write_data,
+	MessagePriority priority)
+{
+	uint8_t data[128];
+	for (int i = 0; i < write_num_registers; i++) {
+		data[i * 2] = uint8_t(write_data[i] >> 8);
+		data[i * 2 + 1] = uint8_t(write_data[i]);
+	}
+
+	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_write_multiple_registers_fn(
+		modbus_server_address,
+		read_starting_address, read_num_registers,
+		write_starting_address, write_num_registers,
+		data, priority));
+	flush();
+
+	std::vector<uint16_t> output_vec;
+	for (size_t i = 0; i < read_num_registers; i++)
+	{
+		output_vec.push_back(orca_reg_contents[read_starting_address + i]);
+	}
+
+	return output_vec;
+}
+
 int32_t Actuator::get_force_mN() {
 	return read_wide_register_blocking(FORCE);
 }

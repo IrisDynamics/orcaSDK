@@ -153,89 +153,68 @@ public:
 #endif
 
 #pragma region GENERIC_MODBUS_COMMUNICATION
-	int32_t read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important)
-	{
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 2, priority));
-		flush();
-		return ((int32_t)orca_reg_contents[reg_address + 1] << 16) + orca_reg_contents[reg_address];
-	}
 
-	uint16_t read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important)
-	{
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 1, priority));
-		flush();
-		return orca_reg_contents[reg_address];
-	}
-
-	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important)
-	{
-		if (num_registers == 0) return {};
-
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_start_address, num_registers, priority));
-		flush();
-		std::vector<uint16_t> output_vec;
-		for (size_t i = 0; i < num_registers; i++)
-		{
-			output_vec.push_back(orca_reg_contents[reg_start_address + i]);
-		}
-		return output_vec;
-	}
-
-	void write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important)
-	{
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(modbus_server_address, reg_address, write_data, priority));
-		flush();
-	}
-
-	void write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important)
-	{
-		uint16_t split_data[2]{
-			uint16_t(write_data),
-			uint16_t(write_data >> 16)
-		};
-		write_multiple_registers_blocking(reg_address, 2, split_data, priority);
-	}
-
-	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
-	{
-		if (num_registers == 0) return;
-
-		uint8_t data[128];
-		for (int i = 0; i < num_registers; i++) {
-			data[i * 2] = uint8_t(write_data[i] >> 8);
-			data[i * 2 + 1] = uint8_t(write_data[i]);
-		}
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_start_address, num_registers, data, priority));
-		flush();
-	}
+	/**
+	 * @brief Reads a double-wide register from the motor. 
+	 *
+	 * @param reg_address The lower register address of the double-wide register
+	 */
+	int32_t read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 	
+	/**
+	 * @brief Reads a register from the motor.
+	 *
+	 * @param reg_address The register address
+	 */
+	uint16_t read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Reads multiple registers from the motor.
+	 *
+	 * @param reg_start_address The starting register address
+	 * @param num_registers How many registers to read
+	 */
+	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Writes a register from the motor.
+	 *
+	 * @param reg_address The register address
+	 * @param write_data The value to be written
+	 */
+	void write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Writes a register to the motor.
+	 *
+	 * @param reg_address The lower address of the double-wide register 
+	 * @param write_data The value to be written
+	 */
+	void write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Writes multiple register values to the motor.
+	 *
+	 * @param reg_start_address The starting register address to be written to
+	 * @param num_registers How many registers to read
+	 * @param write_data An array containing the value to be written
+	 */
+	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Simultaneously reads a set of values from the motor and writes a set of values to the motor.
+	 *
+	 * @param read_starting_address The starting register address to be read from
+	 * @param read_num_registers The amount of registers to read
+	 * @param write_starting_address The starting register address to be written to
+	 * @param write_num_registers The amount of registers to write
+	 * @param write_data An array containing the values to be written
+	 */
 	std::vector<uint16_t> read_write_multiple_registers_blocking(
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint16_t* write_data,
-		MessagePriority priority = MessagePriority::important)
-	{
-		uint8_t data[128];
-		for (int i = 0; i < write_num_registers; i++) {
-			data[i * 2] = uint8_t(write_data[i] >> 8);
-			data[i * 2 + 1] = uint8_t(write_data[i]);
-		}
-
-		modbus_client.enqueue_transaction(DefaultModbusFunctions::read_write_multiple_registers_fn(
-			modbus_server_address, 
-			read_starting_address, read_num_registers, 
-			write_starting_address, write_num_registers,
-			data, priority));
-		flush();
-		
-		std::vector<uint16_t> output_vec;
-		for (size_t i = 0; i < read_num_registers; i++)
-		{
-			output_vec.push_back(orca_reg_contents[read_starting_address + i]);
-		}
-
-		return output_vec;
-	}
+		MessagePriority priority = MessagePriority::important);
 
 	/**
 	* @brief Return the contents of the given register from the controller's copy of the motor's memory map.

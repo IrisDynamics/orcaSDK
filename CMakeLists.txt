@@ -23,6 +23,7 @@ target_sources(orcaSDK
 			src/orca_stream_config.h
 			src/serial_interface.h
 			src/message_priority.h
+			src/command_and_confirm.h
 			tools/log.h
 			tools/log_interface.h
 			tools/timer.h

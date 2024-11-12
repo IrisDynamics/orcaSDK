@@ -1,8 +1,13 @@
 #include "../actuator.h"
 
 
+<<<<<<< HEAD
 bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries = 15);
 bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries = 15);
+=======
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function);
+>>>>>>> 03159e0 (REFACTOR: Forward declare command_and_confirm functions to allow overloading)
 
 /**
  *	@overload	bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);

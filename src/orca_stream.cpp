@@ -54,9 +54,12 @@ void OrcaStream::modbus_handshake(Transaction response) {
 			num_discovery_pings_received++;
 
 			if (num_discovery_pings_received >= connection_config.req_num_discovery_pings) {
-				motor->synchronize_memory_map();			// loads many read messages onto the queue
-				connection_state = ConnectionStatus::synchronization;
-
+				connection_state = ConnectionStatus::negotiation;
+				enqueue_change_connection_status_fn(
+					modbus_server_address,
+					true,
+					connection_config.target_baud_rate_bps,
+					connection_config.target_delay_us);
 			}
 			else {
 				enqueue_ping_msg(modbus_server_address);
@@ -79,11 +82,6 @@ void OrcaStream::modbus_handshake(Transaction response) {
 		else {
 
 			if (modbus_client.get_queue_size() == 0) {
-				enqueue_change_connection_status_fn(
-					modbus_server_address,
-					true,
-					connection_config.target_baud_rate_bps,
-					connection_config.target_delay_us);
 				connection_state = ConnectionStatus::negotiation;
 			}
 		}

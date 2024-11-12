@@ -82,15 +82,15 @@ void Actuator::set_position_um(int32_t position) {
 }
 
 int32_t Actuator::get_force_mN() {
-	return uint32_t(orca_reg_contents[FORCE_REG_H_OFFSET] << 16) | orca_reg_contents[FORCE_REG_OFFSET];
+	return read_wide_register_blocking(FORCE);
 }
 
 int32_t Actuator::get_position_um() {
-	return (orca_reg_contents[POS_REG_H_OFFSET] << 16) | orca_reg_contents[POS_REG_OFFSET];
+	return read_wide_register_blocking(SHAFT_POS_UM);
 }
 
 void Actuator::enable_haptic_effects(uint16_t effects) {
-	write_register(HAPTIC_STATUS, effects);
+	write_register_blocking(HAPTIC_STATUS, effects);
 }
 
 void Actuator::set_stream_timeout(int64_t timeout_us) {
@@ -105,8 +105,8 @@ void Actuator::init() {
 
 void Actuator::run()
 {
-	run_out();
 	run_in();
+	run_out();
 }
 
 void Actuator::flush()
@@ -225,214 +225,147 @@ void Actuator::handle_transaction_response(Transaction response)
 }
 
 uint16_t Actuator::get_mode_of_operation() {
-	return orca_reg_contents[MODE_OF_OPERATION];
+	return read_register_blocking(MODE_OF_OPERATION);
 }
 
 uint16_t Actuator::get_power_W() {
-	return orca_reg_contents[POWER_REG_OFFSET];
+	return read_register_blocking(POWER_REG_OFFSET);
 }
 
 uint16_t Actuator::get_temperature_C() {
-	return orca_reg_contents[TEMP_REG_OFFSET];
+	return read_register_blocking(TEMP_REG_OFFSET);
 }
 
 uint16_t Actuator::get_voltage_mV() {
-	return orca_reg_contents[VOLTAGE_REG_OFFSET];
+	return read_register_blocking(VOLTAGE_REG_OFFSET);
 }
 
 uint16_t Actuator::get_errors() {
-	return orca_reg_contents[ERROR_REG_OFFSET];
+	return read_register_blocking(ERROR_REG_OFFSET);
 }
 
 uint32_t Actuator::get_serial_number() {
-
-	uint16_t sn_high = orca_reg_contents[SERIAL_NUMBER_HIGH];
-	uint16_t sn_low = orca_reg_contents[SERIAL_NUMBER_LOW];
-
-	uint32_t serial_number = (sn_high * (1 << 16)) + sn_low;
-	return serial_number;
+	return (uint32_t)read_wide_register_blocking(SERIAL_NUMBER_LOW);
 }
 
 uint16_t Actuator::get_major_version() {
-	return orca_reg_contents[MAJOR_VERSION];
+	return read_register_blocking(MAJOR_VERSION);
 }
 
 uint16_t Actuator::get_release_state() {
-	return orca_reg_contents[RELEASE_STATE];
+	return read_register_blocking(RELEASE_STATE);
 }
 
 uint16_t Actuator::get_revision_number() {
-	return orca_reg_contents[REVISION_NUMBER];
+	return read_register_blocking(REVISION_NUMBER);
 }
 
 bool Actuator::version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number) {
+	std::vector<uint16_t> version_registers = read_multiple_registers_blocking(MAJOR_VERSION, 3);
+	
+	uint16_t read_major_version = version_registers[0];
+	uint16_t read_revision_number = version_registers[2];
+	uint16_t read_release_state = version_registers[1];
+
 	return
-		get_major_version() > version
-		|| (get_major_version() == version && get_revision_number() > revision_number)
-		|| (get_major_version() == version && get_revision_number() == revision_number && get_release_state() >= release_state);
+		read_major_version > version
+		|| (read_major_version == version && read_revision_number > revision_number)
+		|| (read_major_version == version && read_revision_number == revision_number && read_release_state >= release_state);
 }
 
 void Actuator::zero_position() {
-	write_register(ZERO_POS_REG_OFFSET, ZERO_POS_MASK);
+	write_register_blocking(ZERO_POS_REG_OFFSET, ZERO_POS_MASK);
 }
 
 void Actuator::clear_errors() {
-	write_register(CLEAR_ERROR_REG_OFFSET, CLEAR_ERROR_MASK);
+	write_register_blocking(CLEAR_ERROR_REG_OFFSET, CLEAR_ERROR_MASK);
 }
 
-void Actuator::get_latched_errors() {
-	read_register(ERROR_1);
+uint16_t Actuator::get_latched_errors() {
+	return read_register_blocking(ERROR_1);
 }
 
 void Actuator::set_max_force(s32 max_force) {
-	uint8_t data[4] = {
-		uint8_t(max_force >> 8),
-		uint8_t(max_force),
-		uint8_t(max_force >> 24),
-		uint8_t(max_force >> 16)
-	};
-	write_registers(USER_MAX_FORCE, 2, data);
+	write_wide_register_blocking(USER_MAX_FORCE, max_force);
 }
 
 void Actuator::set_max_temp(uint16_t max_temp) {
-	write_register(USER_MAX_TEMP, max_temp);
+	write_register_blocking(USER_MAX_TEMP, max_temp);
 }
 
 void Actuator::set_max_power(uint16_t max_power) {
-	write_register(USER_MAX_POWER, max_power);
+	write_register_blocking(USER_MAX_POWER, max_power);
 }
 
 void Actuator::set_pctrl_tune_softstart(uint16_t t_in_ms) {
-	write_register(PC_SOFTSTART_PERIOD, t_in_ms);
+	write_register_blocking(PC_SOFTSTART_PERIOD, t_in_ms);
 }
 
 void Actuator::set_safety_damping(uint16_t max_safety_damping) {
-	write_register(SAFETY_DGAIN, max_safety_damping);
+	write_register_blocking(SAFETY_DGAIN, max_safety_damping);
 }
 
+//NEEDS TEST
 void Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain) {
 
-	uint8_t data[12] = {
-		uint8_t(pgain >> 8),
-		uint8_t(pgain),
-		uint8_t(igain >> 8),
-		uint8_t(igain),
-		uint8_t(dvgain >> 8),
-		uint8_t(dvgain),
-		uint8_t(degain >> 8),
-		uint8_t(degain),
-		uint8_t(sat >> 8),
-		uint8_t(sat),
-		uint8_t(sat >> 24),
-		uint8_t(sat >> 16)
+	uint16_t data[6] = {
+		pgain,
+		igain,
+		dvgain,
+		degain,
+		uint16_t(sat),
+		uint16_t(sat >> 16)
 	};
 
-	write_registers(PC_PGAIN, 6, data);
-	write_register(CONTROL_REG_1::address, CONTROL_REG_1::position_controller_gain_set_flag);
+	write_multiple_registers_blocking(PC_PGAIN, 6, data);
+	write_register_blocking(CONTROL_REG_1::address, CONTROL_REG_1::position_controller_gain_set_flag);
 }
 
+//NEEDS TEST
 void Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
 	if (next_id == -1) {
 		next_id = ID + 1;
 	}
 
-	uint8_t data[12] = {
-		uint8_t(position >> 8),
-		uint8_t(position),
-		uint8_t(position >> 24),
-		uint8_t(position >> 16),
-		uint8_t(time >> 8),
-		uint8_t(time),
-		uint8_t(time >> 24),
-		uint8_t(time >> 16),
-		uint8_t(delay >> 8),
-		uint8_t(delay),
-		uint8_t(0),
-		uint8_t((type << 1) | (next_id << 3) | auto_next)
+	uint16_t data[6] = {
+		uint16_t(position),
+		uint16_t(position >> 16),
+		uint16_t(time),
+		uint16_t(time >> 16),
+		uint16_t(delay),
+		uint16_t((type << 1) | (next_id << 3) | auto_next)
 	};
-	write_registers(KIN_MOTION_0 + (6 * ID), 6, data);
+	write_multiple_registers_blocking(KIN_MOTION_0 + (6 * ID), 6, data);
 }
 
+//NEEDS TEST
 void Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone, u16 saturation, u8 coupling) {
-	u8 data[12] = {
-		u8(gain >> 8),
-		u8(gain),
-		u8(center >> 8),
-		u8(center),
-		u8(center >> 24),
-		u8(center >> 16),
-		u8(0),
-		u8(coupling),
-		u8(dead_zone >> 8),
-		u8(dead_zone),
-		u8(saturation >> 8),
-		u8(saturation),
+	uint16_t data[6] = {
+		gain,
+		uint16_t(center),
+		uint16_t(center >> 16),
+		coupling,
+		dead_zone,
+		saturation,
 
 	};
-	write_registers(S0_GAIN_N_MM + spring_id * 6, 6, data);
+	write_multiple_registers_blocking(S0_GAIN_N_MM + spring_id * 6, 6, data);
 }
 
+//NEEDS TEST
 void Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type) {
-	u8 data[8] = {
-		u8(amplitude >> 8),
-		u8(amplitude),
-		u8(type >> 8),
-		u8(type),
-		u8(frequency_dhz >> 8),
-		u8(frequency_dhz),
-		u8(duty >> 8),
-		u8(duty)
+	uint16_t data[4] = {
+		amplitude,
+		type,
+		frequency_dhz,
+		duty
 	};
-	write_registers(O0_GAIN_N + osc_id * 4, 4, data);
+	write_multiple_registers_blocking(O0_GAIN_N + osc_id * 4, 4, data);
 }
 
+//NEEDS TEST: and command revisit
 void Actuator::trigger_kinematic_motion(int8_t ID) {
-	write_register(KIN_SW_TRIGGER, ID);
-}
-
-void Actuator::read_register(uint16_t reg_address, MessagePriority priority) {
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 1, priority));
-}
-
-void Actuator::read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority) {
-	if (num_registers < 1 || num_registers > MAX_NUM_READ_REG) return;
-
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, num_registers, priority));
-}
-
-void Actuator::write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority) {
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(modbus_server_address, reg_address, reg_data, priority));
-}
-
-void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority) {
-	if (num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return;
-
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_address, num_registers, reg_data, priority));
-}
-
-void Actuator::write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority) {
-	if (num_registers < 1 || num_registers > MAX_NUM_WRITE_REG) return;
-
-	uint8_t data[126];
-	for (int i = 0; i < num_registers; i++) {
-		data[i * 2] = uint8_t(reg_data[i] >> 8);
-		data[i * 2 + 1] = uint8_t(reg_data[i]);
-	}
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_multiple_registers_fn(modbus_server_address, reg_address, num_registers, data, priority));
-}
-
-void Actuator::read_write_registers(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers, uint8_t* write_data, MessagePriority priority)
-{
-	if (read_num_registers < 1 || read_num_registers > MAX_NUM_READ_REG) return;
-	if (write_num_registers < 1 || write_num_registers > MAX_NUM_WRITE_REG) return;
-
-	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_write_multiple_registers_fn(
-		modbus_server_address,
-		read_starting_address, read_num_registers,
-		write_starting_address, write_num_registers,
-		write_data,
-		priority
-	));
+	write_register_blocking(KIN_SW_TRIGGER, ID);
 }
 
 uint16_t Actuator::get_orca_reg_content(uint16_t offset) {
@@ -461,13 +394,13 @@ bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t c
 		command_register_address, 
 		command_register_value, 
 		confirm_register_address, 
-		[this, confirm_register_address, confirm_register_value]()->bool { 
-			return (get_orca_reg_content(confirm_register_address) == confirm_register_value); 
+		[this, confirm_register_address, confirm_register_value](uint16_t read_value)->bool { 
+			return (read_value == confirm_register_value);
 		});
 }
 
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function)
+bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function)
 {
 	static constexpr int num_command_confirm_retries = 15;
 	static constexpr int num_reads_per_command_retries = 3;
@@ -475,10 +408,9 @@ bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t c
 	bool command_was_successful = false;
 	for (int i = 0; i < num_command_confirm_retries; i++)
 	{
-		if ((i % num_reads_per_command_retries) == 0) write_register(command_register_address, command_register_value);
-		read_register(confirm_register_address);
-		flush();
-		if (success_function())
+		if ((i % num_reads_per_command_retries) == 0) write_register_blocking(command_register_address, command_register_value);
+		uint16_t current_read = read_register_blocking(confirm_register_address);
+		if (success_function(current_read))
 		{
 			command_was_successful = true;
 			break;
@@ -490,15 +422,6 @@ bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t c
 void Actuator::set_stream_paused(bool paused)
 {
 	stream_paused = paused;
-}
-
-void Actuator::synchronize_memory_map() {
-	read_registers(PARAM_REG_START, PARAM_REG_SIZE);
-	read_registers(ERROR_0, ADC_DATA_COLLISION - ERROR_0);
-	//read_registers(STATOR_CAL_REG_START	, STATOR_CAL_REG_SIZE			) ;
-	//read_registers(SHAFT_CAL_REG_START 	, SHAFT_CAL_REG_SIZE 			) ;
-	//read_registers(FORCE_CAL_REG_START 	, FORCE_CAL_REG_SIZE 			) ;
-	read_registers(TUNING_REG_START, TUNING_REG_SIZE);
 }
 
 void Actuator::desynchronize_memory_map() {

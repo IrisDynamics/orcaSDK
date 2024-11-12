@@ -169,6 +169,8 @@ public:
 
 	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important)
 	{
+		if (num_registers == 0) return {};
+
 		modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_start_address, num_registers, priority));
 		flush();
 		std::vector<uint16_t> output_vec;
@@ -196,6 +198,8 @@ public:
 
 	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
 	{
+		if (num_registers == 0) return;
+
 		uint8_t data[128];
 		for (int i = 0; i < num_registers; i++) {
 			data[i * 2] = uint8_t(write_data[i] >> 8);
@@ -234,54 +238,6 @@ public:
 	}
 
 	/**
-	 * @brief Request for a specific register in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address
-	 */
-	void read_register(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for multiple sequential registers in the local copy to be updated from the motor's memory map
-	 *
-	 * @param reg_address register address from the orca's memory map
-	 * @param num_registers number of sequential registers to read
-	 */
-	void read_registers(uint16_t reg_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for a specific register in the motor's memory map to be updated with a given value.
-	 *
-	 * @param reg_address register address
-	 * @param reg_data data to be added to the register
-	 */
-	void write_register(uint16_t reg_address, uint16_t reg_data, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 * @brief Request for multiple registers in the motor's memory map to be updated with a given value.
-	 *
-	 * @param reg_address register address
-	 * * @param num_registers number of sequential registers to write
-	 * @param reg_data pointer to an array of data to be added to the registers
-	 */
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint8_t* reg_data, MessagePriority priority = MessagePriority::important);
-	void write_registers(uint16_t reg_address, uint8_t num_registers, uint16_t* reg_data, MessagePriority priority = MessagePriority::important);
-
-	/**
-	 *	@brief Requests a read of multiple registers and also request a write of multiple registers
-	 *
-	 *	@param read_starting_address The starting address of registers to read from
-	 *  @param read_num_registers How many registers that should be read
-	 *  @param write_starting_address The startin address of registers to write to
-	 *  @param write_num_registers How many registers that should be written to
-	 *  @param write_data Pointer to an array containing the byte data that should be written
-	 */
-	void read_write_registers(
-		uint16_t read_starting_address, uint8_t read_num_registers,
-		uint16_t write_starting_address, uint8_t write_num_registers,
-		uint8_t* write_data,
-		MessagePriority priority = MessagePriority::important);
-
-	/**
 	* @brief Return the contents of the given register from the controller's copy of the motor's memory map.
 	*
 	* @param offset the register that will be read
@@ -309,7 +265,7 @@ public:
 	 *	@param	success_function	The function that must return true for the command to have been considered a success
 	 */
 	[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool()> success_function);
+	bool command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function);
 	/**
 	 *	@overload	bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value);
 	 *	@brief	Writes to a register and blocks the current thread until a read register matches a given value.
@@ -401,12 +357,6 @@ public:
 	*/
 	bool is_connected();
 
-
-	/**
-	 * @brief Requests the actuator synchronize its memory map with the controller
-	 */
-	void synchronize_memory_map();
-
 #pragma endregion
 
 #pragma region UNCOMMON_MISC_DATA
@@ -441,7 +391,7 @@ public:
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
-	void get_latched_errors();
+	uint16_t get_latched_errors();
 
 #pragma endregion
 

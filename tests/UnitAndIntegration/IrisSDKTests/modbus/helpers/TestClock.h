@@ -16,9 +16,9 @@ public:
 		current_time += new_time;
 	}
 
-	void set_auto_time_pass(int64_t auto_time_pass)
+	void set_auto_time_pass(int64_t _auto_time_pass)
 	{
-		this->auto_time_pass = auto_time_pass;
+		auto_time_pass = _auto_time_pass;
 	}
 
 private:

@@ -18,14 +18,14 @@ protected:
 
 TEST_F(BasicInteractionTests, ReadsToRegisterPositionGoThroughAsExpected) {
 	EXPECT_EQ(0, motor.get_position_um());
-	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
 	motor.flush();
 	EXPECT_NE(0, motor.get_position_um());
 }
 
 //TODO[Aiden, Oct 23 2024]: This behaviour can be checked as a unit test and should be
 TEST_F(BasicInteractionTests, AfterInitRegistersAreSetToZero) {
-	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
 	motor.flush();
 	EXPECT_NE(0, motor.get_position_um());
 	motor.disable_comport();
@@ -35,12 +35,12 @@ TEST_F(BasicInteractionTests, AfterInitRegistersAreSetToZero) {
 
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {
-	motor.read_registers(SHAFT_POS_UM, 2);
+	motor.read_multiple_registers_blocking(SHAFT_POS_UM, 2);
 	motor.flush();
 	EXPECT_NE(0, motor.get_position_um());
 	motor.disable_comport();
 	motor.init();
-	motor.read_register(STATOR_TEMP);
+	motor.read_register_blocking(STATOR_TEMP);
 	motor.flush();
 	EXPECT_NE(0, motor.get_orca_reg_content(STATOR_TEMP));
 }
@@ -55,7 +55,7 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 	for (int i = 0; i < 20; i++)
 	{
 		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
-			[this]()->bool{ return (motor.get_orca_reg_content(MODE_OF_OPERATION) == MotorMode::ForceMode); }));
+			[this](uint16_t read_value)->bool{ return (read_value == MotorMode::ForceMode); }));
 		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
 	}
 }
@@ -83,7 +83,7 @@ TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStre
 		motor.run();
 	}
 
-	motor.read_register(MODE_OF_OPERATION);
+	motor.read_register_blocking(MODE_OF_OPERATION);
 	motor.flush();
 
 	EXPECT_EQ(MotorMode::SleepMode, motor.get_mode());
@@ -105,7 +105,7 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 	motor.set_position_um(2); // This sets the stream timeout timer
 
 	motor.run(); //Inject position command
-	motor.read_register(POS_CMD);
+	motor.read_register_blocking(POS_CMD);
 
 	motor.flush();
 
@@ -121,15 +121,12 @@ TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNo
 	}
 	motor.set_mode(MotorMode::PositionMode);
 
-	motor.write_register(POS_CMD, 0);
+	motor.write_register_blocking(POS_CMD, 0);
 	motor.set_stream_paused(true); // Disable the queuing of new stream messages
 
 	motor.set_position_um(2); // This sets the stream timeout timer
 
 	motor.run(); // This sends the change mode command
-	motor.read_register(POS_CMD);
-
-	motor.flush();
-
-	EXPECT_EQ(0, motor.get_orca_reg_content(POS_CMD));
+	
+	EXPECT_EQ(0, motor.read_register_blocking(POS_CMD));
 }

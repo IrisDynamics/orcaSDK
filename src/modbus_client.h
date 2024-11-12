@@ -112,7 +112,6 @@ public:
      * Should be polled at least as fast as messages are expected to arrive
      */
     void run_in() {
-
     	// Looking for message parsing? Check the application run_in() function (e.g. Actuator object).
         receive();
 
@@ -345,10 +344,11 @@ private:
 	 * 		  Example: Call from UART byte received interrupt or when polling the hardware for data in the input fifo
 	 */
 	void receive() {
-
         if (messages.size() == 0) return;
+        
+        Transaction* active_transaction = messages.get_active_transaction();
 
-		Transaction * active_transaction = messages.get_active_transaction();
+        if (!active_transaction->is_active()) return;
 
         while (serial_interface.ready_to_receive())
         {

@@ -58,7 +58,7 @@ void Actuator::set_mode(MotorMode orca_mode) {
 }
 
 MotorMode Actuator::get_mode() {
-	return (MotorMode)get_orca_reg_content(MODE_OF_OPERATION);
+	return (MotorMode)read_register_blocking(MODE_OF_OPERATION);
 }
 
 void Actuator::set_stream_mode(OrcaStream::StreamMode mode) {

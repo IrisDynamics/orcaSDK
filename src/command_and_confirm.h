@@ -20,7 +20,9 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 		confirm_register_address,
 		[confirm_register_value](uint16_t read_value)->bool {
 			return (read_value == confirm_register_value); 
-		});
+		},
+		num_command_confirm_retries
+		);
 }
 
 /**

@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "actuator.h"
-
+#include "src/command_and_confirm.h"
 class BasicInteractionTests : public ::testing::Test
 {
 protected:
 	BasicInteractionTests() :
-		motor(4, "unimportant")
+		motor(6, "unimportant")
 	{}
 
 	void SetUp()
@@ -54,9 +54,9 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 	}
 	for (int i = 0; i < 20; i++)
 	{
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
+		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
 			[this](uint16_t read_value)->bool{ return (read_value == MotorMode::ForceMode); }));
-		EXPECT_TRUE(motor.command_and_confirm(CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
+		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
 	}
 }
 

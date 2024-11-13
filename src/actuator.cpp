@@ -50,10 +50,13 @@ Actuator::Actuator(
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {
-	if (!command_and_confirm(CTRL_REG_3, (uint16_t)orca_mode, MODE_OF_OPERATION, (uint16_t)orca_mode))
+	write_register_blocking(MODE_OF_OPERATION, orca_mode);
+
+	if (get_mode() != orca_mode)
 	{
 		std::cout << "ERROR: Failed to switch mode during set_mode()\n";
 	}
+
 	stream.update_stream_mode(orca_mode);
 }
 
@@ -469,38 +472,6 @@ void Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr
 {
 	log->open(log_name);
 	modbus_client.begin_logging(log);
-}
-
-[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value)
-{
-	return command_and_confirm(
-		command_register_address, 
-		command_register_value, 
-		confirm_register_address, 
-		[this, confirm_register_address, confirm_register_value](uint16_t read_value)->bool { 
-			return (read_value == confirm_register_value);
-		});
-}
-
-[[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool Actuator::command_and_confirm(uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function)
-{
-	static constexpr int num_command_confirm_retries = 15;
-	static constexpr int num_reads_per_command_retries = 3;
-
-	bool command_was_successful = false;
-	for (int i = 0; i < num_command_confirm_retries; i++)
-	{
-		if ((i % num_reads_per_command_retries) == 0) write_register_blocking(command_register_address, command_register_value);
-		uint16_t current_read = read_register_blocking(confirm_register_address);
-		if (success_function(current_read))
-		{
-			command_was_successful = true;
-			break;
-		}
-	}
-	return command_was_successful;
 }
 
 void Actuator::set_stream_paused(bool paused)

@@ -450,6 +450,22 @@ void Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 d
 	write_multiple_registers_blocking(O0_GAIN_N + osc_id * 4, 4, data);
 }
 
+void Actuator::set_damper(u16 damping) {
+	write_register_blocking(D0_GAIN_NS_MM, damping);
+}
+
+void Actuator::set_inertia(u16 inertia) {
+	write_register_blocking(I0_GAIN_NS2_MM, inertia);
+}
+
+void Actuator::set_constant_force(u32 force) {
+	write_wide_register_blocking(CONSTANT_FORCE_MN, force);
+}
+
+void Actuator::set_constant_force_filter(u16 force_filter) {
+	write_register_blocking(CONST_FORCE_FILTER, force_filter);
+}
+
 //NEEDS TEST: and command revisit
 void Actuator::trigger_kinematic_motion(int8_t ID) {
 	write_register_blocking(KIN_SW_TRIGGER, ID);

@@ -498,9 +498,33 @@ public:
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
-* 
+	 * 
 	 */
 	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
+
+	/**
+	*	@brief Sets the damping value in Haptic Mode
+	*	@param damping	The damping gain (4*N*s/mm)
+	*/
+	void set_damper(u16 damping);
+
+	/**
+	*	@brief Sets the inertia value in Haptic Mode
+	*	@param inertia	The inertia gain (64*N*s^2/mm)
+	*/
+	void set_inertia(u16 inertia);
+
+	/**
+	*	@brief Sets the constant force value in Haptic Mode
+	*	@param force	(mN)
+	*/
+	void set_constant_force(u32 force);
+
+	/**
+	*	@brief Sets the constant force filter value in Haptic Mode
+	*	@param force_filter	Amount of filtering on constant force inputs
+	*/
+	void set_constant_force_filter(u16 force_filter);
 
 #pragma endregion
 

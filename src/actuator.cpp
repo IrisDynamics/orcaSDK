@@ -177,6 +177,7 @@ int32_t Actuator::get_position_um() {
 }
 
 void Actuator::enable_haptic_effects(uint16_t effects) {
+	stream.set_haptic_effects(effects);
 	write_register_blocking(HAPTIC_STATUS, effects);
 }
 

@@ -458,7 +458,7 @@ void Actuator::set_inertia(u16 inertia) {
 	write_register_blocking(I0_GAIN_NS2_MM, inertia);
 }
 
-void Actuator::set_constant_force(u32 force) {
+void Actuator::set_constant_force(s32 force) {
 	write_wide_register_blocking(CONSTANT_FORCE_MN, force);
 }
 

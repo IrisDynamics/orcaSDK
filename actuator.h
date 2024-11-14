@@ -36,6 +36,46 @@
 #include "src/orca_stream_config.h"
 #include "src/orca_modes.h"
 
+class CommunicationError
+{
+public:
+	CommunicationError(
+		const int failure_type,
+		std::string error_message = ""
+	) :
+		failure_type(failure_type),
+		error_message(error_message)
+	{}
+	CommunicationError& operator=(const CommunicationError& other) = default;
+
+	explicit operator bool() const
+	{
+		return failure_type != 0;
+	}
+
+	int failure_codes() const
+	{
+		return failure_type;
+	}
+
+	std::string what()
+	{
+		return error_message;
+	}
+
+private:
+
+	int failure_type;
+	std::string error_message;
+};
+
+template <typename T>
+struct MessageErrorReturn
+{
+	T value;
+	CommunicationError error;
+};
+
 /**
    @class Actuator
    @brief Object that abstracts the communications between the client and a Orca motor server.
@@ -112,32 +152,32 @@ public:
 	*
 	* @return uint32_t - force in milli-Newtons
 	*/
-	int32_t get_force_mN();
+	MessageErrorReturn<int32_t> get_force_mN();
 
 	/**
 	* @brief Returns the position of the shaft in the motor (distance from the zero position) in micrometers.
 	*
 	* @return uint32_t - position in micrometers
 	*/
-	int32_t get_position_um();
+	MessageErrorReturn<int32_t> get_position_um();
 
 	/**
 	*@brief get the motor's mode of operations as currently updated by the local memory map
 	*/
-	uint16_t get_mode_of_operation();
+	MessageErrorReturn<uint16_t> get_mode_of_operation();
 
 	/**
 	* @brief Returns the sum of all error messages being sent by the motor
 	* 
 	* @return uint16_t - sum or all active error codes
 	*/
-	uint16_t get_errors();
+	MessageErrorReturn<uint16_t> get_errors();
 
 	/**
 	 * @brief clear all errors stored on the motor
 	 * note: errors that are still found will appear again
 	 */
-	void clear_errors();
+	CommunicationError clear_errors();
 
 #if defined(WINDOWS)
 	void set_new_comport(int _comport);
@@ -159,14 +199,14 @@ public:
 	 *
 	 * @param reg_address The lower register address of the double-wide register
 	 */
-	int32_t read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+	MessageErrorReturn<int32_t> read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 	
 	/**
 	 * @brief Reads a register from the motor.
 	 *
 	 * @param reg_address The register address
 	 */
-	uint16_t read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+	MessageErrorReturn<uint16_t> read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Reads multiple registers from the motor.
@@ -174,7 +214,7 @@ public:
 	 * @param reg_start_address The starting register address
 	 * @param num_registers How many registers to read
 	 */
-	std::vector<uint16_t> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+	MessageErrorReturn<std::vector<uint16_t>> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Writes a register from the motor.
@@ -182,7 +222,7 @@ public:
 	 * @param reg_address The register address
 	 * @param write_data The value to be written
 	 */
-	void write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important);
+	CommunicationError write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Writes a register to the motor.
@@ -190,7 +230,7 @@ public:
 	 * @param reg_address The lower address of the double-wide register 
 	 * @param write_data The value to be written
 	 */
-	void write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important);
+	CommunicationError write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Writes multiple register values to the motor.
@@ -199,7 +239,7 @@ public:
 	 * @param num_registers How many registers to read
 	 * @param write_data An array containing the value to be written
 	 */
-	void write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important);
+	CommunicationError write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Simultaneously reads a set of values from the motor and writes a set of values to the motor.
@@ -210,7 +250,7 @@ public:
 	 * @param write_num_registers The amount of registers to write
 	 * @param write_data An array containing the values to be written
 	 */
-	std::vector<uint16_t> read_write_multiple_registers_blocking(
+	MessageErrorReturn<std::vector<uint16_t>> read_write_multiple_registers_blocking(
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint16_t* write_data,
@@ -273,7 +313,7 @@ public:
 	* *
 	* @return CommunicationMode
 	*/
-	MotorMode get_mode();
+	MessageErrorReturn<MotorMode> get_mode();
 
 	/**
 	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
@@ -330,32 +370,32 @@ public:
 	* 
 	* @return uint16_t - power in Watts
 	*/
-	uint16_t get_power_W();
+	MessageErrorReturn<uint16_t> get_power_W();
 
 	/**
 	* @brief Returns the temperature of the motor in Celcius
 	* 
 	* @return uint16_t - temperature in Celcius
 	*/
-	uint16_t get_temperature_C();
+	MessageErrorReturn<uint16_t> get_temperature_C();
 
 	/**
 	* @brief Returns the amount of voltage the motor is recieving, in milli-Volts. 
 	* 
 	* @return uint16_t - voltage in milli-Voltage 
 	*/
-	uint16_t get_voltage_mV();
+	MessageErrorReturn<uint16_t> get_voltage_mV();
 
 	/**
 	 * @brief Set the zero position of the motor to be the current position 
 	 */
-	void zero_position();
+	CommunicationError zero_position();
 
 	/**
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
-	uint16_t get_latched_errors();
+	MessageErrorReturn<uint16_t> get_latched_errors();
 
 #pragma endregion
 
@@ -366,28 +406,28 @@ public:
 	*
 	* @return uint32_t - actuator serial number
 	*/
-	uint32_t get_serial_number();
+	MessageErrorReturn<uint32_t> get_serial_number();
 
 	/**
 	* @brief Return the firmware major version
 	*
 	* @return uint16_t - firmware major version
 	*/
-	uint16_t get_major_version();
+	MessageErrorReturn<uint16_t> get_major_version();
 
 	/**
 	* @brief Return the firmware release state (minor version)
 	*
 	* @return uint16_t - firmware release state
 	*/
-	uint16_t get_release_state();
+	MessageErrorReturn<uint16_t> get_release_state();
 
 	/**
 	* @brief Return the firmware revision number
 	*
 	* @return uint16_t - firmware revision number
 	*/
-	uint16_t get_revision_number();
+	MessageErrorReturn<uint16_t> get_revision_number();
 
 	/**
 	* @brief Returns true if the motor's firmware version is 'at least as recent' as the version designated
@@ -400,7 +440,7 @@ public:
 	* @param revision_number - Desired revision number
 	* @return bool - True if motor's firmware version is at least as recent as the version designated by the parameters
 	*/
-	bool version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
+	MessageErrorReturn<bool> version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
 
 #pragma endregion
 
@@ -411,35 +451,35 @@ public:
 	 * 
 	 * @param max_force force in milli-Newtons
 	 */
-	void set_max_force(s32 max_force);
+	CommunicationError set_max_force(s32 max_force);
 
 	/**
 	 * @brief Set the maximum temperature that the motor allows
 	 * 
 	 * @param max_temp temperature in Celcius
 	 */
-	void set_max_temp(uint16_t max_temp);
+	CommunicationError set_max_temp(uint16_t max_temp);
 
 	/**
 	 * @brief Set the maximum power that the motor allows
 	 * 
 	 * @param max_power power in Watts
 	 */
-	void set_max_power(uint16_t max_power);
+	CommunicationError set_max_power(uint16_t max_power);
 
 	/**
 	 * @brief Sets the fade period when changing position controller tune in ms
 	 * 
 	 * @param t_in_ms time period in milliseconds
 	*/
-	void set_pctrl_tune_softstart(uint16_t t_in_ms);
+	CommunicationError set_pctrl_tune_softstart(uint16_t t_in_ms);
 
 	/**
 	 * @brief Sets the motion damping gain value used when communications are interrupted.
 	 * 
 	 * @param max_safety_damping damping value
 	 */
-	void set_safety_damping(uint16_t max_safety_damping);
+	CommunicationError set_safety_damping(uint16_t max_safety_damping);
 
 	/**
 	 * @brief Sets the PID tuning values on the motor in non-scheduling mode. Disabled the gain scheduling in motors that support it
@@ -464,13 +504,13 @@ public:
 	* @param type	0 = minimize power, 1 = maximize smoothness
 	* @param chain	Enable linking this motion to the next
 	*/
-	void set_kinematic_motion(int8_t ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
+	CommunicationError set_kinematic_motion(int8_t ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
 
 	/**
 	* @brief Use the software trigger to start a kinematic motion, this will also run any chained motions
 	* @ID Identification of the motion to be triggered
 	*/
-	void trigger_kinematic_motion(int8_t ID);
+	CommunicationError trigger_kinematic_motion(int8_t ID);
 
 #pragma endregion
 
@@ -492,14 +532,14 @@ public:
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
 	*/
-	void enable_haptic_effects(uint16_t effects);
+	CommunicationError enable_haptic_effects(uint16_t effects);
 
 	/** 
 	 *	@brief	Configures a spring effect with the given parameters.
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
 	 */
-	void set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone = 0, u16 saturation = 0, u8 coupling = 0);
+	CommunicationError set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone = 0, u16 saturation = 0, u8 coupling = 0);
 
 	/**
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
@@ -507,7 +547,7 @@ public:
 	 *			for details on this function.
 	 * 
 	 */
-	void set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
+	CommunicationError set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
 
 	/**
 	*	@brief Sets the damping value in Haptic Mode
@@ -537,6 +577,8 @@ public:
 
 private:
 	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents{};
+	CommunicationError message_error{false};
+	std::vector<uint16_t> message_data{};
 
 	OrcaStream stream;
 

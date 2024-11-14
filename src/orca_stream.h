@@ -86,6 +86,8 @@ public:
 
 	void set_position_um(int32_t position);
 
+	void set_haptic_effects(uint16_t effect);
+
 	void set_stream_timeout(int64_t timeout_us);
 
 private:
@@ -104,6 +106,8 @@ private:
 	// Used to hold the last commanded force and position commands from the user of this object
 	int32_t force_command = 0;
 	int32_t position_command = 0;
+	uint16_t haptic_command = 0;
+
 	//Used to hold the last data to stream in motor write and read streams
 	uint32_t motor_write_data = 0;
 	uint16_t motor_write_addr = 0;
@@ -146,7 +150,6 @@ private:
 	StreamMode stream_mode = MotorCommand;
 
 	static constexpr int kinematic_command = 32;
-	static constexpr int haptic_command = 34;
 	void motor_stream_command();
 
 	void motor_stream_read();

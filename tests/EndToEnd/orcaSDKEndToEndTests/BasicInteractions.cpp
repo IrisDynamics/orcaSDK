@@ -114,25 +114,23 @@ TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNo
 	EXPECT_EQ(0, motor.read_register_blocking(POS_CMD));
 }
 
-//TEST_F(BasicInteractionTests, HapticModeStreaming)
-//{
-//	motor.enable();
-//	while (!motor.is_connected())
-//	{
-//		motor.run();
-//	}
-//
-//	motor.set_mode(MotorMode::HapticMode);
-//	motor.enable_haptic_effects(Actuator::HapticEffect::ConstF + Actuator::HapticEffect::Osc0);
-//	while (1) motor.run();
-//	
-//
-//	
-//	auto stream_start = std::chrono::steady_clock::now();
-//	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(10000))
-//	{
-//		motor.run();
-//	}
-//
-//	EXPECT_EQ(MotorMode::HapticMode, motor.get_mode());
-//}
+TEST_F(BasicInteractionTests, HapticModeStreaming)
+{
+	motor.enable();
+	while (!motor.is_connected())
+	{
+		motor.run();
+	}
+
+	motor.set_mode(MotorMode::HapticMode);
+	motor.enable_haptic_effects(Actuator::HapticEffect::ConstF + Actuator::HapticEffect::Osc0);
+	
+	
+	auto stream_start = std::chrono::steady_clock::now();
+	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(1000))
+	{
+		motor.run();
+	}
+
+	EXPECT_EQ(MotorMode::HapticMode, motor.get_mode());
+}

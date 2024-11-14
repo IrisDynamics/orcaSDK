@@ -518,7 +518,7 @@ public:
 	*	@brief Sets the constant force value in Haptic Mode
 	*	@param force	(mN)
 	*/
-	void set_constant_force(u32 force);
+	void set_constant_force(s32 force);
 
 	/**
 	*	@brief Sets the constant force filter value in Haptic Mode

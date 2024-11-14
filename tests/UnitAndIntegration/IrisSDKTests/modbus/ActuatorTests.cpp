@@ -39,7 +39,7 @@ TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	int32_t output_position = motor.read_wide_register_blocking(SHAFT_POS_UM);
+	int32_t output_position = motor.read_wide_register_blocking(SHAFT_POS_UM).value;
 
 	std::vector<char> expected_sent_buffer{
 		'\x1', '\x3', '\x1', '\x56', '\0', '\x2', '\x25', '\xe7'
@@ -116,16 +116,16 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 	};
 	serial_interface->consume_new_message(receive_buffer);
 
-	motor.read_register_blocking(POWER);
+	auto [_, error] = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
-	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[crc_error_count]);
+	EXPECT_EQ(1 << Transaction::CRC_ERROR, error.failure_codes());
 }
 
 TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFullMessageResponseTimeout)
 {
-	motor.read_register_blocking(POWER, MessagePriority::not_important);
+	auto [_, error] = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
-	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
+	EXPECT_EQ(1 << Transaction::RESPONSE_TIMEOUT_ERROR, error.failure_codes());
 }
 
 TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetweenSeeingNewBytes)
@@ -136,9 +136,9 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	};
 	serial_interface->consume_new_message(new_input);
 
-	motor.read_register_blocking(POWER);
+	auto [_, error] = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
-	EXPECT_EQ(1, motor.modbus_client.diagnostic_counters[unexpected_interchar]);
+	EXPECT_EQ(1 << Transaction::INTERCHAR_TIMEOUT_ERROR, error.failure_codes());
 }
 
 TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFailed)

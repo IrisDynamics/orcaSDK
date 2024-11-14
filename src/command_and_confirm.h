@@ -1,8 +1,8 @@
 #include "../actuator.h"
 
 
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries = 15);
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries = 15);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries = 25);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries = 25);
 
 
 /**
@@ -48,8 +48,8 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 	for (int i = 0; i < num_command_confirm_retries; i++)
 	{
 		if ((i % num_reads_per_command_retries) == 0) motor.write_register_blocking(command_register_address, command_register_value);
-		uint16_t current_read = motor.read_register_blocking(confirm_register_address);
-		if (success_function(current_read))
+		auto [current_read, error] = motor.read_register_blocking(confirm_register_address);
+		if (!error && success_function(current_read))
 		{
 			command_was_successful = true;
 			break;

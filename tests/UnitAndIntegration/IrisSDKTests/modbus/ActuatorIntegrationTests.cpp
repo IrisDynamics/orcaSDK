@@ -33,7 +33,7 @@ TEST_F(ActuatorIntegrationTests, PerformingReadReturnsValueReadFromSerialPort)
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	EXPECT_EQ(65538, motor.read_wide_register_blocking(SHAFT_POS_UM));
+	EXPECT_EQ(65538, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
 }
 
 TEST_F(ActuatorIntegrationTests, ReadWideRegisterBlockingSendsCorrectMessage)
@@ -58,7 +58,7 @@ TEST_F(ActuatorIntegrationTests, PerformingSingleWideReadReturnsSingleWideReturn
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	EXPECT_EQ(2, motor.read_register_blocking(STATOR_TEMP));
+	EXPECT_EQ(2, motor.read_register_blocking(STATOR_TEMP).value);
 }
 
 TEST_F(ActuatorIntegrationTests, PerformingMultipleReadReturnsVectorOfResults)
@@ -72,7 +72,9 @@ TEST_F(ActuatorIntegrationTests, PerformingMultipleReadReturnsVectorOfResults)
 
 	std::vector<uint16_t> expected_output { 2, 256, 255 };
 
-	EXPECT_EQ(expected_output, motor.read_multiple_registers_blocking(STATOR_TEMP, 3));
+	auto [value, error] = motor.read_multiple_registers_blocking(STATOR_TEMP, 3);
+
+	EXPECT_EQ(expected_output, value);
 }
 
 TEST_F(ActuatorIntegrationTests, PerformingWriteSendsSingleByteWriteMessage)
@@ -132,7 +134,7 @@ TEST_F(ActuatorIntegrationTests, ReadWriteRegistersBlockingBothWritesCorrectlyAn
 
 	//Act
 	std::vector<uint16_t> actual_output = motor.read_write_multiple_registers_blocking(
-		128, 3, 256, 2, input_data.data());
+		128, 3, 256, 2, input_data.data()).value;
 
 	//Assert
 	std::vector<char> expected_serial_write_data = std::vector<char>{

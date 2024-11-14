@@ -191,10 +191,10 @@ void OrcaStream::motor_stream_command() {
 		}
 		break;
 	case KinematicMode:
-		motor_command_fn(modbus_server_address, kinematic_command, 0);
+		motor_command_fn(modbus_server_address, kinematic_command_code, 0);
 		break;
 	case HapticMode:
-		motor_command_fn(modbus_server_address, haptic_command, 0);
+		motor_command_fn(modbus_server_address, haptic_command_code, haptic_command_effects);
 		break;
 	default:
 		motor_command_fn(modbus_server_address, 0, 0); //any register address other than force or position register_adresses will induce sleep mode and provided register_value will be ignored
@@ -310,6 +310,12 @@ void OrcaStream::set_force_mN(int32_t force) {
 
 void OrcaStream::set_position_um(int32_t position) {
 	position_command = position;
+	stream_timeout_start = modbus_client.get_system_cycles();
+}
+
+
+void OrcaStream::set_haptic_effects(uint16_t effects) {
+	haptic_command_effects = effects;
 	stream_timeout_start = modbus_client.get_system_cycles();
 }
 

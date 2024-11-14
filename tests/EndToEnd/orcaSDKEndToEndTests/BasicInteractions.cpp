@@ -114,7 +114,7 @@ TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNo
 	EXPECT_EQ(0, motor.read_register_blocking(POS_CMD));
 }
 
-TEST_F(BasicInteractionTests, HapticModeStreaming)
+TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterDuringRun)
 {
 	motor.enable();
 	while (!motor.is_connected())
@@ -122,15 +122,14 @@ TEST_F(BasicInteractionTests, HapticModeStreaming)
 		motor.run();
 	}
 
-	motor.set_mode(MotorMode::HapticMode);
-	motor.enable_haptic_effects(Actuator::HapticEffect::ConstF + Actuator::HapticEffect::Osc0);
-	
-	
-	auto stream_start = std::chrono::steady_clock::now();
-	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(1000))
-	{
-		motor.run();
-	}
+	motor.enable_haptic_effects(0);
 
-	EXPECT_EQ(MotorMode::HapticMode, motor.get_mode());
+	uint16_t haptic_effects = Actuator::HapticEffect::ConstF + Actuator::HapticEffect::Osc0;
+
+	motor.set_mode(MotorMode::HapticMode);
+	motor.update_haptic_stream_effects(haptic_effects);
+	
+	motor.run(); //Sends the motor command frame, updating the haptic status register
+
+	EXPECT_EQ(haptic_effects, motor.read_register_blocking(HAPTIC_STATUS));
 }

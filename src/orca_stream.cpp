@@ -313,10 +313,8 @@ void OrcaStream::set_position_um(int32_t position) {
 	stream_timeout_start = modbus_client.get_system_cycles();
 }
 
-
 void OrcaStream::set_haptic_effects(uint16_t effects) {
 	haptic_command_effects = effects;
-	stream_timeout_start = modbus_client.get_system_cycles();
 }
 
 void OrcaStream::set_stream_timeout(int64_t timeout_us) {

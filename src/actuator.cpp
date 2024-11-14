@@ -50,7 +50,7 @@ Actuator::Actuator(
 {}
 
 void Actuator::set_mode(MotorMode orca_mode) {
-	write_register_blocking(MODE_OF_OPERATION, orca_mode);
+	write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
 
 	if (get_mode() != orca_mode)
 	{

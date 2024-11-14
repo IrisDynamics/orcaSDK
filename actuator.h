@@ -256,6 +256,13 @@ public:
 	void set_position_um(int32_t position);
 
 	/**
+	* @brief Update which haptic effects will be set through the motor command frame
+	*
+	* @param effects The bitmap describing which haptic effects should be enabled and disabled
+	*/
+	void update_haptic_stream_effects(uint16_t effects);
+
+	/**
 	* @brief	Write to the orca control register to change the mode of operation of the motor.
 	*			Also changes what type of command stream will be sent during high speed streaming.
 	*/

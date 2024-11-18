@@ -306,7 +306,7 @@ public:
 	* @brief	Write to the orca control register to change the mode of operation of the motor.
 	*			Also changes what type of command stream will be sent during high speed streaming.
 	*/
-	void set_mode(MotorMode orca_mode);
+	CommunicationError set_mode(MotorMode orca_mode);
 
 	/**
 	* @brief the communication mode determines which commands are sent by enqueue_motor_frame

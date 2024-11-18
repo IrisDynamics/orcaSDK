@@ -278,7 +278,7 @@ int OrcaStream::get_app_reception_length(uint8_t fn_code) {
 
 void OrcaStream::update_stream_mode(MotorMode mode)
 {
-	comms_mode = mode;
+	comms_mode = mode; 
 }
 
 void OrcaStream::update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value) {

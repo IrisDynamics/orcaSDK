@@ -46,6 +46,8 @@ target_sources(orcaSDK
 			src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
 		
 )
+
+target_compile_features(orcaSDK PUBLIC cxx_std_17)
 	
 # target_include_directories(orcaSDK INTERFACE $())
 

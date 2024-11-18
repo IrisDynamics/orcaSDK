@@ -49,9 +49,11 @@ Actuator::Actuator(
 	modbus_server_address(modbus_server_address)
 {}
 
-void Actuator::set_mode(MotorMode orca_mode) {
-	write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
+CommunicationError Actuator::set_mode(MotorMode orca_mode) {
+	CommunicationError error = write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
+	if (error) return error;
 	stream.update_stream_mode(orca_mode);
+	return error;
 }
 
 MessageErrorReturn<MotorMode> Actuator::get_mode() {

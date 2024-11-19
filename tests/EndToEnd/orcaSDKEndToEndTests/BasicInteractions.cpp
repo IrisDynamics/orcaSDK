@@ -5,7 +5,7 @@ class BasicInteractionTests : public ::testing::Test
 {
 protected:
 	BasicInteractionTests() :
-		motor(6, "unimportant")
+		motor(4, "unimportant")
 	{}
 
 	void SetUp()
@@ -42,39 +42,6 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::SleepMode, MODE_OF_OPERATION, MotorMode::SleepMode));
 	}
 }
-
-
-//These following three stream tests should be unit or integration tests, but it's
-// difficult to get the orca into a connected state without following the full
-// handshake or breaking encapsulation. We should search for a way to make this 
-// easier, because end to end tests may become too long to integrate into regular
-// development cycles.
-TEST_F(BasicInteractionTests, MotorGoesToSleepIfEnoughTimePassesBetweenForceStreamCommands)
-{
-	motor.enable();
-	while (!motor.is_connected())
-	{
-		motor.run();
-	}
-	motor.set_mode(MotorMode::ForceMode);
-
-	EXPECT_EQ(MotorMode::ForceMode, motor.get_mode());
-
-	auto stream_start = std::chrono::steady_clock::now();
-	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(105))
-	{
-		motor.run();
-	}
-
-	motor.read_register_blocking(MODE_OF_OPERATION);
-	motor.flush();
-
-	EXPECT_EQ(MotorMode::SleepMode, motor.get_mode());
-
-	motor.disable();
-	motor.flush();
-}
-
 
 TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {

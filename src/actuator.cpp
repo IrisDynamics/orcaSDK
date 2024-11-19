@@ -184,10 +184,6 @@ void Actuator::enable_haptic_effects(uint16_t effects) {
 	write_register_blocking(HAPTIC_STATUS, effects);
 }
 
-void Actuator::set_stream_timeout(int64_t timeout_us) {
-	stream.set_stream_timeout(timeout_us);
-}
-
 void Actuator::init() {
 	stream.disconnect();	// dc is expected to return us to a good init state
 	desynchronize_memory_map();

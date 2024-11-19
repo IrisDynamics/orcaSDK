@@ -173,22 +173,11 @@ void OrcaStream::set_stream_mode(OrcaStream::StreamMode mode) {
 
 void OrcaStream::motor_stream_command() {
 	switch (comms_mode) {
-	case ForceMode: {
-		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {		//return to sleep mode if stream timed out
-			comms_mode = SleepMode;
-		}
-		else {
-			motor_command_fn(modbus_server_address, FORCE_CMD, force_command);
-		}
+	case ForceMode: 
+		motor_command_fn(modbus_server_address, FORCE_CMD, force_command);
 		break;
-	}
 	case PositionMode:
-		if ((modbus_client.get_system_cycles() - stream_timeout_start) > stream_timeout_cycles) {   //return to sleep mode if stream timed out
-			comms_mode = SleepMode;
-		}
-		else {
-			motor_command_fn(modbus_server_address, POS_CMD, position_command);
-		}
+		motor_command_fn(modbus_server_address, POS_CMD, position_command);
 		break;
 	case KinematicMode:
 		motor_command_fn(modbus_server_address, kinematic_command_code, 0);
@@ -305,22 +294,15 @@ void OrcaStream::update_read_stream(uint8_t width, uint16_t register_address) {
 
 void OrcaStream::set_force_mN(int32_t force) {
 	force_command = force;
-	stream_timeout_start = modbus_client.get_system_cycles();
 }
 
 void OrcaStream::set_position_um(int32_t position) {
 	position_command = position;
-	stream_timeout_start = modbus_client.get_system_cycles();
 }
 
 void OrcaStream::set_haptic_effects(uint16_t effects) {
 	haptic_command_effects = effects;
 }
-
-void OrcaStream::set_stream_timeout(int64_t timeout_us) {
-	stream_timeout_cycles = timeout_us;
-}
-
 void OrcaStream::start_pause_timer() {
 	pause_timer_start = modbus_client.get_system_cycles();
 	is_paused = 1;

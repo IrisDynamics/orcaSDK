@@ -49,14 +49,14 @@ Actuator::Actuator(
 	modbus_server_address(modbus_server_address)
 {}
 
-CommunicationError Actuator::set_mode(MotorMode orca_mode) {
-	CommunicationError error = write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
+OrcaError Actuator::set_mode(MotorMode orca_mode) {
+	OrcaError error = write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
 	if (error) return error;
 	stream.update_stream_mode(orca_mode);
 	return error;
 }
 
-MessageErrorReturn<MotorMode> Actuator::get_mode() {
+OrcaResult<MotorMode> Actuator::get_mode() {
 	auto return_struct = read_register_blocking(MODE_OF_OPERATION);
 	return {(MotorMode)return_struct.value, return_struct.error};
 }
@@ -81,7 +81,7 @@ void Actuator::set_position_um(int32_t position) {
 	stream.set_position_um(position);
 }
 
-MessageErrorReturn<int32_t> Actuator::read_wide_register_blocking(uint16_t reg_address, MessagePriority priority)
+OrcaResult<int32_t> Actuator::read_wide_register_blocking(uint16_t reg_address, MessagePriority priority)
 {
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 2, priority));
 	flush();
@@ -89,7 +89,7 @@ MessageErrorReturn<int32_t> Actuator::read_wide_register_blocking(uint16_t reg_a
 	return { ((int32_t)message_data[1] << 16) + message_data[0], message_error };
 }
 
-MessageErrorReturn<uint16_t> Actuator::read_register_blocking(uint16_t reg_address, MessagePriority priority)
+OrcaResult<uint16_t> Actuator::read_register_blocking(uint16_t reg_address, MessagePriority priority)
 {
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 1, priority));
 	flush();
@@ -97,9 +97,9 @@ MessageErrorReturn<uint16_t> Actuator::read_register_blocking(uint16_t reg_addre
 	return { message_data[0], message_error};
 }
 
-MessageErrorReturn<std::vector<uint16_t>> Actuator::read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority)
+OrcaResult<std::vector<uint16_t>> Actuator::read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority)
 {
-	if (num_registers == 0) return { {}, CommunicationError{0} };
+	if (num_registers == 0) return { {}, OrcaError{0} };
 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_start_address, num_registers, priority));
 	flush();
@@ -107,14 +107,14 @@ MessageErrorReturn<std::vector<uint16_t>> Actuator::read_multiple_registers_bloc
 	return { message_data, message_error };
 }
 
-CommunicationError Actuator::write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority)
+OrcaError Actuator::write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority)
 {
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::write_single_register_fn(modbus_server_address, reg_address, write_data, priority));
 	flush();
 	return message_error;
 }
 
-CommunicationError Actuator::write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority)
+OrcaError Actuator::write_wide_register_blocking(uint16_t reg_address, int32_t write_data, MessagePriority priority)
 {
 	uint16_t split_data[2]{
 		uint16_t(write_data),
@@ -123,9 +123,9 @@ CommunicationError Actuator::write_wide_register_blocking(uint16_t reg_address, 
 	return write_multiple_registers_blocking(reg_address, 2, split_data, priority);
 }
 
-CommunicationError Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority)
+OrcaError Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority)
 {
-	if (num_registers == 0) return CommunicationError{ 0 };
+	if (num_registers == 0) return OrcaError{ 0 };
 
 	uint8_t data[128];
 	for (int i = 0; i < num_registers; i++) {
@@ -137,7 +137,7 @@ CommunicationError Actuator::write_multiple_registers_blocking(uint16_t reg_star
 	return message_error;
 }
 
-MessageErrorReturn<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocking(
+OrcaResult<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocking(
 	uint16_t read_starting_address, uint8_t read_num_registers,
 	uint16_t write_starting_address, uint8_t write_num_registers,
 	uint16_t* write_data,
@@ -159,11 +159,11 @@ MessageErrorReturn<std::vector<uint16_t>> Actuator::read_write_multiple_register
 	return { message_data, message_error };
 }
 
-MessageErrorReturn<int32_t> Actuator::get_force_mN() {
+OrcaResult<int32_t> Actuator::get_force_mN() {
 	return read_wide_register_blocking(FORCE);
 }
 
-MessageErrorReturn<int32_t> Actuator::get_position_um() {
+OrcaResult<int32_t> Actuator::get_position_um() {
 	return read_wide_register_blocking(SHAFT_POS_UM);
 }
 
@@ -171,7 +171,7 @@ void Actuator::update_haptic_stream_effects(uint16_t effects) {
 	stream.set_haptic_effects(effects);
 }
 
-CommunicationError Actuator::enable_haptic_effects(uint16_t effects) {
+OrcaError Actuator::enable_haptic_effects(uint16_t effects) {
 	return write_register_blocking(HAPTIC_STATUS, effects);
 }
 
@@ -232,7 +232,7 @@ void Actuator::handle_transaction_response(Transaction response)
 	if (ec & (1 << Transaction::UNEXPECTED_RESPONDER)) error_message << "\tWrong modbus response address. \n";
 	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "\tWrong CRC. \r";
 
-	message_error = CommunicationError{response.get_failure_codes(), error_message.str()};
+	message_error = OrcaError{response.get_failure_codes(), error_message.str()};
 
 	switch (response.get_rx_function_code()) {
 
@@ -312,44 +312,44 @@ void Actuator::handle_transaction_response(Transaction response)
 	}
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_mode_of_operation() {
+OrcaResult<uint16_t> Actuator::get_mode_of_operation() {
 	return read_register_blocking(MODE_OF_OPERATION);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_power_W() {
+OrcaResult<uint16_t> Actuator::get_power_W() {
 	return read_register_blocking(POWER_REG_OFFSET);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_temperature_C() {
+OrcaResult<uint16_t> Actuator::get_temperature_C() {
 	return read_register_blocking(TEMP_REG_OFFSET);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_voltage_mV() {
+OrcaResult<uint16_t> Actuator::get_voltage_mV() {
 	return read_register_blocking(VOLTAGE_REG_OFFSET);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_errors() {
+OrcaResult<uint16_t> Actuator::get_errors() {
 	return read_register_blocking(ERROR_REG_OFFSET);
 }
 
-MessageErrorReturn<uint32_t> Actuator::get_serial_number() {
+OrcaResult<uint32_t> Actuator::get_serial_number() {
 	auto [value, error] = read_wide_register_blocking(SERIAL_NUMBER_LOW);
 	return { (uint32_t)value, error };
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_major_version() {
+OrcaResult<uint16_t> Actuator::get_major_version() {
 	return read_register_blocking(MAJOR_VERSION);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_release_state() {
+OrcaResult<uint16_t> Actuator::get_release_state() {
 	return read_register_blocking(RELEASE_STATE);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_revision_number() {
+OrcaResult<uint16_t> Actuator::get_revision_number() {
 	return read_register_blocking(REVISION_NUMBER);
 }
 
-MessageErrorReturn<bool> Actuator::version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number) {
+OrcaResult<bool> Actuator::version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number) {
 	auto [version_registers, error] = read_multiple_registers_blocking(MAJOR_VERSION, 3);
 
 	if (error) return {false, error};
@@ -366,35 +366,35 @@ MessageErrorReturn<bool> Actuator::version_is_at_least(uint8_t version, uint8_t 
 	};
 }
 
-CommunicationError Actuator::zero_position() {
+OrcaError Actuator::zero_position() {
 	return write_register_blocking(ZERO_POS_REG_OFFSET, ZERO_POS_MASK);
 }
 
-CommunicationError Actuator::clear_errors() {
+OrcaError Actuator::clear_errors() {
 	return write_register_blocking(CLEAR_ERROR_REG_OFFSET, CLEAR_ERROR_MASK);
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_latched_errors() {
+OrcaResult<uint16_t> Actuator::get_latched_errors() {
 	return read_register_blocking(ERROR_1);
 }
 
-CommunicationError Actuator::set_max_force(s32 max_force) {
+OrcaError Actuator::set_max_force(s32 max_force) {
 	return write_wide_register_blocking(USER_MAX_FORCE, max_force);
 }
 
-CommunicationError Actuator::set_max_temp(uint16_t max_temp) {
+OrcaError Actuator::set_max_temp(uint16_t max_temp) {
 	return write_register_blocking(USER_MAX_TEMP, max_temp);
 }
 
-CommunicationError Actuator::set_max_power(uint16_t max_power) {
+OrcaError Actuator::set_max_power(uint16_t max_power) {
 	return write_register_blocking(USER_MAX_POWER, max_power);
 }
 
-CommunicationError Actuator::set_pctrl_tune_softstart(uint16_t t_in_ms) {
+OrcaError Actuator::set_pctrl_tune_softstart(uint16_t t_in_ms) {
 	return write_register_blocking(PC_SOFTSTART_PERIOD, t_in_ms);
 }
 
-CommunicationError Actuator::set_safety_damping(uint16_t max_safety_damping) {
+OrcaError Actuator::set_safety_damping(uint16_t max_safety_damping) {
 	return write_register_blocking(SAFETY_DGAIN, max_safety_damping);
 }
 
@@ -415,7 +415,7 @@ void Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t
 }
 
 //NEEDS TEST
-CommunicationError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
+OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
 	if (next_id == -1) {
 		next_id = ID + 1;
 	}
@@ -432,7 +432,7 @@ CommunicationError Actuator::set_kinematic_motion(int8_t ID, int32_t position, i
 }
 
 //NEEDS TEST
-CommunicationError Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone, u16 saturation, u8 coupling) {
+OrcaError Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone, u16 saturation, u8 coupling) {
 	uint16_t data[6] = {
 		gain,
 		uint16_t(center),
@@ -446,7 +446,7 @@ CommunicationError Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 cente
 }
 
 //NEEDS TEST
-CommunicationError Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type) {
+OrcaError Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type) {
 	uint16_t data[4] = {
 		amplitude,
 		type,
@@ -473,7 +473,7 @@ void Actuator::set_constant_force_filter(u16 force_filter) {
 }
 
 //NEEDS TEST: and command revisit
-CommunicationError Actuator::trigger_kinematic_motion(int8_t ID) {
+OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 	return write_register_blocking(KIN_SW_TRIGGER, ID);
 }
 

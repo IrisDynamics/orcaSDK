@@ -316,8 +316,10 @@ void Actuator::handle_transaction_response(Transaction response)
 	}
 }
 
-MessageErrorReturn<uint16_t> Actuator::get_mode_of_operation() {
-	return read_register_blocking(MODE_OF_OPERATION);
+CommunicationError Actuator::get_mode_of_operation(uint16_t& out_mode) {
+	auto [mode, error] = read_register_blocking(MODE_OF_OPERATION);
+	out_mode = mode;
+	return error;
 }
 
 MessageErrorReturn<uint16_t> Actuator::get_power_W() {

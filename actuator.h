@@ -48,6 +48,11 @@ public:
 	{}
 	CommunicationError& operator=(const CommunicationError& other) = default;
 
+	CommunicationError() :
+		failure_type(0),
+		error_message("")
+	{}
+
 	explicit operator bool() const
 	{
 		return failure_type != 0;
@@ -70,7 +75,7 @@ private:
 };
 
 template <typename T>
-struct MessageErrorReturn
+struct MessageResult
 {
 	T value;
 	CommunicationError error;
@@ -152,26 +157,26 @@ public:
 	*
 	* @return uint32_t - force in milli-Newtons
 	*/
-	MessageErrorReturn<int32_t> get_force_mN();
+	MessageResult<int32_t> get_force_mN();
 
 	/**
 	* @brief Returns the position of the shaft in the motor (distance from the zero position) in micrometers.
 	*
 	* @return uint32_t - position in micrometers
 	*/
-	MessageErrorReturn<int32_t> get_position_um();
+	MessageResult<int32_t> get_position_um();
 
 	/**
 	*@brief get the motor's mode of operations as currently updated by the local memory map
 	*/
-	MessageErrorReturn<uint16_t> get_mode_of_operation();
+	CommunicationError get_mode_of_operation(uint16_t& out_mode);
 
 	/**
 	* @brief Returns the sum of all error messages being sent by the motor
 	* 
 	* @return uint16_t - sum or all active error codes
 	*/
-	MessageErrorReturn<uint16_t> get_errors();
+	MessageResult<uint16_t> get_errors();
 
 	/**
 	 * @brief clear all errors stored on the motor
@@ -199,14 +204,14 @@ public:
 	 *
 	 * @param reg_address The lower register address of the double-wide register
 	 */
-	MessageErrorReturn<int32_t> read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+	MessageResult<int32_t> read_wide_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 	
 	/**
 	 * @brief Reads a register from the motor.
 	 *
 	 * @param reg_address The register address
 	 */
-	MessageErrorReturn<uint16_t> read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
+	MessageResult<uint16_t> read_register_blocking(uint16_t reg_address, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Reads multiple registers from the motor.
@@ -214,7 +219,7 @@ public:
 	 * @param reg_start_address The starting register address
 	 * @param num_registers How many registers to read
 	 */
-	MessageErrorReturn<std::vector<uint16_t>> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
+	MessageResult<std::vector<uint16_t>> read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority = MessagePriority::important);
 
 	/**
 	 * @brief Writes a register from the motor.
@@ -250,7 +255,7 @@ public:
 	 * @param write_num_registers The amount of registers to write
 	 * @param write_data An array containing the values to be written
 	 */
-	MessageErrorReturn<std::vector<uint16_t>> read_write_multiple_registers_blocking(
+	MessageResult<std::vector<uint16_t>> read_write_multiple_registers_blocking(
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint16_t* write_data,
@@ -313,7 +318,7 @@ public:
 	* *
 	* @return CommunicationMode
 	*/
-	MessageErrorReturn<MotorMode> get_mode();
+	MessageResult<MotorMode> get_mode();
 
 	/**
 	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
@@ -370,21 +375,21 @@ public:
 	* 
 	* @return uint16_t - power in Watts
 	*/
-	MessageErrorReturn<uint16_t> get_power_W();
+	MessageResult<uint16_t> get_power_W();
 
 	/**
 	* @brief Returns the temperature of the motor in Celcius
 	* 
 	* @return uint16_t - temperature in Celcius
 	*/
-	MessageErrorReturn<uint16_t> get_temperature_C();
+	MessageResult<uint16_t> get_temperature_C();
 
 	/**
 	* @brief Returns the amount of voltage the motor is recieving, in milli-Volts. 
 	* 
 	* @return uint16_t - voltage in milli-Voltage 
 	*/
-	MessageErrorReturn<uint16_t> get_voltage_mV();
+	MessageResult<uint16_t> get_voltage_mV();
 
 	/**
 	 * @brief Set the zero position of the motor to be the current position 
@@ -395,7 +400,7 @@ public:
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
-	MessageErrorReturn<uint16_t> get_latched_errors();
+	MessageResult<uint16_t> get_latched_errors();
 
 #pragma endregion
 
@@ -406,28 +411,28 @@ public:
 	*
 	* @return uint32_t - actuator serial number
 	*/
-	MessageErrorReturn<uint32_t> get_serial_number();
+	MessageResult<uint32_t> get_serial_number();
 
 	/**
 	* @brief Return the firmware major version
 	*
 	* @return uint16_t - firmware major version
 	*/
-	MessageErrorReturn<uint16_t> get_major_version();
+	MessageResult<uint16_t> get_major_version();
 
 	/**
 	* @brief Return the firmware release state (minor version)
 	*
 	* @return uint16_t - firmware release state
 	*/
-	MessageErrorReturn<uint16_t> get_release_state();
+	MessageResult<uint16_t> get_release_state();
 
 	/**
 	* @brief Return the firmware revision number
 	*
 	* @return uint16_t - firmware revision number
 	*/
-	MessageErrorReturn<uint16_t> get_revision_number();
+	MessageResult<uint16_t> get_revision_number();
 
 	/**
 	* @brief Returns true if the motor's firmware version is 'at least as recent' as the version designated
@@ -440,7 +445,7 @@ public:
 	* @param revision_number - Desired revision number
 	* @return bool - True if motor's firmware version is at least as recent as the version designated by the parameters
 	*/
-	MessageErrorReturn<bool> version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
+	MessageResult<bool> version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
 
 #pragma endregion
 

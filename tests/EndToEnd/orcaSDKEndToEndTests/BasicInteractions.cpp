@@ -95,3 +95,26 @@ TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterD
 
 	EXPECT_EQ(haptic_effects, motor.read_register_blocking(HAPTIC_STATUS).value);
 }
+
+TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
+{
+	motor.enable();
+	motor.set_stream_mode(OrcaStream::StreamMode::MotorRead);
+	motor.update_read_stream(2, SHAFT_PIXEL);
+	while (!motor.is_connected())
+	{
+		motor.run();
+	}
+
+	auto stream_start = std::chrono::steady_clock::now();
+	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(10))
+	{
+		motor.run();
+	}
+
+	EXPECT_NE(motor.stream_cache.read_stream_reg, 0);
+	EXPECT_NE(motor.stream_cache.mode, 0);
+	EXPECT_NE(motor.stream_cache.position, 0);
+	EXPECT_NE(motor.stream_cache.temperature, 0);
+	EXPECT_NE(motor.stream_cache.voltage, 0);
+}

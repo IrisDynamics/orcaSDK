@@ -219,14 +219,6 @@ public:
 		MessagePriority priority = MessagePriority::important);
 
 	/**
-	* @brief Return the contents of the given register from the controller's copy of the motor's memory map.
-	*
-	* @param offset the register that will be read
-	* @return uint16_t - register contents
-	*/
-	uint16_t get_orca_reg_content(uint16_t offset);
-
-	/**
 	 *	@brief	Begins logging all serial communication between this application/object
 	 *			and the motor that this application is talking to
 	 *	@param	log_name	The name of the file to be written to. Assumes relative path.
@@ -291,13 +283,6 @@ public:
 	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
 	*/
 	void update_read_stream(uint8_t width, uint16_t register_address);
-
-	/**
-	* @brief Set the maximum time required between calls to set_force or set_position, in force or position mode respectively, before timing out and returning to sleep mode.
-	*
-	* @param timout_us time in microseconds
-	*/
-	void set_stream_timeout(int64_t timeout_us);
 
 	/**
 	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
@@ -537,11 +522,24 @@ public:
 
 #pragma endregion
 
+	struct StreamReturnData
+	{
+		int32_t read_stream_reg{ 0 };
+		uint16_t mode{ 0 };
+		int32_t position{ 0 };
+		int32_t force{ 0 };
+		uint16_t power{ 0 };
+		int16_t temperature{ 0 };
+		uint16_t voltage{ 0 };
+		uint16_t errors{ 0 };
+	};
+
+	StreamReturnData stream_cache;
+
 private:
-	std::array<uint16_t, ORCA_REG_SIZE> orca_reg_contents{};
 	OrcaError message_error{false};
 	std::vector<uint16_t> message_data{};
-
+	
 	OrcaStream stream;
 
 	const uint8_t modbus_server_address;
@@ -567,11 +565,6 @@ private:
 	void run_in();
 
 	bool stream_paused = false;
-
-	/**
-	 * @brief Resets the memory map array to zeros
-	 */
-	void desynchronize_memory_map();
 	
 public:
 	[[deprecated("Requests initialization of now unused parameters")]]

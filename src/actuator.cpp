@@ -180,9 +180,9 @@ OrcaError Actuator::enable_haptic_effects(uint16_t effects) {
 	return write_register_blocking(HAPTIC_STATUS, effects);
 }
 
-void Actuator::init() {
+OrcaError Actuator::init() {
 	stream.disconnect();	// dc is expected to return us to a good init state
-	modbus_client.init(UART_BAUD_RATE);
+	return modbus_client.init(UART_BAUD_RATE);
 }
 
 void Actuator::run()

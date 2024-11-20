@@ -72,8 +72,10 @@ public:
      * @brief Intializes the com port settings
      * @param baud The baud rate as defined in the client_config.h file
     */
-    void init(int baud) override {
+    OrcaError init(int baud) override {
         initialize_and_acquire_resources(baud);
+        if (!serial_success) return OrcaError(true, "Could not obtain serial port.");
+        return { false, "" };
     }
 
     bool ready_to_send() override {

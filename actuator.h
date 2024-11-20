@@ -83,7 +83,7 @@ public:
 	 *			from the most recent call to set_new_serial_port()
 	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
 	 */
-	OrcaError init();
+	OrcaError open_serial_port();
 
 	/**
 	* @brief Returns the total amount of force being sensed by the motor

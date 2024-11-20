@@ -10,7 +10,7 @@ protected:
 
 	void SetUp()
 	{
-		motor.init();
+		motor.open_serial_port();
 	}
 
 	Actuator motor;
@@ -23,7 +23,7 @@ TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameC
 {
 	EXPECT_NE(0, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
 	motor.disable_serial_port();
-	motor.init();
+	motor.open_serial_port();
 	EXPECT_NE(0, motor.read_register_blocking(STATOR_TEMP).value);
 }
 

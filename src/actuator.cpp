@@ -180,7 +180,7 @@ OrcaError Actuator::enable_haptic_effects(uint16_t effects) {
 	return write_register_blocking(HAPTIC_STATUS, effects);
 }
 
-OrcaError Actuator::init() {
+OrcaError Actuator::open_serial_port() {
 	stream.disconnect();	// dc is expected to return us to a good init state
 	return modbus_client.init(UART_BAUD_RATE);
 }

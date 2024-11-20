@@ -22,7 +22,7 @@ using namespace std::chrono;
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {
 	EXPECT_NE(0, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
-	motor.disable_comport();
+	motor.disable_serial_port();
 	motor.init();
 	EXPECT_NE(0, motor.read_register_blocking(STATOR_TEMP).value);
 }

@@ -84,32 +84,6 @@ public:
 	void init();
 
 	/**
-	 *	@brief	The normal run loop for motor communication. Checks for incoming serial data and 
-	 *			sends queued serial data. If you are communicating with your motor asynchronously, you must
-	 *			call this function in a regular loop. If you are using a high speed stream, and if
-	 *			there are no queued messages, injects stream commands according to the motor mode
-	 *			from the most recent call to set_mode().
-	 */
-	void run();
-
-	/**
-	 * @brief	Flushes all queued messages, blocking the current thread of execution 
-	 *			until all queued messages have completed.
-	 * @note	While this function blocks until all messages complete, it doesn't necessarily
-	 *			block until all commands are fully processed. For example, a mode change
-	 *			command may be acknowledged by the motor without being immediately processed.
-	 *			This acknowledgement will be considered a completed message by this client.
-	 *			To block until commands are successfully processed, additional post-conditions
-	 *			should be checked. See command_and_confirm() for an alternative to flush() in 
-	 *			this case.
-	 * @note	A completed message does not mean a successful message. A message may
-	 *			be considered complete if it times out due to too much delay between
-	 *			sending a message and receiving a response, for example. See modbus documentation
-	 *			for a list of failure types.
-	 */
-	void flush();
-
-	/**
 	* @brief Returns the total amount of force being sensed by the motor
 	*
 	* @return uint32_t - force in milli-Newtons
@@ -142,9 +116,9 @@ public:
 	OrcaError clear_errors();
 
 #if defined(WINDOWS)
-	void set_new_comport(int _comport);
+	void set_new_serial_port(int port_number);
 
-	void disable_comport();
+	void disable_serial_port();
 
 	/**
 	* @brief Returns the UART channel number in use
@@ -229,6 +203,15 @@ public:
 #pragma endregion
 
 #pragma region STREAMING
+	/**
+	 *	@brief	The normal run loop for motor communication. Checks for incoming serial data and
+	 *			sends queued serial data. If you are communicating with your motor asynchronously, you must
+	 *			call this function in a regular loop. If you are using a high speed stream, and if
+	 *			there are no queued messages, injects stream commands according to the motor mode
+	 *			from the most recent call to set_mode().
+	 */
+	void run();
+
 	/**
 	 *	@brief	If called with parameter true, pauses automatic injection of stream
 	 *			commands during calls to run()
@@ -563,6 +546,23 @@ private:
 	 * Parses successful messages
 	 */
 	void run_in();
+
+	/**
+	 * @brief	Flushes all queued messages, blocking the current thread of execution
+	 *			until all queued messages have completed.
+	 * @note	While this function blocks until all messages complete, it doesn't necessarily
+	 *			block until all commands are fully processed. For example, a mode change
+	 *			command may be acknowledged by the motor without being immediately processed.
+	 *			This acknowledgement will be considered a completed message by this client.
+	 *			To block until commands are successfully processed, additional post-conditions
+	 *			should be checked. See command_and_confirm() for an alternative to flush() in
+	 *			this case.
+	 * @note	A completed message does not mean a successful message. A message may
+	 *			be considered complete if it times out due to too much delay between
+	 *			sending a message and receiving a response, for example. See modbus documentation
+	 *			for a list of failure types.
+	 */
+	void flush();
 
 	bool stream_paused = false;
 	

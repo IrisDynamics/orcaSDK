@@ -60,11 +60,11 @@ public:
         return channel_number;
     }
 
-    void set_new_comport(int comport) {
+    void set_new_serial_port(int comport) {
         channel_number = comport;
     }
 
-    void disable_comport_comms() {
+    void close_serial_port() override {
         clean_up_handles();
     }
 

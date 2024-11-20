@@ -79,9 +79,11 @@ public:
 	const char* name;
 
 	/**
-	*@brief Get to a good handshake init state and set up the device driver with the default baud rate
-	*/
-	void init();
+	 *@brief	Attempts to open the serial port either passed through the constructor, or
+	 *			from the most recent call to set_new_serial_port()
+	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
+	 */
+	OrcaError init();
 
 	/**
 	* @brief Returns the total amount of force being sensed by the motor

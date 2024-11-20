@@ -46,7 +46,9 @@ public:
 
 	//Misc
 
-	void init(int) override {}
+	OrcaError init(int) override {
+		return { false, "" };
+	}
 
 	void adjust_baud_rate(uint32_t new_baud_rate) override {
 		adjusted_baud_rate = new_baud_rate;

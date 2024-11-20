@@ -92,10 +92,10 @@ public:
     /**
       * @brief init tranceiver hardware
      */
-    void init(int baud)
+    OrcaError init(int baud)
     {
-        serial_interface.init(baud);
         reset_state();
+        return serial_interface.init(baud);
     }
 
     /**

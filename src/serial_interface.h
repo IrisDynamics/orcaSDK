@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include "error_types.h"
 
 /**
  *	@brief	The pure virtual interface that the SDK relies on for performing
@@ -15,7 +16,7 @@ public:
 	 *	@brief	Obtains the currently indicate serial port. Setting baud rate
 	 *			based on the passed parameter.
 	 */
-	virtual void init(int baud) = 0;
+	virtual OrcaError init(int baud) = 0;
 
 	/**
 	 *	@brief	Changes the current baud rate of the serial port.

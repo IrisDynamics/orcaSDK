@@ -7,12 +7,12 @@ int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_val
 }
 
 #if defined(WINDOWS)
-void Actuator::set_new_comport(int _comport) {
+void Actuator::set_new_serial_port(int _comport) {
 	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 	win_modbus_client->set_new_comport(_comport);
 }
 
-void Actuator::disable_comport() {
+void Actuator::disable_serial_port() {
 	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
 	win_modbus_client->disable_comport_comms();
 }

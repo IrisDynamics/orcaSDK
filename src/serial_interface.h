@@ -19,6 +19,13 @@ public:
 	virtual OrcaError open_serial_port(int baud) = 0;
 
 	/**
+	 *	@brief	Closes and releases any currently held serial port by this object.
+	 */
+	virtual void close_serial_port() = 0;
+
+	virtual void set_new_serial_port(int new_port_number) = 0;
+		
+	/**
 	 *	@brief	Changes the current baud rate of the serial port.
 	 */
 	virtual void adjust_baud_rate(uint32_t baud_rate_bps) = 0;

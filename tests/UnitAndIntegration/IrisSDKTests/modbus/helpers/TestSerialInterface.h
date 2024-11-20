@@ -49,6 +49,8 @@ public:
 	OrcaError open_serial_port(int) override {
 		return { false, "" };
 	}
+	void close_serial_port() {}
+	void set_new_serial_port(int) {}
 
 	void adjust_baud_rate(uint32_t new_baud_rate) override {
 		adjusted_baud_rate = new_baud_rate;

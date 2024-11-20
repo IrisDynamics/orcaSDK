@@ -120,7 +120,7 @@ public:
 #if defined(WINDOWS)
 	void set_new_serial_port(int port_number);
 
-	void disable_serial_port();
+	void close_serial_port();
 
 	/**
 	* @brief Returns the UART channel number in use

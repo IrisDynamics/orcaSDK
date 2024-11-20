@@ -34,8 +34,8 @@ public:
 	 *	@param	std::string str  The log message to be written
 	 *	@throws	std::runtime_error	If this method is called on a log without an opened file
 	 */
-	void write(const std::string& str) override {
-		write_internal(str, timestamp_type_setting);
+	OrcaError write(const std::string& str) override {
+		return write_internal(str, timestamp_type_setting);
 	}
 
 	/**
@@ -47,19 +47,21 @@ public:
 	 *	@throws	std::runtime_error	If this method fails to open the file, or if a file is already open
 	 *	@notes	If verbose mode is on, writes a message signaling a successful open
 	 */
-	void open(const std::string& path) override {
+	OrcaError open(const std::string& path) override {
 		std::string full_name = path;
 
-		if (is_open()) throw std::runtime_error("Could not open file: " + full_name + ". The file: " + file_name + " is already open.");
+		if (is_open()) return OrcaError(true, "Could not open file: " + full_name + ". The file: " + file_name + " is already open.");
 
 		file_name = full_name;
 
 		file.open(full_name, std::ios::out | std::ios::app | std::ios::binary);
-		if (!is_open()) throw std::runtime_error("Failed to open log file: " + path);
+		if (!is_open()) return OrcaError(true, "Failed to open log file: " + path);
 
 		start_time = std::chrono::high_resolution_clock::now();
 
 		if (verbose_mode) write_internal("Opened File", TimestampType::CurrentDateTime);
+
+		return OrcaError(false, "");
 	}
 
 	/**
@@ -103,11 +105,12 @@ private:
 		return std::to_string(duration.count()) + "s";
 	}
 
-	void write_internal(std::string str, TimestampType timestamp_type)
+	OrcaError write_internal(std::string str, TimestampType timestamp_type)
 	{
-		if (!file.is_open()) throw std::runtime_error("Tried to write to unopened log file");
+		if (!file.is_open()) return OrcaError(true, "Tried to write to unopened log file " + file_name + ".");
 		if (verbose_mode) str = get_timestamp(timestamp_type) + str;
 		file << str << "\r\n" << std::flush;
+		return OrcaError(false, "");
 	}
 
 	// Referenced from awesoon's answer here: https://stackoverflow.com/questions/16357999/current-date-and-time-as-string

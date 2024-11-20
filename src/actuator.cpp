@@ -489,19 +489,21 @@ OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 	return write_register_blocking(KIN_SW_TRIGGER, ID);
 }
 
-void Actuator::begin_serial_logging(const std::string& log_name)
+OrcaError Actuator::begin_serial_logging(const std::string& log_name)
 {
 #ifdef WINDOWS
 	std::shared_ptr<Log> app_log = std::make_shared<Log>();
 	app_log->set_verbose_mode(false);
 #endif
-	begin_serial_logging(log_name, app_log);
+	return begin_serial_logging(log_name, app_log);
 }
 
-void Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log)
+OrcaError Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log)
 {
-	log->open(log_name);
+	OrcaError error = log->open(log_name);
+	if (error) return error;
 	modbus_client.begin_logging(log);
+	return OrcaError(false, "");
 }
 
 void Actuator::set_stream_paused(bool paused)

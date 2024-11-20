@@ -5,11 +5,14 @@
 
 class TestLog : public LogInterface {
 public:
-	void open(const std::string&) override {}
+	OrcaError open(const std::string&) override {
+		return { false, "" };
+	}
 
-	void write(const std::string& str) override
+	OrcaError write(const std::string& str) override
 	{
 		last_written_string = str;
+		return { false, "" };
 	}
 
 	std::string last_written_string = "";

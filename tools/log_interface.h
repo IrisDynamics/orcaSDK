@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
+#include "../src/error_types.h"
 
 class LogInterface
 {
 public:
-	virtual void open(const std::string& path) = 0;
-	virtual void write(const std::string& str) = 0;
+	virtual OrcaError open(const std::string& path) = 0;
+	virtual OrcaError write(const std::string& str) = 0;
 };

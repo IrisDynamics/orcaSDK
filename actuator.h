@@ -197,8 +197,8 @@ public:
 	 *			and the motor that this application is talking to
 	 *	@param	log_name	The name of the file to be written to. Assumes relative path.
 	 */
-	void begin_serial_logging(const std::string& log_name);
-	void begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
+	OrcaError begin_serial_logging(const std::string& log_name);
+	OrcaError begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 
 #pragma endregion
 

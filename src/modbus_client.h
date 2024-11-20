@@ -95,7 +95,7 @@ public:
     OrcaError init(int baud)
     {
         reset_state();
-        return serial_interface.init(baud);
+        return serial_interface.open_serial_port(baud);
     }
 
     /**

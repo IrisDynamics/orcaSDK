@@ -16,7 +16,7 @@ public:
 	 *	@brief	Obtains the currently indicate serial port. Setting baud rate
 	 *			based on the passed parameter.
 	 */
-	virtual OrcaError init(int baud) = 0;
+	virtual OrcaError open_serial_port(int baud) = 0;
 
 	/**
 	 *	@brief	Changes the current baud rate of the serial port.

@@ -46,7 +46,7 @@ public:
 
 	//Misc
 
-	OrcaError init(int) override {
+	OrcaError open_serial_port(int) override {
 		return { false, "" };
 	}
 

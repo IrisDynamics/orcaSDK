@@ -511,11 +511,11 @@ void Actuator::set_connection_config(ConnectionConfig config) {
 	stream.set_connection_config(config);
 }
 
-void Actuator::enable() {
+void Actuator::enable_stream() {
 	stream.enable();
 }
 
-void Actuator::disable() {
+void Actuator::disable_stream() {
 	stream.disable();
 	if (stream_is_established()) {
 		stream.enqueue_change_connection_status_fn(modbus_server_address, false, 0, 0);

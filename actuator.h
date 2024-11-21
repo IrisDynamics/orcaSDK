@@ -225,6 +225,16 @@ public:
 	void run();
 
 	/**
+	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
+	*/
+	void enable_stream();
+
+	/**
+	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
+	*/
+	void disable_stream();
+
+	/**
 	 *	@brief	If called with parameter true, pauses automatic injection of stream
 	 *			commands during calls to run()
 	 */
@@ -280,16 +290,6 @@ public:
 	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
 	*/
 	void set_connection_config(ConnectionConfig config);
-
-	/**
-	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
-	*/
-	void enable();
-
-	/**
-	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
-	*/
-	void disable();
 
 	/**
 		* @brief Determine whether the Actuator object has successfully initiated a stream with the motor

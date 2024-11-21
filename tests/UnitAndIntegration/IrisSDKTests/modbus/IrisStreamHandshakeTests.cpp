@@ -19,7 +19,7 @@ protected:
 
 	void SetUp()
 	{
-		modbus_app.enable();
+		modbus_app.enable_stream();
 	}
 
 	std::shared_ptr<TestSerialInterface> serial_interface;

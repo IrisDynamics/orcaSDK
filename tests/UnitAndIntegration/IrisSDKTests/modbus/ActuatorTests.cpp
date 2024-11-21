@@ -55,7 +55,7 @@ TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 {
 	//-----Disconnected-----
-	motor.enable();
+	motor.enable_stream();
 
 	//Trigger beginning of discovery
 	motor.run();
@@ -162,7 +162,7 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 
 TEST_F(ActuatorTests, WhenStreamPauseIsCalledModbusHandshakeDoesntOccur)
 {
-	motor.enable();
+	motor.enable_stream();
 
 	motor.set_stream_paused(true); // Disable the queuing of new stream messages
 

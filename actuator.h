@@ -489,25 +489,25 @@ public:
 	*	@brief Sets the damping value in Haptic Mode
 	*	@param damping	The damping gain (4*N*s/mm)
 	*/
-	void set_damper(u16 damping);
+	OrcaError set_damper(u16 damping);
 
 	/**
 	*	@brief Sets the inertia value in Haptic Mode
 	*	@param inertia	The inertia gain (64*N*s^2/mm)
 	*/
-	void set_inertia(u16 inertia);
+	OrcaError set_inertia(u16 inertia);
 
 	/**
 	*	@brief Sets the constant force value in Haptic Mode
 	*	@param force	(mN)
 	*/
-	void set_constant_force(s32 force);
+	OrcaError set_constant_force(s32 force);
 
 	/**
 	*	@brief Sets the constant force filter value in Haptic Mode
 	*	@param force_filter	Amount of filtering on constant force inputs
 	*/
-	void set_constant_force_filter(u16 force_filter);
+	OrcaError set_constant_force_filter(u16 force_filter);
 
 #pragma endregion
 

@@ -105,7 +105,7 @@ TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
 	serial_interface->consume_new_message(stream_negotiation_response);
 	motor.run();
 
-	EXPECT_TRUE(motor.is_connected());
+	EXPECT_TRUE(motor.stream_is_established());
 	EXPECT_EQ(625000, serial_interface->adjusted_baud_rate);
 }
 

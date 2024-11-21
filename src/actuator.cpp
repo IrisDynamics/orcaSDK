@@ -212,7 +212,7 @@ void Actuator::run_in() {
 	if (modbus_client.is_response_ready()) {
 		Transaction response = modbus_client.dequeue_transaction();
 
-		if (stream.is_enabled() && !stream_paused && !is_connected()) stream.modbus_handshake(response);
+		if (stream.is_enabled() && !stream_paused && !stream_is_established()) stream.modbus_handshake(response);
 
 		stream.update_stream_state(response);
 
@@ -517,12 +517,12 @@ void Actuator::enable() {
 
 void Actuator::disable() {
 	stream.disable();
-	if (is_connected()) {
+	if (stream_is_established()) {
 		stream.enqueue_change_connection_status_fn(modbus_server_address, false, 0, 0);
 	}
 	stream.disconnect();
 }
 
-bool Actuator::is_connected() {
+bool Actuator::stream_is_established() {
 	return stream.is_connected();
 }

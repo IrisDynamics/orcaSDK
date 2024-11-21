@@ -86,6 +86,23 @@ public:
 	OrcaError open_serial_port();
 
 	/**
+	 *	@brief	Updates which serial port number should be used to connect to the Orca.
+	 */
+	void set_new_serial_port(int port_number);
+
+	/**
+	 *	@brief	Closes any open serial port and releases all handles to it.
+	 */
+	void close_serial_port();
+
+	/**
+	* @brief Returns the UART channel number in use
+	*
+	* @return int, channel number
+	*/
+	int channel_number();
+
+	/**
 	* @brief Returns the total amount of force being sensed by the motor
 	*
 	* @return uint32_t - force in milli-Newtons
@@ -116,19 +133,6 @@ public:
 	 * note: errors that are still found will appear again
 	 */
 	OrcaError clear_errors();
-
-#if defined(WINDOWS)
-	void set_new_serial_port(int port_number);
-
-	void close_serial_port();
-
-	/**
-	* @brief Returns the UART channel number in use
-	*
-	* @return int, channel number
-	*/
-	int channel_number();
-#endif
 
 #pragma region GENERIC_MODBUS_COMMUNICATION
 

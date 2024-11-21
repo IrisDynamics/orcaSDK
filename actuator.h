@@ -129,6 +129,12 @@ public:
 	OrcaResult<uint16_t> get_errors();
 
 	/**
+	* @brief	Write to the orca control register to change the mode of operation of the motor.
+	*			Also changes what type of command stream will be sent during high speed streaming.
+	*/
+	OrcaError set_mode(MotorMode orca_mode);
+
+	/**
 	 * @brief clear all errors stored on the motor
 	 * note: errors that are still found will appear again
 	 */
@@ -246,12 +252,6 @@ public:
 	void update_haptic_stream_effects(uint16_t effects);
 
 	/**
-	* @brief	Write to the orca control register to change the mode of operation of the motor.
-	*			Also changes what type of command stream will be sent during high speed streaming.
-	*/
-	OrcaError set_mode(MotorMode orca_mode);
-
-	/**
 	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
 	* *
 	* @return CommunicationMode
@@ -295,7 +295,7 @@ public:
 		* @brief Determine whether the Actuator object has successfully initiated a stream with the motor
 		* @return true if the stream is in the connected state, false otherwise
 	*/
-	bool is_connected();
+	bool stream_is_established();
 
 #pragma endregion
 

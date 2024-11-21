@@ -30,7 +30,7 @@ TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameC
 TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 {
 	motor.enable();
-	while (!motor.is_connected())
+	while (!motor.stream_is_established())
 	{
 		motor.run();
 	}
@@ -45,7 +45,7 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {
 	motor.enable();
-	while (!motor.is_connected())
+	while (!motor.stream_is_established())
 	{
 		motor.run();
 	}
@@ -62,7 +62,7 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
 {
 	motor.enable();
-	while (!motor.is_connected())
+	while (!motor.stream_is_established())
 	{
 		motor.run();
 	}
@@ -82,7 +82,7 @@ TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNo
 TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterDuringRun)
 {
 	motor.enable();
-	while (!motor.is_connected())
+	while (!motor.stream_is_established())
 	{
 		motor.run();
 	}
@@ -104,7 +104,7 @@ TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 	motor.enable();
 	motor.set_stream_mode(OrcaStream::StreamMode::MotorRead);
 	motor.update_read_stream(2, SHAFT_PIXEL);
-	while (!motor.is_connected())
+	while (!motor.stream_is_established())
 	{
 		motor.run();
 	}

@@ -6,22 +6,6 @@ int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_val
 	return ((int32_t)high_reg_value << 16) + low_reg_value;
 }
 
-#if defined(WINDOWS)
-void Actuator::set_new_serial_port(int _comport) {
-	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
-	win_modbus_client->set_new_serial_port(_comport);
-}
-
-void Actuator::close_serial_port() {
-	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
-	win_modbus_client->close_serial_port();
-}
-
-int Actuator::channel_number() {
-	return modbus_client.channel_number;
-}
-#endif
-
 //Constructor
 Actuator::Actuator(
 	int serial_port_channel,
@@ -53,6 +37,23 @@ Actuator::Actuator(
 	stream(this, modbus_client, modbus_server_address),
 	modbus_server_address(modbus_server_address)
 {}
+
+OrcaError Actuator::open_serial_port() {
+	stream.disconnect();	// dc is expected to return us to a good init state
+	return modbus_client.init(UART_BAUD_RATE);
+}
+
+void Actuator::set_new_serial_port(int _comport) {
+	serial_interface->set_new_serial_port(_comport);
+}
+
+void Actuator::close_serial_port() {
+	serial_interface->close_serial_port();
+}
+
+int Actuator::channel_number() {
+	return modbus_client.channel_number;
+}
 
 OrcaError Actuator::set_mode(MotorMode orca_mode) {
 	OrcaError error = write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
@@ -178,11 +179,6 @@ void Actuator::update_haptic_stream_effects(uint16_t effects) {
 
 OrcaError Actuator::enable_haptic_effects(uint16_t effects) {
 	return write_register_blocking(HAPTIC_STATUS, effects);
-}
-
-OrcaError Actuator::open_serial_port() {
-	stream.disconnect();	// dc is expected to return us to a good init state
-	return modbus_client.init(UART_BAUD_RATE);
 }
 
 void Actuator::run()

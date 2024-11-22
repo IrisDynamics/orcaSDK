@@ -1,6 +1,11 @@
 #include "../actuator.h"
 #include "chrono_clock.h"
 
+int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_value)
+{
+	return ((int32_t)high_reg_value << 16) + low_reg_value;
+}
+
 #if defined(WINDOWS)
 void Actuator::set_new_comport(int _comport) {
 	std::shared_ptr<windows_SerialInterface> win_modbus_client = std::dynamic_pointer_cast<windows_SerialInterface>(serial_interface);
@@ -86,7 +91,7 @@ OrcaResult<int32_t> Actuator::read_wide_register_blocking(uint16_t reg_address, 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 2, priority));
 	flush();
 	if (message_error) return { 0, message_error };
-	return { ((int32_t)message_data[1] << 16) + message_data[0], message_error };
+	return { combine_into_wide_register(message_data[0], message_data[1]), message_error };
 }
 
 OrcaResult<uint16_t> Actuator::read_register_blocking(uint16_t reg_address, MessagePriority priority)
@@ -250,10 +255,10 @@ void Actuator::handle_transaction_response(Transaction response)
 		stream_cache.mode = 0;
 		uint16_t position_high = (response.get_rx_data()[0] << 8) | response.get_rx_data()[1];
 		uint16_t position_low = (response.get_rx_data()[2] << 8) | response.get_rx_data()[3];
-		stream_cache.position = (int32_t(position_high) << 16) + position_low;
+		stream_cache.position = combine_into_wide_register(position_low, position_high);
 		uint16_t force_high = (response.get_rx_data()[4] << 8) | response.get_rx_data()[5];
 		uint16_t force_low = (response.get_rx_data()[6] << 8) | response.get_rx_data()[7];
-		stream_cache.force = (int32_t(force_high) << 16) + force_low;
+		stream_cache.force = combine_into_wide_register(force_low, force_high);
 		stream_cache.power = (response.get_rx_data()[8] << 8) | response.get_rx_data()[9];
 		stream_cache.temperature = (response.get_rx_data()[10]);
 		stream_cache.voltage = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
@@ -262,34 +267,39 @@ void Actuator::handle_transaction_response(Transaction response)
 	}
 	case motor_read: {
 		u8 width = response.get_tx_data()[2];
-		u16 register_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
-		stream_cache.read_stream_reg = register_data;
-		if (width > 1) {
-			register_data = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
-			stream_cache.read_stream_reg += register_data;
+		if (width == 0)
+		{
+			uint16_t reg_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
+			stream_cache.read_stream_reg = reg_data; 
+		}
+		else
+		{
+			uint16_t reg_data_low = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
+			uint16_t reg_data_high = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
+			stream_cache.read_stream_reg = combine_into_wide_register(reg_data_low, reg_data_high);
 		}
 
 		stream_cache.mode = response.get_rx_data()[4];
 		uint16_t position_high = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
 		uint16_t position_low = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-		stream_cache.position = (int32_t(position_high) << 16) + position_low;
+		stream_cache.position = combine_into_wide_register(position_low, position_high); 
 		uint16_t force_high = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
 		uint16_t force_low = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
-		stream_cache.force = (int32_t(force_high) << 16) + force_low;
+		stream_cache.force = combine_into_wide_register(force_low, force_high);
 		stream_cache.power = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
 		stream_cache.temperature = (response.get_rx_data()[15]);
 		stream_cache.voltage = (response.get_rx_data()[16] << 8) | response.get_rx_data()[17];
 		stream_cache.errors = (response.get_rx_data()[18] << 8) | response.get_rx_data()[19];
 	}
-				   break;
+		break;
 	case motor_write: {
 		stream_cache.mode = response.get_rx_data()[0];
 		uint16_t position_high = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
 		uint16_t position_low = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
-		stream_cache.position = (int32_t(position_high) << 16) + position_low;
+		stream_cache.position = combine_into_wide_register(position_low, position_high);
 		uint16_t force_high = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
 		uint16_t force_low = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-		stream_cache.force = (int32_t(force_high) << 16) + force_low;
+		stream_cache.force = combine_into_wide_register(force_low, force_high);
 		stream_cache.power = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
 		stream_cache.temperature = (response.get_rx_data()[11]);
 		stream_cache.voltage = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];

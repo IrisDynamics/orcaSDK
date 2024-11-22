@@ -16,6 +16,9 @@ protected:
 	Actuator motor;
 };
 
+using namespace std::literals::chrono_literals;
+using namespace std::chrono;
+
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {
 	EXPECT_NE(0, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
@@ -106,8 +109,8 @@ TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 		motor.run();
 	}
 
-	auto stream_start = std::chrono::steady_clock::now();
-	while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - stream_start) < std::chrono::milliseconds(10))
+	auto stream_start = steady_clock::now();
+	while (duration_cast<milliseconds>(steady_clock::now() - stream_start) < 10ms)
 	{
 		motor.run();
 	}

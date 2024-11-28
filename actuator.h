@@ -359,19 +359,6 @@ public:
 	*/
 	OrcaResult<uint16_t> get_revision_number();
 
-	/**
-	* @brief Returns true if the motor's firmware version is 'at least as recent' as the version designated
-	*		 by the parameters. 'At least as recent' can be thought of as a greater than or equal to comparison
-	*		 with version being the most significant digit, revision number being second most significant, and
-	*		 release state being the least significant.
-	*
-	* @param version - Desired major version number
-	* @param release_state - Desired release state (0 - alpha, 1 - beta, 2 - release)
-	* @param revision_number - Desired revision number
-	* @return bool - True if motor's firmware version is at least as recent as the version designated by the parameters
-	*/
-	OrcaResult<bool> version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number);
-
 #pragma endregion
 
 #pragma region TUNING_AND_SAFETY

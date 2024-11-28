@@ -135,6 +135,13 @@ public:
 	OrcaError set_mode(MotorMode orca_mode);
 
 	/**
+	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
+	* *
+	* @return CommunicationMode
+	*/
+	OrcaResult<MotorMode> get_mode();
+
+	/**
 	 * @brief clear all errors stored on the motor
 	 * note: errors that are still found will appear again
 	 */
@@ -260,13 +267,6 @@ public:
 	* @param effects The bitmap describing which haptic effects should be enabled and disabled
 	*/
 	void update_haptic_stream_effects(uint16_t effects);
-
-	/**
-	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
-	* *
-	* @return CommunicationMode
-	*/
-	OrcaResult<MotorMode> get_mode();
 
 	/**
 	* @brief Set the type of high speed stream to be sent on run out once handshake is complete

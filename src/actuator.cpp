@@ -357,23 +357,6 @@ OrcaResult<uint16_t> Actuator::get_revision_number() {
 	return read_register_blocking(REVISION_NUMBER);
 }
 
-OrcaResult<bool> Actuator::version_is_at_least(uint8_t version, uint8_t release_state, uint8_t revision_number) {
-	auto [version_registers, error] = read_multiple_registers_blocking(MAJOR_VERSION, 3);
-
-	if (error) return {false, error};
-
-	uint16_t read_major_version = version_registers[0];
-	uint16_t read_revision_number = version_registers[2];
-	uint16_t read_release_state = version_registers[1];
-
-	return { 
-		read_major_version > version
-		|| (read_major_version == version && read_revision_number > revision_number)
-		|| (read_major_version == version && read_revision_number == revision_number && read_release_state >= release_state) 
-		, error
-	};
-}
-
 OrcaError Actuator::zero_position() {
 	return write_register_blocking(ZERO_POS_REG_OFFSET, ZERO_POS_MASK);
 }

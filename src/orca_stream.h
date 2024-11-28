@@ -76,7 +76,7 @@ public:
 	*/
 	int enqueue_change_connection_status_fn(uint8_t device_address, bool connect, uint32_t baud_rate_bps, uint16_t delay_us);
 
-	void update_stream_mode(MotorMode mode);
+	void update_motor_mode(MotorMode mode);
 
 	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
 

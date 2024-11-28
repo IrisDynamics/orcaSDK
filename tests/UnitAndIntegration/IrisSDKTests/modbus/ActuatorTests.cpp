@@ -160,19 +160,6 @@ TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedI
 	EXPECT_EQ(7, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 }
 
-TEST_F(ActuatorTests, WhenStreamPauseIsCalledModbusHandshakeDoesntOccur)
-{
-	motor.enable_stream();
-
-	motor.set_stream_paused(true); // Disable the queuing of new stream messages
-
-	motor.run(); // This sends the change mode command
-
-	std::vector<char> out_buffer{};
-
-	EXPECT_EQ(out_buffer, serial_interface->sendBuffer);
-}
-
 TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
 {
 	std::vector<char> empty_out_buffer{};

@@ -51,7 +51,7 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 	}
 	motor.set_mode(MotorMode::PositionMode);
 
-	motor.set_position_um(2); // This sets the stream timeout timer
+	motor.set_streamed_position_um(2); // This sets the stream timeout timer
 
 	motor.run(); //Inject position command
 	auto [value, error] = motor.read_register_blocking(POS_CMD);

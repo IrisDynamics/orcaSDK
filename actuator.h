@@ -246,14 +246,14 @@ public:
 	*
 	* @param force force, in milli-Newtons
 	*/
-	void set_force_mN(int32_t force);
+	void set_streamed_force_mN(int32_t force);
 
 	/**
 	* @brief Set/adjust the position that the motor is aiming for when in motor command stream mode
 	*
 	* @param position position, in micrometers
 	*/
-	void set_position_um(int32_t position);
+	void set_streamed_position_um(int32_t position);
 
 	/**
 	* @brief Update which haptic effects will be set through the motor command frame

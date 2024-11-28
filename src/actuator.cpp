@@ -79,11 +79,11 @@ void Actuator::update_read_stream(uint8_t width, uint16_t register_address) {
 	stream.update_read_stream(width, register_address);
 }
 
-void Actuator::set_force_mN(int32_t force) {
+void Actuator::set_streamed_force_mN(int32_t force) {
 	stream.set_force_mN(force);
 }
 
-void Actuator::set_position_um(int32_t position) {
+void Actuator::set_streamed_position_um(int32_t position) {
 	stream.set_position_um(position);
 }
 

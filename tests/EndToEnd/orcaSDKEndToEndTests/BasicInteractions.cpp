@@ -59,26 +59,6 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 	EXPECT_EQ(2, value);
 }
 
-TEST_F(BasicInteractionTests, WhenStreamPauseIsCalledAutomaticStreamMessagesDoNotGetQueued)
-{
-	motor.enable_stream();
-	while (!motor.stream_is_established())
-	{
-		motor.run();
-	}
-	motor.set_mode(MotorMode::PositionMode);
-
-	motor.write_register_blocking(POS_CMD, 0);
-	
-	motor.set_stream_paused(true); // Disable the queuing of new stream messages
-
-	motor.set_position_um(2); // This sets the stream timeout timer
-
-	motor.run(); // This sends the change mode command
-
-	EXPECT_EQ(0, motor.read_register_blocking(POS_CMD).value);
-}
-
 TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterDuringRun)
 {
 	motor.enable_stream();

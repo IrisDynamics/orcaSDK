@@ -242,12 +242,6 @@ public:
 	void disable_stream();
 
 	/**
-	 *	@brief	If called with parameter true, pauses automatic injection of stream
-	 *			commands during calls to run()
-	 */
-	void set_stream_paused(bool paused);
-
-	/**
 	* @brief Set/adjust the force that the motor is exerting when in motor_command stream mode
 	*
 	* @param force force, in milli-Newtons
@@ -569,6 +563,12 @@ private:
 	 *			for a list of failure types.
 	 */
 	void flush();
+
+	/**
+	 *	@brief	If called with parameter true, pauses automatic injection of stream
+	 *			commands during calls to run()
+	 */
+	void set_stream_paused(bool paused);
 
 	bool stream_paused = false;
 	

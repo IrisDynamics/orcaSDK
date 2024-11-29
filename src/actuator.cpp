@@ -1,8 +1,9 @@
-#include "src/actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
+#include "actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
 #include "../actuator.h"
 #include "chrono_clock.h"
-#include "src/standard_modbus_functions.h"
+#include "standard_modbus_functions.h"
 #include "tools/log.h"
+#include "command_and_confirm.h"
 
 int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_value)
 {
@@ -58,10 +59,10 @@ int Actuator::channel_number() {
 }
 
 OrcaError Actuator::set_mode(MotorMode orca_mode) {
-	OrcaError error = write_register_blocking(CTRL_REG_3, (uint16_t)orca_mode);
-	if (error) return error;
+	bool command_success = command_and_confirm(*this, CTRL_REG_3, (uint16_t)orca_mode, MODE_OF_OPERATION, (uint16_t)orca_mode);
+	if (!command_success) return OrcaError{ true, "Failed to set mode within 25ms!"};
 	stream.update_motor_mode(orca_mode);
-	return error;
+	return { false, "" };
 }
 
 OrcaResult<MotorMode> Actuator::get_mode() {

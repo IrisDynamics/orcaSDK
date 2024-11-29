@@ -1,8 +1,8 @@
 #include "../actuator.h"
+#include <chrono>
 
-
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries = 25);
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries = 25);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int max_wait_time_ms = 25);
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int max_wait_time_ms = 25);
 
 
 /**
@@ -12,7 +12,7 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 	*									for the command to have been considered a success
 	*/
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int num_command_confirm_retries)
+bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, uint16_t confirm_register_value, const int max_wait_time_ms)
 {
 	return command_and_confirm(
 		motor,
@@ -22,7 +22,7 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 		[confirm_register_value](uint16_t read_value)->bool {
 			return (read_value == confirm_register_value); 
 		},
-		num_command_confirm_retries
+		max_wait_time_ms
 		);
 
 }
@@ -39,21 +39,36 @@ bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uin
 	*	@param	success_function	The function that must return true for the command to have been considered a success
 	*/
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]
-bool command_and_confirm(Actuator& motor, uint16_t command_register_address, uint16_t command_register_value, uint16_t confirm_register_address, std::function<bool(uint16_t)> success_function, const int num_command_confirm_retries)
+bool command_and_confirm(Actuator& motor, 
+	uint16_t command_register_address, 
+	uint16_t command_register_value, 
+	uint16_t confirm_register_address, 
+	std::function<bool(uint16_t)> success_function, 
+	const int wait_time_ms)
 {
-
-	static constexpr int num_reads_per_command_retries = 3;
-
 	bool command_was_successful = false;
-	for (int i = 0; i < num_command_confirm_retries; i++)
+
+	auto start_time = std::chrono::system_clock::now();
+
+	constexpr int reads_per_write = 3;
+	int iteration_num = 0;
+
+	while (std::chrono::system_clock::now() - start_time < std::chrono::milliseconds(wait_time_ms))
 	{
-		if ((i % num_reads_per_command_retries) == 0) motor.write_register_blocking(command_register_address, command_register_value);
-		auto [current_read, error] = motor.read_register_blocking(confirm_register_address);
-		if (!error && success_function(current_read))
+		if (iteration_num % reads_per_write == 0)
 		{
-			command_was_successful = true;
-			break;
+			motor.write_register_blocking(command_register_address, command_register_value);
 		}
+		else
+		{
+			auto [current_read, error] = motor.read_register_blocking(confirm_register_address);
+			if (!error && success_function(current_read))
+			{
+				command_was_successful = true;
+				break;
+			}
+		}
+		iteration_num++;
 	}
 	return command_was_successful;
 }

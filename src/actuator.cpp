@@ -42,7 +42,6 @@ Actuator::Actuator(
 {}
 
 OrcaError Actuator::open_serial_port() {
-	stream.disconnect();	// dc is expected to return us to a good init state
 	return modbus_client.init(UART_BAUD_RATE);
 }
 
@@ -203,10 +202,6 @@ void Actuator::run_in() {
 	if (modbus_client.is_response_ready()) {
 		Transaction response = modbus_client.dequeue_transaction();
 
-		if (stream.is_enabled() && !stream_paused && !stream_is_established()) stream.modbus_handshake(response);
-
-		stream.update_stream_state(response);
-
 		handle_transaction_response(response);
 	}
 }
@@ -231,9 +226,9 @@ void Actuator::handle_transaction_response(Transaction response)
 	case ModbusFunctionCodes::read_write_multiple_registers: {
 		// add the received data to the local copy of the memory map
 		//u16 register_start_address = (response.get_tx_data()[0] << 8) + response.get_tx_data()[1];
-		u16 num_registers = (response.get_tx_data()[2] << 8) + response.get_tx_data()[3];
+		uint16_t num_registers = (response.get_tx_data()[2] << 8) + response.get_tx_data()[3];
 		for (int i = 0; i < num_registers; i++) {
-			u16 register_data = (response.get_rx_data()[1 + i * 2] << 8) + response.get_rx_data()[2 + i * 2];
+			uint16_t register_data = (response.get_rx_data()[1 + i * 2] << 8) + response.get_rx_data()[2 + i * 2];
 			message_data.push_back(register_data);
 		}
 		break;
@@ -439,22 +434,10 @@ void Actuator::set_stream_paused(bool paused)
 	stream_paused = paused;
 }
 
-void Actuator::set_connection_config(ConnectionConfig config) {
-	stream.set_connection_config(config);
-}
-
 void Actuator::enable_stream() {
 	stream.enable();
 }
 
 void Actuator::disable_stream() {
 	stream.disable();
-	if (stream_is_established()) {
-		stream.enqueue_change_connection_status_fn(modbus_server_address, false, 0, 0);
-	}
-	stream.disconnect();
-}
-
-bool Actuator::stream_is_established() {
-	return stream.is_connected();
 }

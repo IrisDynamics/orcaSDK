@@ -84,7 +84,7 @@ TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
 	clock.pass_time(DEFAULT_RESPONSE_uS + 1);
 	modbus_client.run_in();
 
-	std::string logString = "60001\trx\tTimed out. ";
+	std::string logString = "18001\trx\tTimed out. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 

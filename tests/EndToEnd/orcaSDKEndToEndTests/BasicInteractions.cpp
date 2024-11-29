@@ -31,10 +31,7 @@ TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameC
 TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 {
 	motor.enable_stream();
-	while (!motor.stream_is_established())
-	{
-		motor.run();
-	}
+
 	for (int i = 0; i < 20; i++)
 	{
 		EXPECT_TRUE(command_and_confirm(motor, CTRL_REG_3, MotorMode::ForceMode, MODE_OF_OPERATION, 
@@ -46,10 +43,7 @@ TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)
 TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomaticallyEnqueuesStreamCommands)
 {
 	motor.enable_stream();
-	while (!motor.stream_is_established())
-	{
-		motor.run();
-	}
+
 	motor.set_mode(MotorMode::PositionMode);
 
 	motor.set_streamed_position_um(2); // This sets the stream timeout timer
@@ -63,10 +57,6 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterDuringRun)
 {
 	motor.enable_stream();
-	while (!motor.stream_is_established())
-	{
-		motor.run();
-	}
 
 	motor.enable_haptic_effects(0);
 
@@ -83,10 +73,6 @@ TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterD
 TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 {
 	motor.enable_stream();
-	while (!motor.stream_is_established())
-	{
-		motor.run();
-	}
 
 	auto stream_start = steady_clock::now();
 	while (duration_cast<milliseconds>(steady_clock::now() - stream_start) < 10ms)

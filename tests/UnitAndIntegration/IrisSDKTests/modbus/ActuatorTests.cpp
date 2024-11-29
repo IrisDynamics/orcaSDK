@@ -49,66 +49,6 @@ TEST_F(ActuatorTests, ReadingFromMemoryMapAndThenReceivingUpdatesLocalMemoryMap)
 	EXPECT_EQ(65538, output_position);
 }
 
-// This test walks through the 'happy path' of the modbus high speed stream handshake
-//  mostly to protect against regressions. Additional tests should be added to handle
-//  bad paths through the algorithm.
-TEST_F(ActuatorTests, ModbusHighSpeedStreamHandshakeHappyPathIntegrationTest)
-{
-	//-----Disconnected-----
-	motor.enable_stream();
-
-	//Trigger beginning of discovery
-	motor.run();
-
-	std::vector<char> ping_message{
-		{ '\x1', '\b', '\0', '\0', '\x80', '\x1a' }
-	};
-	EXPECT_EQ(ping_message, serial_interface->sendBuffer);
-
-	//-----Discovery-----
-	// Involves sending three ping messages and hearing three echo responses
-	// After performing this back and forth, enqueues messages to synchronize
-	// the local memory map, and enters beginning of synchronization
-	std::deque<char> ping_echo;
-	for (char c : ping_message)
-	{
-		ping_echo.push_back(c);
-	}
-	serial_interface->sendBuffer.clear();
-	serial_interface->consume_new_message(ping_echo);
-	motor.run();
-	serial_interface->sendBuffer.clear();
-	serial_interface->consume_new_message(ping_echo);
-	motor.run();
-	serial_interface->sendBuffer.clear();
-	serial_interface->consume_new_message(ping_echo);
-	motor.run();
-
-	std::vector<char> output = {
-		'\x01', //Orca address
-		65, //Manage High-speed Stream message ID
-		'\xff', '\0', // Enable and apply parameters
-		'\0', '\x9', '\x89', '\x68', // Target baud rate (650000bps)
-		'\0', '\x50', // Target Response delay (80ms)
-		'\x25', '\x28' // CRC
-	};
-
-	ASSERT_EQ(output, serial_interface->sendBuffer);
-
-	//-----Negotiation-----
-	// The motor sends exactly one stream negotiation message and 
-	// expects a valid response. After receiving it, it updates
-	// relevant local parameters and goes to connected state.
-	std::deque<char> stream_negotiation_response{
-			output.begin(), output.end()
-	};
-	serial_interface->consume_new_message(stream_negotiation_response);
-	motor.run();
-
-	EXPECT_TRUE(motor.stream_is_established());
-	EXPECT_EQ(625000, serial_interface->adjusted_baud_rate);
-}
-
 TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 {
 	std::deque<char> receive_buffer{

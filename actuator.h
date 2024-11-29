@@ -260,20 +260,6 @@ public:
 	*/
 	void update_haptic_stream_effects(uint16_t effects);
 
-	/**
-	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
-	 *
-	 * @param config ConnectionConfig object
-	 * @return 0 if one of the parameters was invalid and default values were used, 1 otherwise
-	*/
-	void set_connection_config(ConnectionConfig config);
-
-	/**
-		* @brief Determine whether the Actuator object has successfully initiated a stream with the motor
-		* @return true if the stream is in the connected state, false otherwise
-	*/
-	bool stream_is_established();
-
 #pragma endregion
 
 #pragma region UNCOMMON_MISC_DATA

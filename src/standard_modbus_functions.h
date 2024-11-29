@@ -141,14 +141,6 @@ namespace DefaultModbusFunctions {
 		uint16_t read_starting_address, uint16_t read_num_registers,
 		uint16_t write_starting_address, uint16_t write_num_registers,
 		uint8_t* data, MessagePriority priority);
-
-	/**
-	 * @brief Format a return_query_data request, sub-function code 00, and add the request to the buffer queue
-	 * @param device_address The address of the server device that will accept the transaction, 0 if broadcast
-	 * @param data The data to send and have echoed back from the server device
-	 * @param num_data The quantity of data bytes being added to the transaction
-	*/
-	Transaction return_query_data_fn(uint8_t device_address);
 }
 
 

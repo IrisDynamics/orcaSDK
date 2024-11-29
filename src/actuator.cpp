@@ -1,5 +1,8 @@
+#include "src/actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
 #include "../actuator.h"
 #include "chrono_clock.h"
+#include "src/standard_modbus_functions.h"
+#include "tools/log.h"
 
 int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_value)
 {
@@ -315,7 +318,7 @@ OrcaResult<uint16_t> Actuator::get_latched_errors() {
 	return read_register_blocking(ERROR_1);
 }
 
-OrcaError Actuator::set_max_force(s32 max_force) {
+OrcaError Actuator::set_max_force(int32_t max_force) {
 	return write_wide_register_blocking(USER_MAX_FORCE, max_force);
 }
 
@@ -369,7 +372,7 @@ OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t ti
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone, u16 saturation, u8 coupling) {
+OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, uint8_t coupling) {
 	uint16_t data[6] = {
 		gain,
 		uint16_t(center),
@@ -383,7 +386,7 @@ OrcaError Actuator::set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 de
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type) {
+OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type) {
 	uint16_t data[4] = {
 		amplitude,
 		type,
@@ -393,19 +396,19 @@ OrcaError Actuator::set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, 
 	return write_multiple_registers_blocking(O0_GAIN_N + osc_id * 4, 4, data);
 }
 
-OrcaError Actuator::set_damper(u16 damping) {
+OrcaError Actuator::set_damper(uint16_t damping) {
 	return write_register_blocking(D0_GAIN_NS_MM, damping);
 }
 
-OrcaError Actuator::set_inertia(u16 inertia) {
+OrcaError Actuator::set_inertia(uint16_t inertia) {
 	return write_register_blocking(I0_GAIN_NS2_MM, inertia);
 }
 
-OrcaError Actuator::set_constant_force(s32 force) {
+OrcaError Actuator::set_constant_force(int32_t force) {
 	return write_wide_register_blocking(CONSTANT_FORCE_MN, force);
 }
 
-OrcaError Actuator::set_constant_force_filter(u16 force_filter) {
+OrcaError Actuator::set_constant_force_filter(uint16_t force_filter) {
 	return write_register_blocking(CONST_FORCE_FILTER, force_filter);
 }
 

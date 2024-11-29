@@ -41,8 +41,8 @@ Actuator::Actuator(
 	modbus_server_address(modbus_server_address)
 {}
 
-OrcaError Actuator::open_serial_port() {
-	return modbus_client.init(UART_BAUD_RATE);
+OrcaError Actuator::open_serial_port(int baud_rate) {
+	return modbus_client.init(baud_rate);
 }
 
 void Actuator::set_new_serial_port(int _comport) {

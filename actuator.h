@@ -23,17 +23,15 @@
 #ifndef ACTUATOR_H_
 #define ACTUATOR_H_
 
-#include "src/standard_modbus_functions.h"
-
-#include "src/actuator_config.h"
-#include "tools/log.h"
-#include <memory>
+#include <cstdint>
+#include "src/message_priority.h"
+#include "orca600_api/orca600_memory_map.h"
 #include <string>
 
 #include <functional>
+#include "src/serial_interface.h"
+#include "src/modbus_client.h"
 #include "src/orca_stream.h"
-
-#include "src/orca_stream_config.h"
 #include "src/orca_modes.h"
 
 #include "src/error_types.h"
@@ -353,7 +351,7 @@ public:
 	 * 
 	 * @param max_force force in milli-Newtons
 	 */
-	OrcaError set_max_force(s32 max_force);
+	OrcaError set_max_force(int32_t max_force);
 
 	/**
 	 * @brief Set the maximum temperature that the motor allows
@@ -441,7 +439,7 @@ public:
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
 	 */
-	OrcaError set_spring_effect(u8 spring_id, u16 gain, u32 center, u16 dead_zone = 0, u16 saturation = 0, u8 coupling = 0);
+	OrcaError set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone = 0, uint16_t saturation = 0, uint8_t coupling = 0);
 
 	/**
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
@@ -449,31 +447,31 @@ public:
 	 *			for details on this function.
 	 * 
 	 */
-	OrcaError set_osc_effect(u8 osc_id, u16 amplitude, u16 frequency_dhz, u16 duty, u16 type);
+	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type);
 
 	/**
 	*	@brief Sets the damping value in Haptic Mode
 	*	@param damping	The damping gain (4*N*s/mm)
 	*/
-	OrcaError set_damper(u16 damping);
+	OrcaError set_damper(uint16_t damping);
 
 	/**
 	*	@brief Sets the inertia value in Haptic Mode
 	*	@param inertia	The inertia gain (64*N*s^2/mm)
 	*/
-	OrcaError set_inertia(u16 inertia);
+	OrcaError set_inertia(uint16_t inertia);
 
 	/**
 	*	@brief Sets the constant force value in Haptic Mode
 	*	@param force	(mN)
 	*/
-	OrcaError set_constant_force(s32 force);
+	OrcaError set_constant_force(int32_t force);
 
 	/**
 	*	@brief Sets the constant force filter value in Haptic Mode
 	*	@param force_filter	Amount of filtering on constant force inputs
 	*/
-	OrcaError set_constant_force_filter(u16 force_filter);
+	OrcaError set_constant_force_filter(uint16_t force_filter);
 
 #pragma endregion
 

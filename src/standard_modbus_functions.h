@@ -27,8 +27,8 @@
 
 #include <stdint.h>
 #include "function_code_parameters.h"
-#include "modbus_client.h"
 #include "message_priority.h"
+#include "transaction.h"
 
 namespace ModbusSubFunctionCodes
 {

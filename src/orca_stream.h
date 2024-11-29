@@ -9,14 +9,6 @@ class Actuator;
 class OrcaStream
 {
 public:
-	/**
-	*@brief Sets the type of command that will be sent on high speed stream (ie when enable() has been used, this sets the type of message sent from enqueue motor frame)
-	*/
-	typedef enum {
-		MotorCommand,
-		MotorRead,
-		MotorWrite
-	} StreamMode;
 
 	OrcaStream(Actuator* motor, ModbusClient& modbus_client, uint8_t modbus_server_address);
 
@@ -62,10 +54,6 @@ public:
 	 * @brief enqueue a motor message if the queue is empty
 	 */
 	void enqueue_motor_frame();
-	/**
-	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
-	*/
-	void set_stream_mode(OrcaStream::StreamMode mode);
 
 	/**
 	 * @brief Format a change_connection_status request, user-defined function code 65, and add the request to the buffer queue
@@ -77,10 +65,6 @@ public:
 	int enqueue_change_connection_status_fn(uint8_t device_address, bool connect, uint32_t baud_rate_bps, uint16_t delay_us);
 
 	void update_motor_mode(MotorMode mode);
-
-	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
-
-	void update_read_stream(uint8_t width, uint16_t register_address);
 
 	void set_force_mN(int32_t force);
 
@@ -102,12 +86,6 @@ private:
 	int32_t force_command = 0;
 	int32_t position_command = 0;
 	uint16_t haptic_command_effects = 0;
-	//Used to hold the last data to stream in motor write and read streams
-	uint32_t motor_write_data = 0;
-	uint16_t motor_write_addr = 0;
-	uint8_t motor_write_width = 1;
-	uint16_t motor_read_addr = 0;
-	uint8_t motor_read_width = 1;
 
 	int num_discovery_pings_received = 0;
 
@@ -141,16 +119,10 @@ private:
 
 	ConnectionConfig connection_config;
 
-	StreamMode stream_mode = MotorCommand;
-
 	static constexpr int kinematic_command_code = 32;
 	static constexpr int haptic_command_code = 34;
 
 	void motor_stream_command();
-
-	void motor_stream_read();
-
-	void motor_stream_write();
 
 	/**
 	  @brief Format a motor command request, function code 0x64, and add the request to the buffer queue
@@ -160,10 +132,6 @@ private:
 	  @param register_value The value to write to the register
 	 */
 	int motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value);
-
-	int motor_read_fn(uint8_t device_address, uint8_t width, uint16_t register_address);
-
-	int motor_write_fn(uint8_t device_address, uint8_t width, uint16_t register_address, uint32_t register_value);
 
 	/**
 	 * @brief Determine the length of the request for an application specific function code

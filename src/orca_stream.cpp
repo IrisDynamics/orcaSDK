@@ -153,22 +153,7 @@ void OrcaStream::set_connection_config(ConnectionConfig config) {
 }
 
 void OrcaStream::enqueue_motor_frame() {
-	if (modbus_client.get_queue_size() > 0) return;
-	switch (stream_mode) {
-	case MotorCommand:
-		motor_stream_command();
-		break;
-	case MotorRead:
-		motor_stream_read();
-		break;
-	case MotorWrite:
-		motor_stream_write();
-		break;
-	}
-}
-
-void OrcaStream::set_stream_mode(OrcaStream::StreamMode mode) {
-	stream_mode = mode;
+	motor_stream_command();
 }
 
 void OrcaStream::motor_stream_command() {
@@ -191,14 +176,6 @@ void OrcaStream::motor_stream_command() {
 	}
 }
 
-void OrcaStream::motor_stream_read() {
-	motor_read_fn(modbus_server_address, motor_read_width, motor_read_addr);
-}
-
-void OrcaStream::motor_stream_write() {
-	motor_write_fn(modbus_server_address, motor_write_width, motor_write_addr, motor_write_data);
-}
-
 int OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value) {
 	uint8_t data_bytes[5] = {
 		uint8_t(command_code),
@@ -209,36 +186,6 @@ int OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, i
 	};
 	Transaction my_temp_transaction;
 	my_temp_transaction.load_transmission_data(device_address, motor_command, data_bytes, 5, get_app_reception_length(motor_command));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
-}
-
-int OrcaStream::motor_read_fn(uint8_t device_address, uint8_t width, uint16_t register_address) {
-	uint8_t data_bytes[3] = {
-		uint8_t(register_address >> 8),
-		uint8_t(register_address),
-		uint8_t(width)
-	};
-
-	Transaction my_temp_transaction;
-	my_temp_transaction.load_transmission_data(device_address, motor_read, data_bytes, 3, get_app_reception_length(motor_read));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
-}
-
-int OrcaStream::motor_write_fn(uint8_t device_address, uint8_t width, uint16_t register_address, uint32_t register_value) {
-	uint8_t data_bytes[7] = {
-		uint8_t(register_address >> 8),
-		uint8_t(register_address),
-		uint8_t(width),
-		uint8_t(register_value >> 24),
-		uint8_t(register_value >> 16),
-		uint8_t(register_value >> 8),
-		uint8_t(register_value)
-	};
-
-	Transaction my_temp_transaction;
-	my_temp_transaction.load_transmission_data(device_address, motor_write, data_bytes, 7, get_app_reception_length(motor_write));
 	int check = modbus_client.enqueue_transaction(my_temp_transaction);
 	return check;
 }
@@ -265,10 +212,6 @@ int OrcaStream::get_app_reception_length(uint8_t fn_code) {
 	switch (fn_code) {
 	case motor_command:
 		return 19;
-	case motor_read:
-		return 24;
-	case motor_write:
-		return 20;
 	case change_connection_status:
 		return 12;
 	default:
@@ -279,17 +222,6 @@ int OrcaStream::get_app_reception_length(uint8_t fn_code) {
 void OrcaStream::update_motor_mode(MotorMode mode)
 {
 	comms_mode = mode; 
-}
-
-void OrcaStream::update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value) {
-	motor_write_data = register_value;
-	motor_write_addr = register_address;
-	motor_write_width = width;
-}
-
-void OrcaStream::update_read_stream(uint8_t width, uint16_t register_address) {
-	motor_read_addr = register_address;
-	motor_read_width = width;
 }
 
 void OrcaStream::set_force_mN(int32_t force) {

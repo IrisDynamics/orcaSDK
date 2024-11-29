@@ -82,8 +82,6 @@ TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterD
 TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 {
 	motor.enable_stream();
-	motor.set_stream_mode(OrcaStream::StreamMode::MotorRead);
-	motor.update_read_stream(2, SHAFT_PIXEL);
 	while (!motor.stream_is_established())
 	{
 		motor.run();
@@ -95,8 +93,6 @@ TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 		motor.run();
 	}
 
-	EXPECT_NE(motor.stream_cache.read_stream_reg, 0);
-	EXPECT_NE(motor.stream_cache.mode, 0);
 	EXPECT_NE(motor.stream_cache.position, 0);
 	EXPECT_NE(motor.stream_cache.temperature, 0);
 	EXPECT_NE(motor.stream_cache.voltage, 0);

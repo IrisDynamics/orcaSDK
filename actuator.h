@@ -263,21 +263,6 @@ public:
 	void update_haptic_stream_effects(uint16_t effects);
 
 	/**
-	* @brief Set the type of high speed stream to be sent on run out once handshake is complete
-	*/
-	void set_stream_mode(OrcaStream::StreamMode mode);
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor write stream mode
-	*/
-	void update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value);
-
-	/**
-	* @brief This function can be continuously called and will update the values being sent when in motor read stream mode
-	*/
-	void update_read_stream(uint8_t width, uint16_t register_address);
-
-	/**
 	 * @brief Error check and apply the handshake/connection configuration parameters passed in the ConnectionConfig struct
 	 *
 	 * @param config ConnectionConfig object
@@ -494,8 +479,6 @@ public:
 
 	struct StreamReturnData
 	{
-		int32_t read_stream_reg{ 0 };
-		uint16_t mode{ 0 };
 		int32_t position{ 0 };
 		int32_t force{ 0 };
 		uint16_t power{ 0 };

@@ -67,18 +67,6 @@ OrcaResult<MotorMode> Actuator::get_mode() {
 	return {(MotorMode)return_struct.value, return_struct.error};
 }
 
-void Actuator::set_stream_mode(OrcaStream::StreamMode mode) {
-	stream.set_stream_mode(mode);
-}
-
-void Actuator::update_write_stream(uint8_t width, uint16_t register_address, uint32_t register_value) {
-	stream.update_write_stream(width, register_address, register_value);
-}
-
-void Actuator::update_read_stream(uint8_t width, uint16_t register_address) {
-	stream.update_read_stream(width, register_address);
-}
-
 void Actuator::set_streamed_force_mN(int32_t force) {
 	stream.set_force_mN(force);
 }
@@ -248,7 +236,6 @@ void Actuator::handle_transaction_response(Transaction response)
 		break;
 	}
 	case motor_command: {
-		stream_cache.mode = 0;
 		uint16_t position_high = (response.get_rx_data()[0] << 8) | response.get_rx_data()[1];
 		uint16_t position_low = (response.get_rx_data()[2] << 8) | response.get_rx_data()[3];
 		stream_cache.position = combine_into_wide_register(position_low, position_high);
@@ -259,47 +246,6 @@ void Actuator::handle_transaction_response(Transaction response)
 		stream_cache.temperature = (response.get_rx_data()[10]);
 		stream_cache.voltage = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
 		stream_cache.errors = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
-		break;
-	}
-	case motor_read: {
-		u8 width = response.get_tx_data()[2];
-		if (width == 0)
-		{
-			uint16_t reg_data = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
-			stream_cache.read_stream_reg = reg_data; 
-		}
-		else
-		{
-			uint16_t reg_data_low = (response.get_rx_data()[2] << 8) + response.get_rx_data()[3];
-			uint16_t reg_data_high = (response.get_rx_data()[0] << 8) + response.get_rx_data()[1];
-			stream_cache.read_stream_reg = combine_into_wide_register(reg_data_low, reg_data_high);
-		}
-
-		stream_cache.mode = response.get_rx_data()[4];
-		uint16_t position_high = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
-		uint16_t position_low = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-		stream_cache.position = combine_into_wide_register(position_low, position_high); 
-		uint16_t force_high = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
-		uint16_t force_low = (response.get_rx_data()[11] << 8) | response.get_rx_data()[12];
-		stream_cache.force = combine_into_wide_register(force_low, force_high);
-		stream_cache.power = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
-		stream_cache.temperature = (response.get_rx_data()[15]);
-		stream_cache.voltage = (response.get_rx_data()[16] << 8) | response.get_rx_data()[17];
-		stream_cache.errors = (response.get_rx_data()[18] << 8) | response.get_rx_data()[19];
-	}
-		break;
-	case motor_write: {
-		stream_cache.mode = response.get_rx_data()[0];
-		uint16_t position_high = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
-		uint16_t position_low = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
-		stream_cache.position = combine_into_wide_register(position_low, position_high);
-		uint16_t force_high = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
-		uint16_t force_low = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
-		stream_cache.force = combine_into_wide_register(force_low, force_high);
-		stream_cache.power = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
-		stream_cache.temperature = (response.get_rx_data()[11]);
-		stream_cache.voltage = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];
-		stream_cache.errors = (response.get_rx_data()[14] << 8) | response.get_rx_data()[15];
 		break;
 	}
 	case ModbusFunctionCodes::read_coils:

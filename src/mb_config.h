@@ -40,14 +40,14 @@
 
 //
 
-#define DEFAULT_INTERFRAME_uS	2000	//2000 
+#define DEFAULT_INTERFRAME_uS	0	//2000 
 #ifdef WINDOWS
 #define DEFAULT_INTERCHAR_uS	16000//8000 	//8000	// 700
 #else
 #define DEFAULT_INTERCHAR_uS	8000
 #endif
 #define DEFAULT_TURNAROUND_uS	500		//2000	//2000
-#define DEFAULT_RESPONSE_uS    	50000	//750000 - windows		//100000
+#define DEFAULT_RESPONSE_uS    	8000	//750000 - windows		//100000
 
 #define DEFAULT_CONNECTION_PAUSE_uS		750000
 
@@ -64,7 +64,7 @@
 #define NUM_MESSAGES        64  //8  //4  //32  //64
 #endif
 //uncomment one of the following baud rate options
-#define UART_BAUD_RATE      19200  //9600  //1000000  //625000  //500000   //Modbus specified default is 19200bps
+#define UART_BAUD_RATE      625000//9600  //1000000  //625000  //500000   //Modbus specified default is 19200bps
 
 
 #if defined(ATMEGA328)

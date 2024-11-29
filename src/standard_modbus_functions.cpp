@@ -98,18 +98,4 @@ namespace DefaultModbusFunctions {
 		return my_temp_transaction;
 
 	}
-
-	/**
-	 * @brief Format a return_query_data request, sub-function code 00, and add the request to the buffer queue
-	 * @param device_address The address of the server device that will accept the transaction, 0 if broadcast
-	 * @param data The data to send and have echoed back from the server device
-	 * @param num_data The quantity of data bytes being added to the transaction
-	*/
-	Transaction return_query_data_fn(uint8_t device_address) {
-		uint8_t data_bytes[2] = { uint8_t(ModbusSubFunctionCodes::return_query_data << 8), uint8_t(ModbusSubFunctionCodes::return_query_data) };
-		Transaction my_temp_transaction;
-		my_temp_transaction.load_transmission_data(
-			device_address, ModbusFunctionCodes::diagnostics, data_bytes, 2, nullptr, 0, 6);
-		return my_temp_transaction;
-	}
 };

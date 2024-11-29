@@ -81,7 +81,7 @@ public:
 	 *			from the most recent call to set_new_serial_port()
 	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
 	 */
-	OrcaError open_serial_port();
+	OrcaError open_serial_port(int baud_rate = UART_BAUD_RATE);
 
 	/**
 	 *	@brief	Updates which serial port number should be used to connect to the Orca.

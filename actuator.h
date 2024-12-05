@@ -27,6 +27,7 @@
 #include "src/message_priority.h"
 #include "orca600_api/orca600_memory_map.h"
 #include <string>
+#include <vector>
 
 #include <functional>
 #include "src/serial_interface.h"

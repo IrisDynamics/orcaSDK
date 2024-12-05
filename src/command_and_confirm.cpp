@@ -57,8 +57,8 @@ bool command_and_confirm(Actuator& motor,
 		}
 		else
 		{
-			auto [current_read, error] = motor.read_register_blocking(confirm_register_address);
-			if (!error && success_function(current_read))
+			OrcaResult<uint16_t> result = motor.read_register_blocking(confirm_register_address);
+			if (!result.error && success_function(result.value))
 			{
 				command_was_successful = true;
 				break;

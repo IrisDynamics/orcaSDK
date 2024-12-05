@@ -9,6 +9,7 @@ add_library(orcaSDK
 	src/actuator.cpp
 	src/orca_stream.cpp
 	src/standard_modbus_functions.cpp	
+	src/command_and_confirm.cpp
 )
 	
 target_sources(orcaSDK
@@ -24,6 +25,8 @@ target_sources(orcaSDK
 			src/serial_interface.h
 			src/message_priority.h
 			src/command_and_confirm.h
+			src/clock.h
+			src/error_types.h
 			tools/log.h
 			tools/log_interface.h
 			tools/timer.h
@@ -47,7 +50,7 @@ target_sources(orcaSDK
 		
 )
 
-target_compile_features(orcaSDK PUBLIC cxx_std_17)
+target_compile_features(orcaSDK PUBLIC cxx_std_11)
 	
 # target_include_directories(orcaSDK INTERFACE $())
 
@@ -57,31 +60,31 @@ set_target_properties(orcaSDK
 		SOVERSION 1
 )
 
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-	orcaSDKConfigVersion.cmake
-	VERSION 1.0.0
-	COMPATIBILITY SameMajorVersion
-)
+# include(CMakePackageConfigHelpers)
+# write_basic_package_version_file(
+	# orcaSDKConfigVersion.cmake
+	# VERSION 1.0.0
+	# COMPATIBILITY SameMajorVersion
+# )
 
-include(GNUInstallDirs)
-install(TARGETS orcaSDK
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-		COMPONENT	orcaSDK_Runtime
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		COMPONENT			orcaSDK_Runtime
-		NAMELINK_COMPONENT	orcaSDK_Development
-	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		COMPONENT	orcaSDK_Development
-)
+# include(GNUInstallDirs)
+# install(TARGETS orcaSDK
+	# RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+		# COMPONENT	orcaSDK_Runtime
+	# LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		# COMPONENT			orcaSDK_Runtime
+		# NAMELINK_COMPONENT	orcaSDK_Development
+	# ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		# COMPONENT	orcaSDK_Development
+# )
 
-#Packaging
-set(CPACK_PACKAGE_NAME orcaSDK)
-set(CPACK_PACKAGE_VENDOR IrisDynamicsLtd)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A C++ library for interacting with your Orca Series Linear Motor.")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
-set(CPACK_VERBATIM_VARIABLES TRUE)
+# #Packaging
+# set(CPACK_PACKAGE_NAME orcaSDK)
+# set(CPACK_PACKAGE_VENDOR IrisDynamicsLtd)
+# set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A C++ library for interacting with your Orca Series Linear Motor.")
+# set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
+# set(CPACK_VERBATIM_VARIABLES TRUE)
 
-include(CPack)
+# include(CPack)
 
-add_subdirectory(tests)
+# add_subdirectory(tests)

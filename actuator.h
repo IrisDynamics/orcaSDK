@@ -221,6 +221,19 @@ public:
 #pragma endregion
 
 #pragma region STREAMING
+
+	struct StreamData
+	{
+		int32_t position{ 0 };
+		int32_t force{ 0 };
+		uint16_t power{ 0 };
+		int16_t temperature{ 0 };
+		uint16_t voltage{ 0 };
+		uint16_t errors{ 0 };
+	};
+
+	StreamData stream_cache;
+
 	/**
 	 *	@brief	The normal run loop for motor communication. Checks for incoming serial data and
 	 *			sends queued serial data. If you are communicating with your motor asynchronously, you must
@@ -296,38 +309,6 @@ public:
 	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
 	OrcaResult<uint16_t> get_latched_errors();
-
-#pragma endregion
-
-#pragma region MOTOR_ID_AND_VERSIONING
-
-	/**
-	* @brief Returns the actuator serial number
-	*
-	* @return uint32_t - actuator serial number
-	*/
-	OrcaResult<uint32_t> get_serial_number();
-
-	/**
-	* @brief Return the firmware major version
-	*
-	* @return uint16_t - firmware major version
-	*/
-	OrcaResult<uint16_t> get_major_version();
-
-	/**
-	* @brief Return the firmware release state (minor version)
-	*
-	* @return uint16_t - firmware release state
-	*/
-	OrcaResult<uint16_t> get_release_state();
-
-	/**
-	* @brief Return the firmware revision number
-	*
-	* @return uint16_t - firmware revision number
-	*/
-	OrcaResult<uint16_t> get_revision_number();
 
 #pragma endregion
 
@@ -462,17 +443,37 @@ public:
 
 #pragma endregion
 
-	struct StreamReturnData
-	{
-		int32_t position{ 0 };
-		int32_t force{ 0 };
-		uint16_t power{ 0 };
-		int16_t temperature{ 0 };
-		uint16_t voltage{ 0 };
-		uint16_t errors{ 0 };
-	};
+#pragma region MOTOR_ID_AND_VERSIONING
 
-	StreamReturnData stream_cache;
+	/**
+	* @brief Returns the actuator serial number
+	*
+	* @return uint32_t - actuator serial number
+	*/
+	OrcaResult<uint32_t> get_serial_number();
+
+	/**
+	* @brief Return the firmware major version
+	*
+	* @return uint16_t - firmware major version
+	*/
+	OrcaResult<uint16_t> get_major_version();
+
+	/**
+	* @brief Return the firmware release state (minor version)
+	*
+	* @return uint16_t - firmware release state
+	*/
+	OrcaResult<uint16_t> get_release_state();
+
+	/**
+	* @brief Return the firmware revision number
+	*
+	* @return uint16_t - firmware revision number
+	*/
+	OrcaResult<uint16_t> get_revision_number();
+
+#pragma endregion
 
 private:
 	OrcaError message_error{false};

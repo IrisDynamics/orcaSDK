@@ -1,18 +1,19 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.23)
 
-project(orcaSDK_proj VERSION 1.0.0)
+project(orcaSDK VERSION 1.0.0)
 
 #TODO(Aiden Oct 31, 2024): 
 #	Address when we've decided how to handle platform dependencies. Add conditional 
 #	compilation of platform specific code. See Professional CMake section 16.2.6 for suggestions
-add_library(orcaSDK 
+add_library(orcaSDK_core 
 	src/actuator.cpp
 	src/orca_stream.cpp
 	src/standard_modbus_functions.cpp	
 	src/command_and_confirm.cpp
 )
+add_library(orcaSDK::core ALIAS orcaSDK_core)
 	
-target_sources(orcaSDK
+target_sources(orcaSDK_core
 	PUBLIC
 		FILE_SET publicAPI
 		TYPE HEADERS
@@ -30,11 +31,10 @@ target_sources(orcaSDK
 			tools/log.h
 			tools/log_interface.h
 			tools/timer.h
+			orca600_api/orca600.h
+			orca600_api/orca600_memory_map.h
+			orca600_api/orca600_registers.h
 			
-	PRIVATE
-		FILE_SET implementationIncludes
-		TYPE HEADERS
-		FILES
 			src/chrono_clock.h
 			src/diagnostics_tracker.h
 			src/function_code_parameters.h
@@ -42,22 +42,37 @@ target_sources(orcaSDK
 			src/mb_crc.h
 			src/message_queue.h
 			src/modbus_client.h
-			src/modbus_client
 			src/standard_modbus_functions.h
 			src/orca_stream.h
 			src/transaction.h
 			src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
+			
+	# PRIVATE
+		# FILE_SET implementationIncludes
+		# TYPE HEADERS
+		# FILES
+			# src/chrono_clock.h
+			# src/diagnostics_tracker.h
+			# src/function_code_parameters.h
+			# src/mb_config.h
+			# src/mb_crc.h
+			# src/message_queue.h
+			# src/modbus_client.h
+			# src/modbus_client
+			# src/standard_modbus_functions.h
+			# src/orca_stream.h
+			# src/transaction.h
+			# src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
 		
 )
 
-target_compile_features(orcaSDK PUBLIC cxx_std_11)
-	
-# target_include_directories(orcaSDK INTERFACE $())
+target_compile_features(orcaSDK_core PUBLIC cxx_std_11)
 
-set_target_properties(orcaSDK
+set_target_properties(orcaSDK_core
 	PROPERTIES
 		VERSION 1.0.0
 		SOVERSION 1
+	EXPORT_NAME core
 )
 
 # include(CMakePackageConfigHelpers)
@@ -67,8 +82,22 @@ set_target_properties(orcaSDK
 	# COMPATIBILITY SameMajorVersion
 # )
 
-# include(GNUInstallDirs)
-# install(TARGETS orcaSDK
+include(GNUInstallDirs)
+install(TARGETS orcaSDK_core
+	EXPORT orcaSDKConfig
+	FILE_SET publicAPI
+	INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+export(TARGETS orcaSDK_core
+	NAMESPACE orcaSDK::
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
+)
+install(EXPORT orcaSDKConfig 
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
+	NAMESPACE orcaSDK::
+)
 	# RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 		# COMPONENT	orcaSDK_Runtime
 	# LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

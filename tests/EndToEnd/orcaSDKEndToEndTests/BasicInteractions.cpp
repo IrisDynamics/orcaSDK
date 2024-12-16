@@ -49,9 +49,9 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 	motor.set_streamed_position_um(2); // This sets the stream timeout timer
 
 	motor.run(); //Inject position command
-	auto [value, error] = motor.read_register_blocking(POS_CMD);
+	OrcaResult<uint16_t> result = motor.read_register_blocking(POS_CMD);
 
-	EXPECT_EQ(2, value);
+	EXPECT_EQ(2, result.value);
 }
 
 TEST_F(BasicInteractionTests, HapticModeStreamingUpdatesTheHapticStatusRegisterDuringRun)

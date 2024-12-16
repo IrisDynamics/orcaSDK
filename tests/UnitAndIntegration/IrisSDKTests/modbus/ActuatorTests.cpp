@@ -56,17 +56,17 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 	};
 	serial_interface->consume_new_message(receive_buffer);
 
-	auto [_, error] = motor.read_register_blocking(POWER, MessagePriority::not_important);
+	OrcaResult<uint16_t> result = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
-	EXPECT_TRUE(error);
+	EXPECT_TRUE(result.error);
 }
 
 TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFullMessageResponseTimeout)
 {
 	//Requires C++17
-	auto [_, error] = motor.read_register_blocking(POWER, MessagePriority::not_important);
+	OrcaResult<uint16_t> result = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
-	EXPECT_TRUE(error);
+	EXPECT_TRUE(result.error);
 }
 
 TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetweenSeeingNewBytes)

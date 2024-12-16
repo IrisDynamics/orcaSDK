@@ -72,9 +72,9 @@ TEST_F(ActuatorIntegrationTests, PerformingMultipleReadReturnsVectorOfResults)
 
 	std::vector<uint16_t> expected_output { 2, 256, 255 };
 
-	auto [value, error] = motor.read_multiple_registers_blocking(STATOR_TEMP, 3);
+	OrcaResult<std::vector<uint16_t>> result = motor.read_multiple_registers_blocking(STATOR_TEMP, 3);
 
-	EXPECT_EQ(expected_output, value);
+	EXPECT_EQ(expected_output, result.value);
 }
 
 TEST_F(ActuatorIntegrationTests, PerformingWriteSendsSingleByteWriteMessage)

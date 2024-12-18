@@ -83,6 +83,8 @@ public:
 	 *	If the timer has not yet been set, returns time since object construction. 
 	 */
 	uint32_t time_elapsed() {
-		return (std::chrono::system_clock::now() - start_time).count();
+		return std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now() - start_time
+		).count();
 	}
 };

@@ -55,7 +55,7 @@ public:
 		file_name = full_name;
 
 		file.open(full_name, std::ios::out | std::ios::app | std::ios::binary);
-		if (!is_open()) return OrcaError(true, "Failed to open log file: " + path);
+		if (!is_open()) return OrcaError(true, "Failed to create/open log file: " + path);
 
 		start_time = std::chrono::high_resolution_clock::now();
 

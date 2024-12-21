@@ -109,11 +109,6 @@ public:
 	OrcaResult<int32_t> get_position_um();
 
 	/**
-	*@brief get the motor's mode of operations as currently updated by the local memory map
-	*/
-	OrcaResult<uint16_t> get_mode_of_operation();
-
-	/**
 	* @brief Returns the sum of all error messages being sent by the motor
 	* 
 	* @return uint16_t - sum or all active error codes

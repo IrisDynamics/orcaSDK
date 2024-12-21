@@ -259,10 +259,6 @@ void Actuator::handle_transaction_response(Transaction response)
 	}
 }
 
-OrcaResult<uint16_t> Actuator::get_mode_of_operation() {
-	return read_register_blocking(MODE_OF_OPERATION);
-}
-
 OrcaResult<uint16_t> Actuator::get_power_W() {
 	return read_register_blocking(POWER_REG_OFFSET);
 }

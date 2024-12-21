@@ -12,16 +12,14 @@ int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_val
 
 //Constructor
 Actuator::Actuator(
-	int serial_port_channel,
 	const char* name,
 	uint8_t modbus_server_address
 ) :
 	Actuator(
 #if defined(WINDOWS)
-		std::make_shared<windows_SerialInterface>(serial_port_channel),
+		std::make_shared<windows_SerialInterface>(),
 #endif
 		std::make_shared<ChronoClock>(),
-		serial_port_channel,
 		name,
 		modbus_server_address
 	)
@@ -30,24 +28,20 @@ Actuator::Actuator(
 Actuator::Actuator(
 	std::shared_ptr<SerialInterface> serial_interface,
 	std::shared_ptr<Clock> clock,
-	int serial_port_channel,
 	const char* name,
 	uint8_t modbus_server_address
 ) :
 	serial_interface(serial_interface),
 	clock(clock),
-	modbus_client(*serial_interface, *clock, serial_port_channel),
+	modbus_client(*serial_interface, *clock, 0),
 	name(name),
 	stream(this, modbus_client, modbus_server_address),
 	modbus_server_address(modbus_server_address)
 {}
 
-OrcaError Actuator::open_serial_port(int baud_rate) {
+OrcaError Actuator::open_serial_port(int port_number, int baud_rate) {
+	serial_interface->set_new_serial_port(port_number);
 	return modbus_client.init(baud_rate);
-}
-
-void Actuator::set_new_serial_port(int _comport) {
-	serial_interface->set_new_serial_port(_comport);
 }
 
 void Actuator::close_serial_port() {

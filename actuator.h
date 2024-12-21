@@ -58,7 +58,6 @@ public:
 						public member variable Actuator::name
 	 */
 	Actuator(
-		int serial_port_channel,
 		const char* name,
 		uint8_t modbus_server_address = 1
 	);
@@ -70,7 +69,6 @@ public:
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
 		std::shared_ptr<Clock> clock,
-		int serial_port_channel,
 		const char* name,
 		uint8_t modbus_server_address = 1
 	);
@@ -82,12 +80,7 @@ public:
 	 *			from the most recent call to set_new_serial_port()
 	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
 	 */
-	OrcaError open_serial_port(int baud_rate = UART_BAUD_RATE);
-
-	/**
-	 *	@brief	Updates which serial port number should be used to connect to the Orca.
-	 */
-	void set_new_serial_port(int port_number);
+	OrcaError open_serial_port(int port_number, int baud_rate = UART_BAUD_RATE);
 
 	/**
 	 *	@brief	Closes any open serial port and releases all handles to it.
@@ -531,11 +524,11 @@ private:
 public:
 	[[deprecated("Requests initialization of now unused parameters")]]
 	Actuator(
-		int uart_channel,
+		int,
 		const char* name,
 		int
 	) :
-		Actuator(uart_channel, name)
+		Actuator(name)
 	{}
 };
 

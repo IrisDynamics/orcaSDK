@@ -15,7 +15,7 @@ protected:
 		serial_interface(std::make_shared<TestSerialInterface>()),
 		clock(std::make_shared<TestClock>()),
 		log(std::make_shared<TestLog>()),
-		motor(serial_interface, clock, -1, "unimportant")
+		motor(serial_interface, clock, "unimportant")
 	{}
 
 	void SetUp()

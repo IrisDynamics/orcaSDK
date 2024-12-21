@@ -1,8 +1,6 @@
 add_executable(orcaSDKUnitTests 
-	EXCLUDE_FROM_ALL
 	IrisSDKTests/pch.cpp
 	IrisSDKTests/modbus/ActuatorTests.cpp
-	IrisSDKTests/modbus/IrisStreamHandshakeTests.cpp
 	IrisSDKTests/modbus/MessageQueueTests.cpp
 	IrisSDKTests/modbus/ModbusClientTests.cpp
 	IrisSDKTests/modbus/TransactionConstructionTests.cpp
@@ -14,6 +12,6 @@ target_include_directories(orcaSDKUnitTests
 		IrisSDKTests)
 
 target_link_libraries(orcaSDKUnitTests PRIVATE gtest_main gmock_main)
-target_link_libraries(orcaSDKUnitTests PRIVATE orcaSDK)
+target_link_libraries(orcaSDKUnitTests PRIVATE orcaSDK::core)
 
 gtest_discover_tests(orcaSDKUnitTests "" AUTO)

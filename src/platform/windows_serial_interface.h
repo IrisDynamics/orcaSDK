@@ -45,9 +45,7 @@ static void reset_overlapped_struct(OVERLAPPED& o);
 
 class windows_SerialInterface : public SerialInterface {
 public:
-    windows_SerialInterface(int _channel_number) :
-        channel_number(_channel_number)
-    {}
+    windows_SerialInterface() = default;
 
     /**
     * @brief ends the listening thread, purges the comport and closes it

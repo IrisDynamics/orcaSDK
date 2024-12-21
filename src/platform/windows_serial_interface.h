@@ -54,10 +54,6 @@ public:
         clean_up_handles();
     }
 
-    int get_port_number() {
-        return channel_number;
-    }
-
     void set_new_serial_port(int comport) {
         channel_number = comport;
     }
@@ -263,7 +259,7 @@ private:
 
     //IO file handle stuff
     HANDLE hSerial{ nullptr }; //The com port file handle 
-    int channel_number; //The com port number
+    int channel_number = 0; //The com port number
     DCB dcbSerialParams = { 0 }; //Serial parameters for file handle
     bool serial_success = false;     //flag bool to indicate if the handle to the serial port is obtained
     COMMTIMEOUTS timeouts{

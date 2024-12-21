@@ -116,4 +116,6 @@ install(EXPORT orcaSDKConfig
 
 # include(CPack)
 
-# add_subdirectory(tests)
+if (PROJECT_IS_TOP_LEVEL)
+	add_subdirectory(tests)
+endif()

@@ -23,10 +23,6 @@
 #pragma once
 #include "mb_config.h"
 
-#if defined(WINDOWS)
-#include "platform/windows_serial_interface.h"
-#endif
-
 
 //#include "orca600_memory_map.h"
 #include "../orca600_api/orca600.h"

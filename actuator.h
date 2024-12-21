@@ -520,16 +520,6 @@ private:
 	void set_stream_paused(bool paused);
 
 	bool stream_paused = false;
-	
-public:
-	[[deprecated("Requests initialization of now unused parameters")]]
-	Actuator(
-		int,
-		const char* name,
-		int
-	) :
-		Actuator(name)
-	{}
 };
 
 #endif

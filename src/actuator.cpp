@@ -1,3 +1,5 @@
+// TODO (Aiden Dec 20, 2024): Remove when making cross-platform
+#include "platform/windows_serial_interface.h" 
 #include "actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
 #include "../actuator.h"
 #include "chrono_clock.h"
@@ -16,9 +18,7 @@ Actuator::Actuator(
 	uint8_t modbus_server_address
 ) :
 	Actuator(
-#if defined(WINDOWS)
 		std::make_shared<windows_SerialInterface>(),
-#endif
 		std::make_shared<ChronoClock>(),
 		name,
 		modbus_server_address
@@ -405,10 +405,8 @@ OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 
 OrcaError Actuator::begin_serial_logging(const std::string& log_name)
 {
-#ifdef WINDOWS
 	std::shared_ptr<Log> app_log = std::make_shared<Log>();
 	app_log->set_verbose_mode(false);
-#endif
 	return begin_serial_logging(log_name, app_log);
 }
 

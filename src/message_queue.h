@@ -73,12 +73,9 @@ public:
      * Returns false if the message was not added.
     */
     bool enqueue(Transaction message){
-        if(!full()) {			// todo: get rid of this assignment...
-            message.mark_queued();
-            transaction_buffer.push_back(message);
-            return true;
-        }
-        return false;
+        message.mark_queued();
+        transaction_buffer.push_back(message);
+        return true;
     }
 
     void insert_next(Transaction message)
@@ -158,18 +155,7 @@ public:
 
 private:
     DiagnosticsTracker& diagnostics_tracker;
-    std::list<Transaction> transaction_buffer;  //!<Configure the max amount of messages in the buffer queue in the mb_config.h file
-    //int back_index = 0;       //!<index of next available empty spot
-    //int front_index = 0;      //!<index of item in front of queue
-    //int active_index = 0;
-
-    /**
-     * @brief Determine if the Message queue is full
-     * @return True if the last enqueue filled the spot immediately 'before' the front of the queue, false otherwise.
-    */
-    bool full() {
-        return size() >= (NUM_MESSAGES - 1);
-    }
+    std::list<Transaction> transaction_buffer;  
 };
 
 #endif

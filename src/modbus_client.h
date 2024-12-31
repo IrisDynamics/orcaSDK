@@ -491,10 +491,6 @@ private:
                 retry_transaction.generate_retry(transaction);
                 messages.insert_next(retry_transaction);
             }
-            else
-            {
-                std::cout << "Failed to send important transaction" << std::endl;
-            }
         }
     }
 

@@ -12,7 +12,6 @@ public:
 		failure(failure_type),
 		error_message(error_message)
 	{}
-	OrcaError& operator=(const OrcaError& other) = default;
 
 	explicit operator bool() const
 	{

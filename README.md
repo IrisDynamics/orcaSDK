@@ -163,7 +163,7 @@ Next let's create a very simple main.cpp which makes use of the SDK, and build i
 
 int main()
 {
-    Actuator motor{ 0, "MotorName" };
+    Actuator motor{ "MotorName" };
     std::cout << "Hello World\n";
     return 0;
 }

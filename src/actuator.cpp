@@ -208,10 +208,10 @@ void Actuator::handle_transaction_response(Transaction response)
 	int ec = response.get_failure_codes();
 
 	std::stringstream error_message;
-	if (ec & (1 << Transaction::RESPONSE_TIMEOUT_ERROR)) error_message << "\tResponse timed out. The motor took too long to respond. \n";
-	if (ec & (1 << Transaction::INTERCHAR_TIMEOUT_ERROR)) error_message << "\tUnexpected interchar delay timeout. \n";
-	if (ec & (1 << Transaction::UNEXPECTED_RESPONDER)) error_message << "\tWrong modbus response address. \n";
-	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "\tWrong CRC. \r";
+	if (ec & (1 << Transaction::RESPONSE_TIMEOUT_ERROR)) error_message << "Response timed out, the motor took too long to respond. ";
+	if (ec & (1 << Transaction::INTERCHAR_TIMEOUT_ERROR)) error_message << "Unexpected interchar delay timeout. ";
+	if (ec & (1 << Transaction::UNEXPECTED_RESPONDER)) error_message << "Wrong modbus response address. ";
+	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "Wrong CRC. ";
 
 	message_error = OrcaError{response.get_failure_codes(), error_message.str()};
 

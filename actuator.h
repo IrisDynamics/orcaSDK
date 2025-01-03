@@ -397,13 +397,21 @@ public:
 	 */
 	OrcaError set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone = 0, uint16_t saturation = 0, uint8_t coupling = 0);
 
+	enum OscillatorType
+	{
+		Pulse = 0,
+		Sine,
+		Triangle,
+		Saw
+	};
+
 	/**
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
 	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details on this function.
 	 * 
 	 */
-	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type);
+	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type);
 
 	/**
 	*	@brief Sets the damping value in Haptic Mode

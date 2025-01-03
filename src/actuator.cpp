@@ -372,10 +372,10 @@ OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t 
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type) {
+OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type) {
 	uint16_t data[4] = {
 		amplitude,
-		type,
+		(uint16_t)type,
 		frequency_dhz,
 		duty
 	};

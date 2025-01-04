@@ -69,13 +69,11 @@ public:
     }
 
     /**
-     * @brief Adds the next message requested for transmission to the end of the queue if space is free
-     * Returns false if the message was not added.
+     * @brief Adds the next message requested for transmission to the end of the queue
     */
-    bool enqueue(Transaction message){
+    void enqueue(Transaction message){
         message.mark_queued();
         transaction_buffer.push_back(message);
-        return true;
     }
 
     void insert_next(Transaction message)

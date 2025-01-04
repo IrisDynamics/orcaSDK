@@ -60,7 +60,7 @@ private:
 	  @param command_code command code to specify command mode (sleep, force, position etc.)
 	  @param register_value The value to write to the register
 	 */
-	int motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value);
+	void motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value);
 
 	/**
 	 * @brief Determine the length of the request for an application specific function code

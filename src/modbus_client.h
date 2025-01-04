@@ -221,10 +221,9 @@ public:
     /**
      * @brief enqueue a Transaction
      * @param message should be a populated Transaction object which will be copied into a Transaction in the message queue
-     * @return 1 if succeeded in adding the message to the buffer, 0 if messages buffer was full
     */
-    bool enqueue_transaction(Transaction message) {       
-        return messages.enqueue(message);
+    void enqueue_transaction(Transaction message) {       
+        messages.enqueue(message);
     }
 
     /**

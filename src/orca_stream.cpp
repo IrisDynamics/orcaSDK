@@ -48,7 +48,7 @@ void OrcaStream::motor_stream_command() {
 	}
 }
 
-int OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value) {
+void OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value) {
 	uint8_t data_bytes[5] = {
 		uint8_t(command_code),
 		uint8_t(register_value >> 24),
@@ -58,8 +58,7 @@ int OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, i
 	};
 	Transaction my_temp_transaction;
 	my_temp_transaction.load_transmission_data(device_address, motor_command, data_bytes, 5, get_app_reception_length(motor_command));
-	int check = modbus_client.enqueue_transaction(my_temp_transaction);
-	return check;
+	modbus_client.enqueue_transaction(my_temp_transaction);
 }
 
 int OrcaStream::get_app_reception_length(uint8_t fn_code) {

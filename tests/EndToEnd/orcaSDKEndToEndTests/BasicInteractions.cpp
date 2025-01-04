@@ -45,12 +45,12 @@ TEST_F(BasicInteractionTests, WhenEnabledAndConnectedActuatorObjectAutomatically
 {
 	motor.enable_stream();
 
-	motor.set_mode(MotorMode::PositionMode);
+	motor.set_mode(MotorMode::ForceMode);
 
-	motor.set_streamed_position_um(2); // This sets the stream timeout timer
+	motor.set_streamed_force_mN(2); // This sets the stream timeout timer
 
 	motor.run(); //Inject position command
-	OrcaResult<uint16_t> result = motor.read_register_blocking(POS_CMD);
+	OrcaResult<uint16_t> result = motor.read_register_blocking(FORCE_CMD);
 
 	EXPECT_EQ(2, result.value);
 }

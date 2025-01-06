@@ -63,7 +63,6 @@ TEST_F(ActuatorTests, MotorIncrementsCRCDiagnosticCounterOnBadCRCResponse)
 
 TEST_F(ActuatorTests, MotorIncrementsTimeoutAfterEnoughTimePassesBetweenSeeingFullMessageResponseTimeout)
 {
-	//Requires C++17
 	OrcaResult<uint16_t> result = motor.read_register_blocking(POWER, MessagePriority::not_important);
 
 	EXPECT_TRUE(result.error);
@@ -118,6 +117,52 @@ TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroDoesNotGetQueued)
 	motor.write_multiple_registers_blocking(1, 0, unimportant_data);
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, TimeSinceLastMessageBeginsVeryLarge)
+{
+	EXPECT_GT(motor.time_since_last_response_microseconds(), 1000000000);
+}
+
+TEST_F(ActuatorTests, AfterReceivingASuccessfulMessageTimeSinceLastMessageBecomesZero)
+{
+	clock->set_auto_time_pass(0);
+
+	std::deque<char> next_input_message = std::deque<char>{
+		//						 low  reg(2)
+			'\x1', '\x3', '\x4', '\0', '\x2'
+	};
+	ModbusTesting::CalculateAndAppendCRC(next_input_message);
+	serial_interface->consume_new_message(next_input_message);
+
+	motor.read_register_blocking(STATOR_TEMP);
+
+	EXPECT_EQ(motor.time_since_last_response_microseconds(), 0);
+}
+
+TEST_F(ActuatorTests, AfterReceivingASuccessfulMessageAndWaitingTimeSinceLastResponseMatchesTimeWaited)
+{
+	clock->set_auto_time_pass(0);
+
+	std::deque<char> next_input_message = std::deque<char>{
+		//						 low  reg(2)
+			'\x1', '\x3', '\x4', '\0', '\x2'
+	};
+	ModbusTesting::CalculateAndAppendCRC(next_input_message);
+	serial_interface->consume_new_message(next_input_message);
+
+	motor.read_register_blocking(STATOR_TEMP);
+
+	clock->pass_time(5000);
+
+	EXPECT_EQ(motor.time_since_last_response_microseconds(), 5000);
+}
+
+TEST_F(ActuatorTests, InvalidMessagesDoNotUpdateTimeSinceLastResponse)
+{
+	OrcaResult<uint16_t> result = motor.read_register_blocking(POWER, MessagePriority::not_important);
+
+	EXPECT_GT(motor.time_since_last_response_microseconds(), 1000000000);
 }
 
 //TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)

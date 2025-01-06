@@ -298,6 +298,8 @@ public:
 	 */
 	OrcaResult<uint16_t> get_latched_errors();
 
+	int64_t time_since_last_response_microseconds();
+
 #pragma endregion
 
 #pragma region TUNING_AND_SAFETY
@@ -478,6 +480,7 @@ private:
 	OrcaStream stream;
 
 	const uint8_t modbus_server_address;
+	int64_t _time_since_last_response_microseconds;
 
 	void handle_transaction_response(Transaction response);
 

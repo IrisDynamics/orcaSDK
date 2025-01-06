@@ -1,11 +1,14 @@
 // TODO (Aiden Dec 20, 2024): Remove when making cross-platform
 #include "platform/windows_serial_interface.h" 
+#undef max
+#undef min
 #include "actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
 #include "../actuator.h"
 #include "chrono_clock.h"
 #include "standard_modbus_functions.h"
 #include "tools/log.h"
 #include "command_and_confirm.h"
+#include <limits>
 
 int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_value)
 {
@@ -36,7 +39,8 @@ Actuator::Actuator(
 	modbus_client(*serial_interface, *clock, 0),
 	name(name),
 	stream(this, modbus_client, modbus_server_address),
-	modbus_server_address(modbus_server_address)
+	modbus_server_address(modbus_server_address),
+	_time_since_last_response_microseconds(std::numeric_limits<long long>::min() / 2) //Dividing by 2 because using minimum causes instant rollover
 {}
 
 OrcaError Actuator::open_serial_port(int port_number, int baud_rate) {
@@ -214,6 +218,11 @@ void Actuator::handle_transaction_response(Transaction response)
 	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "Wrong CRC. ";
 
 	message_error = OrcaError{response.get_failure_codes(), error_message.str()};
+
+	if (!ec)
+	{
+		_time_since_last_response_microseconds = clock->get_time_microseconds();
+	}
 
 	switch (response.get_rx_function_code()) {
 
@@ -429,4 +438,9 @@ void Actuator::enable_stream() {
 
 void Actuator::disable_stream() {
 	stream.disable();
+}
+
+int64_t Actuator::time_since_last_response_microseconds()
+{
+	return clock->get_time_microseconds() - _time_since_last_response_microseconds;
 }

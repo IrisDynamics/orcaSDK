@@ -415,7 +415,7 @@ OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 
 OrcaError Actuator::begin_serial_logging(const std::string& log_name)
 {
-	std::shared_ptr<Log> app_log = std::make_shared<Log>();
+	std::shared_ptr<orcaSDK::Log> app_log = std::make_shared<orcaSDK::Log>();
 	app_log->set_verbose_mode(false);
 	return begin_serial_logging(log_name, app_log);
 }

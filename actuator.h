@@ -80,7 +80,11 @@ public:
 	 *			from the most recent call to set_new_serial_port()
 	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
 	 */
-	OrcaError open_serial_port(int port_number, int baud_rate = UART_BAUD_RATE);
+	OrcaError open_serial_port(
+		int port_number, 
+		int baud_rate = ModbusClient::kDefaultBaudRate, 
+		int interframe_delay = ModbusClient::kDefaultInterframeDelay_uS
+	);
 
 	/**
 	 *	@brief	Closes any open serial port and releases all handles to it.

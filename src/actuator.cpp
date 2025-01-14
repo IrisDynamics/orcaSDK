@@ -43,9 +43,9 @@ Actuator::Actuator(
 	_time_since_last_response_microseconds(std::numeric_limits<long long>::min() / 2) //Dividing by 2 because using minimum causes instant rollover
 {}
 
-OrcaError Actuator::open_serial_port(int port_number, int baud_rate) {
+OrcaError Actuator::open_serial_port(int port_number, int baud_rate, int interframe_delay) {
 	serial_interface->set_new_serial_port(port_number);
-	return modbus_client.init(baud_rate);
+	return modbus_client.init(baud_rate, interframe_delay);
 }
 
 void Actuator::close_serial_port() {

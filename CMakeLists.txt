@@ -38,7 +38,7 @@ target_sources(orcaSDK_core
 			src/chrono_clock.h
 			src/diagnostics_tracker.h
 			src/function_code_parameters.h
-			src/mb_config.h
+			
 			src/mb_crc.h
 			src/message_queue.h
 			src/modbus_client.h

@@ -69,12 +69,10 @@ public:
         serial_interface(serial_interface),
         clock(clock),
         channel_number(_channel_number),
-		repsonse_timeout_cycles  ( DEFAULT_RESPONSE_uS	 ),	
-		interchar_timeout_cycles ( DEFAULT_INTERCHAR_uS	 ),
-		turnaround_delay_cycles  ( DEFAULT_TURNAROUND_uS )
-    {
-    	adjust_interframe_delay_us  ( 			  DEFAULT_INTERFRAME_uS );
-    }
+		repsonse_timeout_cycles  ( kDefaultResponseTimeout_uS	 ),	
+		interchar_timeout_cycles ( kDefaultIntercharTimeout_uS	 ),
+		turnaround_delay_cycles  ( kDefaultTurnaroundTime_uS )
+    {}
     virtual ~ModbusClient(){}
 
     /**
@@ -295,6 +293,12 @@ public:
 
     DiagnosticsTracker diagnostic_counters;
 
+    static constexpr int kDefaultBaudRate = 19200;
+    static constexpr int kDefaultInterframeDelay_uS = 2000;
+    static constexpr int kDefaultIntercharTimeout_uS = 16000;
+    static constexpr int kDefaultTurnaroundTime_uS = 500;
+    static constexpr int kDefaultResponseTimeout_uS = 20000;
+
 private:
     SerialInterface& serial_interface;
     Clock& clock;
@@ -307,7 +311,7 @@ private:
     int64_t interchar_timeout_cycles;
     int64_t turnaround_delay_cycles;
 
-    int64_t interframe_delay_cycles = 0;
+    int64_t interframe_delay_cycles{ kDefaultInterframeDelay_uS };
 
     bool logging = false;
 

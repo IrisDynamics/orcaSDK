@@ -81,10 +81,10 @@ TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
 
 	modbus_client.run_out();
 
-	clock.pass_time(DEFAULT_RESPONSE_uS + 1);
+	clock.pass_time(modbus_client.kDefaultResponseTimeout_uS + 1);
 	modbus_client.run_in();
 
-	std::string logString = "18001\trx\tTimed out. ";
+	std::string logString = "30001\trx\tTimed out. ";
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
@@ -108,7 +108,7 @@ TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
 	};
 	serial_interface.consume_new_message(incoming_message);
 	modbus_client.run_in();
-	clock.pass_time(DEFAULT_INTERCHAR_uS + 1);
+	clock.pass_time(modbus_client.kDefaultIntercharTimeout_uS + 1);
 	modbus_client.run_in();
 
 	std::string logString = "26001\trx\t01\tUnexpected interchar. ";

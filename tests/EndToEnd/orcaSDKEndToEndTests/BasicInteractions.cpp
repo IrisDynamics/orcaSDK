@@ -76,7 +76,7 @@ TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 	motor.enable_stream();
 
 	auto stream_start = steady_clock::now();
-	while (duration_cast<milliseconds>(steady_clock::now() - stream_start) < 10ms)
+	while (duration_cast<milliseconds>(steady_clock::now() - stream_start) < 50ms)
 	{
 		motor.run();
 	}

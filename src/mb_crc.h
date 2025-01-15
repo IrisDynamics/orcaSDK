@@ -24,7 +24,6 @@
 #define MB_CRC_H_
 
 #include <stdint.h>
-#include "mb_config.h"
 
 
 

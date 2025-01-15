@@ -2,7 +2,7 @@
 #include "platform/windows_serial_interface.h" 
 #undef max
 #undef min
-#include "actuator_config.h" //SWITCH THE INCLUDE ORDERS OF THESE HEADERS AS SOON AS POSSIBLE
+#include "orca600_api/orca600.h"
 #include "../actuator.h"
 #include "chrono_clock.h"
 #include "standard_modbus_functions.h"
@@ -269,19 +269,19 @@ void Actuator::handle_transaction_response(Transaction response)
 }
 
 OrcaResult<uint16_t> Actuator::get_power_W() {
-	return read_register_blocking(POWER_REG_OFFSET);
+	return read_register_blocking(POWER);
 }
 
 OrcaResult<uint16_t> Actuator::get_temperature_C() {
-	return read_register_blocking(TEMP_REG_OFFSET);
+	return read_register_blocking(STATOR_TEMP);
 }
 
 OrcaResult<uint16_t> Actuator::get_voltage_mV() {
-	return read_register_blocking(VOLTAGE_REG_OFFSET);
+	return read_register_blocking(VDD_FINAL);
 }
 
 OrcaResult<uint16_t> Actuator::get_errors() {
-	return read_register_blocking(ERROR_REG_OFFSET);
+	return read_register_blocking(ERROR_0);
 }
 
 OrcaResult<uint32_t> Actuator::get_serial_number() {
@@ -302,11 +302,11 @@ OrcaResult<uint16_t> Actuator::get_revision_number() {
 }
 
 OrcaError Actuator::zero_position() {
-	return write_register_blocking(ZERO_POS_REG_OFFSET, ZERO_POS_MASK);
+	return write_register_blocking(CTRL_REG_0, CONTROL_REG_0::position_zero_flag);
 }
 
 OrcaError Actuator::clear_errors() {
-	return write_register_blocking(CLEAR_ERROR_REG_OFFSET, CLEAR_ERROR_MASK);
+	return write_register_blocking(CTRL_REG_0, CONTROL_REG_0::clear_errors_flag);
 }
 
 OrcaResult<uint16_t> Actuator::get_latched_errors() {

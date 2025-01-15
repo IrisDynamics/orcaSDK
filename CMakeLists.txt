@@ -20,7 +20,6 @@ target_sources(orcaSDK_core
 		FILES
 			actuator.h
 			
-			src/actuator_config.h
 			src/orca_modes.h
 			src/orca_stream_config.h
 			src/serial_interface.h

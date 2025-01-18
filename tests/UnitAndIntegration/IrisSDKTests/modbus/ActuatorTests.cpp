@@ -165,6 +165,25 @@ TEST_F(ActuatorTests, InvalidMessagesDoNotUpdateTimeSinceLastResponse)
 	EXPECT_GT(motor.time_since_last_response_microseconds(), 1000000000);
 }
 
+TEST_F(ActuatorTests, WhenMultipleReceivedMessagesInReceiveBufferActuatorSuccessfullySplitsThem)
+{
+	std::deque<char> double_message = std::deque<char>
+	{
+		'\x1', '\x3', '\x2', '\0', '\0', '\xb8', '\x44', '\x1', '\x3', '\x2', '\0', '\0', '\xb8', '\x44'
+	};
+	serial_interface->consume_new_message(double_message);
+
+	OrcaResult<uint16_t> read_result = motor.read_register_blocking(418);
+
+	EXPECT_FALSE(read_result.error);
+	EXPECT_EQ(0, read_result.value);
+
+	double_message = std::deque<char>
+	{
+		'\x1', '\x3', '\x2', '\0', '\0', '\xb8', '\x44'
+	};
+	EXPECT_EQ(double_message, serial_interface->receive_buffer);
+}
 //TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)
 //{
 //	std::vector<char> empty_out_buffer{};

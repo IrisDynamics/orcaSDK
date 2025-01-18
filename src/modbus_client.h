@@ -366,6 +366,7 @@ private:
             {
                 active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
                 conclude_transaction(active_transaction);
+                break;
             }
             else {
                 enable_interchar_timeout();

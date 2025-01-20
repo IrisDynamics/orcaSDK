@@ -128,19 +128,12 @@ public:
 
         if (size() == 0) return false;
 
-    	bool ret = false;
-			
-	    if (transaction_buffer.front().is_active()) {
-		    // no new messages, or the current message is still active
-		    ret = false;
-	    }
-	    else if (transaction_buffer.front().is_queued()) {
-		    // current message hasn't been sent yet, but was loaded and queued up
-		    ret = true;
-            transaction_buffer.front().mark_sent();
-	    }
+        return transaction_buffer.front().is_queued();
+    }
 
-    	return ret;
+    void mark_active_message_sent()
+    {
+        transaction_buffer.front().mark_sent();
     }
 
 	/**

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../actuator.h"
 
 [[nodiscard("Ignored failure here will usually lead to an invalid application state")]]

@@ -184,6 +184,7 @@ void Actuator::flush()
 	while (modbus_client.get_queue_size() > 0)
 	{
 		run();
+		if (modbus_client.get_queue_size() > 0) std::this_thread::yield();
 	}
 
 	set_stream_paused(current_paused_state);

@@ -363,6 +363,8 @@ private:
 
             thread_lock.unlock();
 
+            std::this_thread::yield();
+
             //Locking this mutex right before leaving scope makes it easy 
             // for another thread to interrupt the hot loop
             std::lock_guard<std::mutex> light_lock{ light_mutex };

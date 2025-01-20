@@ -180,7 +180,6 @@ public:
     	if ( my_enabled_timer == TIMER_ID::none	||  has_timer_expired() == TIMER_ID::interframe_delay) {
     		disable_timer();
     		if ( messages.available_to_send() ) {
-    			enable_response_timeout();
                 if (serial_interface.ready_to_send())
                 {
                     //while there are bytes left to send in the transaction, continue adding them to sendBuf
@@ -202,11 +201,11 @@ public:
                         }
                     }
                     if (logging) log_transaction_transmission(active_transaction);
+                    
+                    messages.mark_active_message_sent();
+    			    serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
+                    diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
                 }
-    			serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
-                diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
-    		}
-    		else {
     		}
     	}
     }

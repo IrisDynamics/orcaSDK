@@ -177,7 +177,8 @@ public:
     void run_out () {
        
     	// If the interframe has expired, or there are no timers expired, check for a message to transmit
-    	if ( my_enabled_timer == TIMER_ID::none	||  has_timer_expired() == TIMER_ID::interframe_delay) {
+    	if ( my_enabled_timer == TIMER_ID::none	|| has_timer_expired() == TIMER_ID::interframe_delay) {
+            if (has_timer_expired() == TIMER_ID::interframe_delay) flush_remaining_bytes_from_serial_interface();
     		disable_timer();
     		if ( messages.available_to_send() ) {
                 if (serial_interface.ready_to_send())
@@ -499,6 +500,13 @@ private:
         }
     }
 
+    void flush_remaining_bytes_from_serial_interface()
+    {
+        while (serial_interface.ready_to_receive())
+        {
+            serial_interface.receive_byte();
+        }
+    }
 };
 
 

@@ -151,6 +151,7 @@ private:
     std::deque<char> activeBuffer;
     std::atomic<bool> write_in_progress = false;
     OVERLAPPED write_overlapped{}; //Synchronization object for asynchronous writes
+    bool write_event_handle_created = false;
     std::array<char, maxBufferSize> writeCStyleBuffer{}; //Just for WriteFile interaction
 
     void initiate_write(const std::deque<char>& buffer)
@@ -202,6 +203,7 @@ private:
 #pragma region READ_HANDLING
     std::deque<char> rcvBuf;
     OVERLAPPED read_overlapped{}; //Synchronization object for asynchronous reads 
+    bool read_event_handle_created = false;
     bool read_in_progress = false;
     std::array<char, maxBufferSize> readCStyleBuffer{}; //Just for ReadFile interaction
 
@@ -315,6 +317,26 @@ private:
             OutputDebugStringW(maskErr);
         }
 
+        //Create event handles for OVERLAPPED structs
+        write_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, "OrcaSDKWriteEvent");
+        if (write_overlapped.hEvent == NULL) {
+            LPCWSTR eventErr = L"Error setting write overlapped event\n";
+            OutputDebugStringW(eventErr);
+        }
+        else
+        {
+            write_event_handle_created = true;
+        }
+        read_overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, "OrcaSDKReadEvent");
+        if (read_overlapped.hEvent == NULL) {
+            LPCWSTR eventErr = L"Error setting write overlapped event\n";
+            OutputDebugStringW(eventErr);
+        }
+        else
+        {
+            read_event_handle_created = true;
+        }
+
         //set everything to a clear state 
         activeBuffer.clear();
         sendBuffer.clear();
@@ -382,6 +404,8 @@ private:
         WaitForSingleObject(write_overlapped.hEvent, 50);
         WaitForSingleObject(read_overlapped.hEvent, 50);
 
+        if (read_event_handle_created) CloseHandle(read_overlapped.hEvent);
+        if (write_event_handle_created) CloseHandle(write_overlapped.hEvent);
         if (serial_success) CloseHandle(hSerial);
 
         serial_success = false;
@@ -402,9 +426,9 @@ static void reset_overlapped_struct(OVERLAPPED& o)
     o.OffsetHigh = 0;
     o.Pointer = 0;
 
-    o.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    if (o.hEvent == NULL) {
-        LPCWSTR eventErr = L"Error setting overlapped event\n";
+    bool reset_successful = ResetEvent(o.hEvent);
+    if (!reset_successful) {
+        LPCWSTR eventErr = L"Error resetting overlapped event\n";
         OutputDebugStringW(eventErr);
     }
 }

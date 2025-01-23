@@ -34,6 +34,8 @@
 #include <sstream>
 #include "clock.h"
 
+namespace orcaSDK
+{
 
 /**
  * @class ModbusClient
@@ -509,6 +511,7 @@ private:
     }
 };
 
+}
 
 #endif
 

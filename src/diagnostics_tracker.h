@@ -4,6 +4,9 @@
 #include <array>
 #include <iostream>
 
+namespace orcaSDK
+{
+
 /**
  * @brief Description of the different diagnostic counters
 */
@@ -68,3 +71,5 @@ private:
         return diagnostic_number >= diagnostic_counters_array_size || diagnostic_number < 0;
     }
 };
+
+}

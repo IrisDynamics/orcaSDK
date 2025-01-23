@@ -37,6 +37,9 @@
 #include <mutex>
 #include <deque>
 
+namespace orcaSDK
+{
+
  /**
   * @class windows_SerialInterface
   * @brief Extension of the ModbusClient virtual class that implements functions for the Eagle K20's timers, and interrupts. UART channel specific functions to be
@@ -435,4 +438,4 @@ static void reset_overlapped_struct(OVERLAPPED& o)
 
 extern windows_SerialInterface modbus_client;
 
-
+}

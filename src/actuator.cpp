@@ -10,6 +10,8 @@
 #include "command_and_confirm.h"
 #include <limits>
 
+namespace orcaSDK {
+
 int32_t combine_into_wide_register(uint16_t low_reg_value, uint16_t high_reg_value)
 {
 	return ((int32_t)high_reg_value << 16) + low_reg_value;
@@ -415,7 +417,7 @@ OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 
 OrcaError Actuator::begin_serial_logging(const std::string& log_name)
 {
-	std::shared_ptr<orcaSDK::Log> app_log = std::make_shared<orcaSDK::Log>();
+	std::shared_ptr<Log> app_log = std::make_shared<Log>();
 	app_log->set_verbose_mode(false);
 	return begin_serial_logging(log_name, app_log);
 }
@@ -444,4 +446,6 @@ void Actuator::disable_stream() {
 int64_t Actuator::time_since_last_response_microseconds()
 {
 	return clock->get_time_microseconds() - _time_since_last_response_microseconds;
+}
+
 }

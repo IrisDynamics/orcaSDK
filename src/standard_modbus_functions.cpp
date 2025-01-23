@@ -4,7 +4,7 @@
 #include "modbus_client.h"
 #include "message_priority.h"
 
-namespace DefaultModbusFunctions {
+namespace orcaSDK { namespace DefaultModbusFunctions {
 
 	/**
 	 * @brief Format a read_holding_registers request, function code 03, and add the request to the buffer queue
@@ -98,4 +98,4 @@ namespace DefaultModbusFunctions {
 		return my_temp_transaction;
 
 	}
-};
+} }

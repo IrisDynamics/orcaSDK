@@ -30,6 +30,8 @@
 #include "transaction.h"
 #include <list>
 
+namespace orcaSDK
+{
 
 /**
  * @class MessageQueue
@@ -148,6 +150,8 @@ private:
     DiagnosticsTracker& diagnostics_tracker;
     std::list<Transaction> transaction_buffer;  
 };
+
+}
 
 #endif
 

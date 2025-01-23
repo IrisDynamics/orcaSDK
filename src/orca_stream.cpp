@@ -2,6 +2,9 @@
 #include "../actuator.h"
 #include "../orca600_api/orca600_memory_map.h"
 
+namespace orcaSDK
+{
+
 OrcaStream::OrcaStream(Actuator* motor, ModbusClient& modbus_client, uint8_t modbus_server_address) :
 	motor(motor),
 	modbus_client(modbus_client),
@@ -87,4 +90,6 @@ void OrcaStream::set_position_um(int32_t position) {
 
 void OrcaStream::set_haptic_effects(uint16_t effects) {
 	haptic_command_effects = effects;
+}
+
 }

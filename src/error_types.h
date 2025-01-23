@@ -2,6 +2,9 @@
 
 #include <string>
 
+namespace orcaSDK
+{
+
 class OrcaError
 {
 public:
@@ -35,3 +38,5 @@ struct OrcaResult
 	T value;
 	OrcaError error;
 };
+
+}

@@ -25,7 +25,8 @@
 
 #include <stdint.h>
 
-
+namespace orcaSDK
+{
 
 /**
  * @class ModbusCRC
@@ -106,5 +107,7 @@ public:
 	}
 
 };
+
+}
 
 #endif /* MB_CRC_H_ */

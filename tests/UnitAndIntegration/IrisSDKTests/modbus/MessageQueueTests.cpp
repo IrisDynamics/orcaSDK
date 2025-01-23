@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "src/message_queue.h"
 
+using namespace orcaSDK;
+
 class MessageQueueTests : public testing::Test
 {
 	DiagnosticsTracker diagnostic_tracker;

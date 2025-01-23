@@ -38,6 +38,9 @@
 #include "../ic4_library/iriscontrols4.h"
 #endif
 
+namespace orcaSDK
+{
+
 /**
  * @class Transaction
  * @brief MODBUS RTU frame object for outgoing and respective incoming requests.
@@ -450,6 +453,8 @@ private:
 
     int reception_length = 0; // expected length, in bytes, of the current request
 };
+
+}
 
 #endif
 

@@ -5,6 +5,8 @@
 #include "modbus/helpers/modbus_helpers.h"
 #include "modbus/helpers/TestClock.h"
 
+using namespace orcaSDK;
+
 class ModbusClientTests : public testing::Test
 {
 protected:

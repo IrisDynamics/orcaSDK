@@ -37,6 +37,9 @@
 
 #include "src/error_types.h"
 
+namespace orcaSDK
+{
+
 /**
    @class Actuator
    @brief Object that abstracts the communications between the client and a Orca motor server.
@@ -531,5 +534,7 @@ private:
 
 	bool stream_paused = false;
 };
+
+}
 
 #endif

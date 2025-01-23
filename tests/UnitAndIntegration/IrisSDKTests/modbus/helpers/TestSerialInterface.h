@@ -5,7 +5,7 @@
 #include <vector>
 #include <deque>
 
-class TestSerialInterface : public SerialInterface
+class TestSerialInterface : public orcaSDK::SerialInterface
 {
 public:
 	TestSerialInterface()
@@ -46,7 +46,7 @@ public:
 
 	//Misc
 
-	OrcaError open_serial_port(int) override {
+	orcaSDK::OrcaError open_serial_port(int) override {
 		return { false, "" };
 	}
 	void close_serial_port() {}

@@ -30,6 +30,8 @@
 #include "message_priority.h"
 #include "transaction.h"
 
+namespace orcaSDK { 
+
 namespace ModbusSubFunctionCodes
 {
 	/**
@@ -143,5 +145,6 @@ namespace DefaultModbusFunctions {
 		uint8_t* data, MessagePriority priority);
 }
 
+}
 
 #endif /* MODBUS_APPLICATION_H_ */

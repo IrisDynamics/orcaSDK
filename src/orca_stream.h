@@ -4,6 +4,9 @@
 #include "orca_stream_config.h"
 #include "orca_modes.h"
 
+namespace orcaSDK
+{
+
 class Actuator;
 
 class OrcaStream
@@ -70,3 +73,5 @@ private:
 	 */
 	int get_app_reception_length(uint8_t fn_code);
 };
+
+}

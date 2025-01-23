@@ -1,5 +1,8 @@
 #pragma once
 
+namespace orcaSDK
+{
+
 typedef enum {
 
 	SleepMode = 1,
@@ -9,3 +12,5 @@ typedef enum {
 	KinematicMode = 5
 
 } MotorMode;
+
+}

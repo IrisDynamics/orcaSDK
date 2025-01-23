@@ -2,7 +2,7 @@
 
 #include "src/clock.h"
 
-class TestClock : public Clock
+class TestClock : public orcaSDK::Clock
 {
 public:
 	int64_t get_time_microseconds() override 

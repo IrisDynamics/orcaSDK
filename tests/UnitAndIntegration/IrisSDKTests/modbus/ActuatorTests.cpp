@@ -8,6 +8,8 @@
 
 #undef WINDOWS
 
+using namespace orcaSDK;
+
 class ActuatorTests : public testing::Test
 {
 protected:

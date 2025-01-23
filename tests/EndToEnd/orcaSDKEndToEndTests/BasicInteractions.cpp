@@ -2,6 +2,8 @@
 #include "actuator.h"
 #include "src/command_and_confirm.h"
 #include <chrono>
+using namespace orcaSDK;
+
 class BasicInteractionTests : public ::testing::Test
 {
 protected:

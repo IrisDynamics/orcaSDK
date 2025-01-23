@@ -3,6 +3,9 @@
 #include <cstdint>
 #include "error_types.h"
 
+namespace orcaSDK
+{
+
 /**
  *	@brief	The pure virtual interface that the SDK relies on for performing
  *			serial communication. Must be implemented if using the SDK on 
@@ -57,3 +60,5 @@ public:
 	 */
 	virtual uint8_t receive_byte() = 0;
 };
+
+}

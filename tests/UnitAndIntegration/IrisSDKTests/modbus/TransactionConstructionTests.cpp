@@ -4,6 +4,8 @@
 #include "modbus/helpers/TestClock.h"
 #include "actuator.h"
 
+using namespace orcaSDK;
+
 class TransactionConstructionTests : public testing::Test
 {
 protected:

@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+namespace orcaSDK
+{
+
 /** 
  * @brief	An interface class for implementing time on non-standard systems
  */
@@ -19,3 +22,5 @@ public:
 	 */
 	virtual int64_t get_time_microseconds() = 0;
 };
+
+}

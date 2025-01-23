@@ -8,6 +8,8 @@
 //using ::testing::NiceMock;
 //using ::testing::InSequence;
 
+using namespace orcaSDK;
+
 class ActuatorIntegrationTests : public testing::Test
 {
 protected:

@@ -3,6 +3,9 @@
 #include "pch.h"
 #include "tools/log_interface.h"
 
+namespace orcaSDK
+{
+
 class TestLog : public LogInterface {
 public:
 	OrcaError open(const std::string&) override {
@@ -17,3 +20,5 @@ public:
 
 	std::string last_written_string = "";
 };
+
+}

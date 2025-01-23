@@ -23,6 +23,9 @@
 
 #include <chrono>
 
+namespace orcaSDK
+{
+
 /**
  *	@class	Timer Timer.h "irisSDK_libraries/Timer.h" 
  *	@brief	An object intended to be used as a countdown timer (But does support counting up). Offers a selection of simple operations. 
@@ -88,3 +91,5 @@ public:
 		).count();
 	}
 };
+
+}

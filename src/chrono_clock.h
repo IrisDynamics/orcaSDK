@@ -3,6 +3,9 @@
 #include "clock.h"
 #include <chrono>
 
+namespace orcaSDK
+{
+
 class ChronoClock : public Clock
 {
 public:
@@ -18,3 +21,5 @@ public:
 private:
 	std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::microseconds> start_time;
 };
+
+}

@@ -46,8 +46,7 @@ Actuator::Actuator(
 {}
 
 OrcaError Actuator::open_serial_port(int port_number, int baud_rate, int interframe_delay) {
-	serial_interface->set_new_serial_port(port_number);
-	return modbus_client.init(baud_rate, interframe_delay);
+	return modbus_client.init(port_number, baud_rate, interframe_delay);
 }
 
 void Actuator::close_serial_port() {

@@ -46,7 +46,7 @@ public:
 
 	//Misc
 
-	orcaSDK::OrcaError open_serial_port(int) override {
+	orcaSDK::OrcaError open_serial_port(int, int) override {
 		return { false, "" };
 	}
 	void close_serial_port() {}

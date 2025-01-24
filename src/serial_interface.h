@@ -16,17 +16,15 @@ public:
 	virtual ~SerialInterface() = default;
 
 	/**
-	 *	@brief	Obtains the currently indicate serial port. Setting baud rate
+	 *	@brief	Obtains the serial port with the given serial port number. Setting baud rate
 	 *			based on the passed parameter.
 	 */
-	virtual OrcaError open_serial_port(int baud) = 0;
+	virtual OrcaError open_serial_port(int serial_port_number, int baud) = 0;
 
 	/**
 	 *	@brief	Closes and releases any currently held serial port by this object.
 	 */
 	virtual void close_serial_port() = 0;
-
-	virtual void set_new_serial_port(int new_port_number) = 0;
 		
 	/**
 	 *	@brief	Changes the current baud rate of the serial port.

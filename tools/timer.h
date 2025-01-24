@@ -41,8 +41,8 @@ public:
 	}
 
 	/**
-	 *	@brief		Sets the timer's duration to the value indicated by the parameter and restarts the timer. 
-	 *	@param[in]  uint32_t _duration - The duration of the timer in milliseconds. 
+	 *	@brief		Sets the timer's duration to the value indicated by the parameter and starts the timer. 
+	 *	@param  _duration - The duration of the timer in milliseconds. 
 	 */
 	void set(uint32_t _duration) {
 		start_time = std::chrono::system_clock::now();

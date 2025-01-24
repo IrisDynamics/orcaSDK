@@ -1,3 +1,5 @@
 build/*
 tests/.vs
 .vs
+doxygen_output/
+out/

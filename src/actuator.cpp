@@ -369,7 +369,7 @@ OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t ti
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, uint8_t coupling) {
+OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, SpringCoupling coupling) {
 	uint16_t data[6] = {
 		gain,
 		uint16_t(center),

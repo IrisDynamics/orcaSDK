@@ -13,6 +13,7 @@ class Clock
 public:
 	/**
 	 * @brief	Obtain a timestamp for the current time in microseconds.
+	 * @return	int64_t - The current time in microseconds.
 	 * @note	The zero value for this time can be anything so long as 
 	 *			the clock increases roughly monotonically.
 	 * @note	The possible range of times must span the full signed 64-bit

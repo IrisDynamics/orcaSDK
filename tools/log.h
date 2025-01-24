@@ -9,15 +9,25 @@
 
 namespace orcaSDK {
 
+	/**
+	 *	@brief	A simple implementation for writing data to a log file.
+	 */
 	class Log : public LogInterface {
 	public:
+		/**
+		 *	@brief	The what type of timestamp should the log prepend to each entry.
+		 */
 		enum class TimestampType {
-			CurrentDateTime,
-			DurationSinceOpening
+			CurrentDateTime, //!<The current date and time.
+			DurationSinceOpening //!<The current time, in nanoseconds, from opening the log.
 		};
 
-		Log(TimestampType _timestamp_type = TimestampType::CurrentDateTime) :
-			timestamp_type_setting(_timestamp_type)
+		/**
+		 *	@brief	The constructor for the Log object.
+		 *	@param	timestamp_type	The timestamp type that should be prepended to each log entry.
+		 */
+		Log(TimestampType timestamp_type = TimestampType::CurrentDateTime) :
+			timestamp_type_setting(timestamp_type)
 		{
 		}
 		~Log() {
@@ -34,8 +44,7 @@ namespace orcaSDK {
 		/**
 		 *	@brief	Writes the contents of the str parameter to the file. Also writes a timestamp if
 		 *			verbose mode is on.
-		 *	@param	std::string str  The log message to be written
-		 *	@throws	std::runtime_error	If this method is called on a log without an opened file
+		 *	@param	str  The log message to be written
 		 */
 		OrcaError write(const std::string& str) override {
 			return write_internal(str, timestamp_type_setting);
@@ -44,11 +53,9 @@ namespace orcaSDK {
 		/**
 		 *	@brief	Opens a file located at the given path, creating one if it doesn't exist, and appending
 		 *			to the file if it does exist.
-		 *	@param	std::string path  The file location of the desired log file. Begins relative paths at
-									  the calling .exe
-		 *	@param	std::string file_ext  The file extension of the desired file, defaults to .txt
-		 *	@throws	std::runtime_error	If this method fails to open the file, or if a file is already open
-		 *	@notes	If verbose mode is on, writes a message signaling a successful open
+		 *	@param	path  The file location and name of the desired log file. Assumes relative path to 
+						  the executable file.
+		 *	@note	If verbose mode is on, writes a message signaling a successful open
 		 */
 		OrcaError open(const std::string& path) override {
 			std::string full_name = path;
@@ -69,7 +76,7 @@ namespace orcaSDK {
 
 		/**
 		 *	@brief	Closes the current file, if it is open
-		 *	@notes	If verbose mode is on, writes a message signaling closing the file
+		 *	@note	If verbose mode is on, writes a message signaling closing the file
 		 */
 		void close() {
 			if (is_open() && verbose_mode) write_internal("Closed File", TimestampType::CurrentDateTime);
@@ -78,19 +85,16 @@ namespace orcaSDK {
 		}
 
 		/**
-		 *	@brief	Turns verbose mode on or off. If verbose mode is on, then, in addition to user defined
-		 *			writes, the log will:
+		 *	@brief	Turns verbose mode on or off. 
+				If verbose mode is on, then, in addition to user defined writes, the log will:
 		 *				1. Include a timestamp with every log write
 		 *				2. Write a message upon opening the file
 		 *				3. Write a message upon closing the file
+		 *		Verbose mode is defaulted to on. Regardless, the log will append a newline to each log entry.
+		 *	@param	active True if output should be verbose, false if not.
 		 */
 		void set_verbose_mode(bool active) {
 			verbose_mode = active;
-		}
-
-		// Included for interoperability between log implementations
-		void add(const char* name) {
-			open(name);
 		}
 
 	private:

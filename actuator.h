@@ -43,7 +43,10 @@ namespace orcaSDK
 
 /**
    @class Actuator
-   @brief Object that abstracts the communications between the client and a Orca motor server.
+   @brief Class that abstracts the communications between the client and a Orca motor server.
+
+		This class should be the centerpoint for all communication with your motor from this 
+		SDK. Other classes and types in this SDK should be understood in reference to this class.
  */
 class Actuator {
 
@@ -56,10 +59,12 @@ public:
 public:
 	/**
 	 *	@brief	Constructs the object, if you don't know which constructor to use, use this one.
-	 *	@param	serial_port_channel	The channel (E.g. 'COM_{X}') that the object should attempt to
-	 *								obtain by default.
 	 *	@param	name	The name of the object, can be obtained later through the 
-						public member variable Actuator::name
+	 *					public member variable Actuator::name
+	 *	@param	modbus_server_address	The modbus address of the server that should be communicated
+	 *									with. See modbus specification for details.
+	 *	@note	If you don't know which constructor to use, use this one.
+	 *	@overload Actuator::Actuator(const char* name, uint8_t modbus_server_address = 1)
 	 */
 	Actuator(
 		const char* name,
@@ -69,6 +74,14 @@ public:
 	/**
 	 *	@brief	Constructs the object, passing in custom implementations for serial communication
 	 *			and clocks. Useful for testing or for using this object on unsupported platforms.
+	 *	@param	serial_interface	A custom implementation of the SerialInterface pure virtual class
+	 *	@param	clock	A custom implementation of the Clock pure virtual class
+	 *	@param	name	The name of the object, can be obtained later through the 
+	 *					public member variable Actuator::name
+	 *	@param	modbus_server_address	The modbus address of the server that should be communicated
+	 *									with. See modbus specification for details.
+	 *	@note	Use this constructor if you need an implementation of this object for a platform that we don't yet support.
+	 *	@overload Actuator::Actuator(std::shared_ptr<SerialInterface> serial_interface, std::shared_ptr<Clock> clock, const char* name, uint8_t modbus_server_address = 1)
 	 */
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
@@ -80,9 +93,15 @@ public:
 	const char* name;
 
 	/**
-	 *@brief	Attempts to open the serial port either passed through the constructor, or
-	 *			from the most recent call to set_new_serial_port()
-	 * @returns	True, if the serial port is acquired and ready to use, false otherwise.
+	 * @brief	Attempts to open a desired serial port, assigning a baud rate and interframe
+	 *			delay for this connection.
+	 * @param	port_number  The serial port number of the rs422 cable that the desired device
+	 *						 is connected to.
+	 * @param	baud_rate	The desired baud rate for this connection. Should match the baud
+	 *						rate configured in the Orca's modbus settings.
+	 * @param	interframe_delay	The time that this object will wait after concluding a message
+	 *								before initiating the next. Should match the interframe delay
+	 *								configured in the Orca's modbus settings.
 	 */
 	OrcaError open_serial_port(
 		int port_number, 
@@ -98,21 +117,25 @@ public:
 	/**
 	* @brief Returns the total amount of force being sensed by the motor
 	*
-	* @return uint32_t - force in milli-Newtons
+	* @return int32_t  Force in milli-Newtons
 	*/
 	OrcaResult<int32_t> get_force_mN();
 
 	/**
 	* @brief Returns the position of the shaft in the motor (distance from the zero position) in micrometers.
 	*
-	* @return uint32_t - position in micrometers
+	* @return uint32_t  Position in micrometers
 	*/
 	OrcaResult<int32_t> get_position_um();
 
 	/**
-	* @brief Returns the sum of all error messages being sent by the motor
+	* @brief Returns the bitmask representing all active errors on the motor.
 	* 
-	* @return uint16_t - sum or all active error codes
+	* @return uint16_t  The bitmask containing all active errors present on the motor.
+	* @note		To check for a specific error, check whether the bit which corresponds with
+	*			the error value is currently set, we recommend using a bitwise AND with the
+	*			value of the error of interest. See the Orca Reference Manual, section 
+	*			'Errors->Active and Latched Error Registers' for details on the error types.
 	*/
 	OrcaResult<uint16_t> get_errors();
 
@@ -123,22 +146,23 @@ public:
 	OrcaError set_mode(MotorMode orca_mode);
 
 	/**
-	* @brief the communication mode determines which commands are sent by enqueue_motor_frame
-	* *
-	* @return CommunicationMode
+	* @brief Requests from the motor what mode of operation the motor is currently in.
+	* 
+	* @return MotorMode  The mode of operation that the Orca is currently in.
 	*/
 	OrcaResult<MotorMode> get_mode();
 
 	/**
-	 * @brief clear all errors stored on the motor
-	 * note: errors that are still found will appear again
+	 * @brief	Clears all errors that are currently active on the motor.
+	 * @note	If the condition that caused the error(s) is still present, those
+	 *			errors will immediately appear again.
 	 */
 	OrcaError clear_errors();
 
 #pragma region GENERIC_MODBUS_COMMUNICATION
 
 	/**
-	 * @brief Reads a double-wide register from the motor. 
+	 * @brief Reads a double-wide (32-bit) register from the motor. 
 	 *
 	 * @param reg_address The lower register address of the double-wide register
 	 */
@@ -168,7 +192,7 @@ public:
 	OrcaError write_register_blocking(uint16_t reg_address, uint16_t write_data, MessagePriority priority = MessagePriority::important);
 
 	/**
-	 * @brief Writes a register to the motor.
+	 * @brief Writes a double-wide (32-bit) register to the motor.
 	 *
 	 * @param reg_address The lower address of the double-wide register 
 	 * @param write_data The value to be written
@@ -200,17 +224,30 @@ public:
 		MessagePriority priority = MessagePriority::important);
 
 	/**
-	 *	@brief	Begins logging all serial communication between this application/object
-	 *			and the motor that this application is talking to
-	 *	@param	log_name	The name of the file to be written to. Assumes relative path.
+	 *	Begins logging all serial communication between this application/object
+	 *			and the motor that this application is talking to.
+	 *	@param	log_name	The name of the file to be written to. Assumes relative path
+							to the location of the built executable file.
+	 *  @overload	Actuator::begin_serial_logging(const std::string& log_name)
 	 */
 	OrcaError begin_serial_logging(const std::string& log_name);
+	/** 
+	 *	Begins logging using a custom log implementation.
+	 *	@param	log_name	The name of the file to be written to. Assumes relative path
+							to the location of the built executable file.
+	 *	@param	log	A pointer to a custom implementation of the LogInterface. In case custom logging
+	 *				behaviour is desired.
+	 *  @overload	Actuator::begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log)
+	 */
 	OrcaError begin_serial_logging(const std::string& log_name, std::shared_ptr<LogInterface> log);
 
 #pragma endregion
 
 #pragma region STREAMING
 
+	/**
+	 *	@brief	The member variable in which responses to command stream messages are stored.
+	 */
 	StreamData stream_cache;
 
 	/**
@@ -223,7 +260,17 @@ public:
 	void run();
 
 	/**
-	 * @brief Enable communication with a server device. Allows handshake sequence to begin, enables transceiver hardware
+	 * @brief	Enables command streaming with the Orca. 
+	 *		
+	 *		Command streaming is the main form of asynchronous communication with the Orca. Command
+			streaming is also required for certain modes of communication, including Position mode, 
+			Force mode, and Haptic mode. When command streaming is enabled, this object	will automatically 
+			inject command stream messages when the run() function is called, and this object isn't 
+			currently waiting on an active message. When command stream messages complete, this object
+			populates the returned data from the motor into the stream_cache public StreamData struct member. 
+			See the Orca Series Modbus User Guide, section Orca-specific Function Codes for details on 
+			command streaming.
+	 *	
 	*/
 	void enable_stream();
 
@@ -260,14 +307,14 @@ public:
 	/**
 	* @brief Returns the amount of power being drawn by the motor, in Watts
 	* 
-	* @return uint16_t - power in Watts
+	* @return uint16_t - Power in Watts
 	*/
 	OrcaResult<uint16_t> get_power_W();
 
 	/**
-	* @brief Returns the temperature of the motor in Celcius
+	* @brief Returns the temperature of the motor's board/microcontroller in Celcius
 	* 
-	* @return uint16_t - temperature in Celcius
+	* @return uint16_t - Temperature of the board/microcontroller in Celcius
 	*/
 	OrcaResult<uint16_t> get_temperature_C();
 
@@ -281,21 +328,26 @@ public:
 	/**
 	* @brief Returns the amount of voltage the motor is recieving, in milli-Volts. 
 	* 
-	* @return uint16_t - voltage in milli-Voltage 
+	* @return uint16_t - Voltage in milli-Voltage 
 	*/
 	OrcaResult<uint16_t> get_voltage_mV();
 
 	/**
-	 * @brief Set the zero position of the motor to be the current position 
+	 * @brief Sets the zero position of the motor to be the currently sensed position 
 	 */
 	OrcaError zero_position();
 
 	/**
 	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
-	 * Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
+	 * 
+	 *		Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
 	OrcaResult<uint16_t> get_latched_errors();
 
+	/**
+	 *	@brief	Returns the time, in microseconds, since the last successful message with the motor has completed.
+	 *	@return int64_t	Time in microseconds since the last message completed successfully.
+	 */
 	int64_t time_since_last_response_microseconds();
 
 #pragma endregion
@@ -338,12 +390,17 @@ public:
 	OrcaError set_safety_damping(uint16_t max_safety_damping);
 
 	/**
-	 * @brief Sets the PID tuning values on the motor in non-scheduling mode. Disabled the gain scheduling in motors that support it
+	 * @brief	Sets the PID controller tuning values on the motor for the position controller.
 	 * 
-	 * @param pgain proportional gain
-	 * @param igain integral gain
-	 * @param dgain derivative gain
-	 * @param sat maximum force (safety value)
+	 * @param  pgain proportional gain
+	 * @param  igain integral gain
+	 * @param  dvgain derivative gain with respect to velocity
+	 * @param  sat maximum force (safety value)
+	 * @param  degain derivative gain with respect to error
+	 * @note	The position controller's PID tuning affects the behaviour of the motor in 
+	 *			both position control mode and kinematic control mode. Please refer to the 
+	 *			Orca Series Reference Manual, section Controllers->Position Controller
+	 *			for details.
 	 */
 	void tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
 
@@ -352,26 +409,36 @@ public:
 #pragma region KINEMATICS
 
 	/**
-	* @brief Set the parameters to define a kinematic motion 
-	* @param ID	Motion identifier
-	* @param position Target position to reach
-	* @param time	Time to get to the target
-	* @param chain_delay	delay between this motion and the next
-	* @param type	0 = minimize power, 1 = maximize smoothness
-	* @param chain	Enable linking this motion to the next
-	*/
+	 * @brief	Sets the parameters of a kinematic motion.
+	 * @param	ID	The ID of the motion.
+	 * @param	position  The target position to reach
+	 * @param	time  The desired time, in milliseconds, to complete the motion
+	 * @param	delay	 The desired delay, in milliseconds, between this motion and the chained motion to execute after this
+	 * @param	type  0 = minimize power, 1 = maximize smoothness
+	 * @param	auto_next  Should this motion to another motion after completing?
+	 * @param	next_id  The motion that should be executed next, in the case that chain is set to true
+	 * @note	Please refer to the Orca Series Reference Manual, section Controllers->Kinematic Controller
+	 *			for details.
+	 */
 	OrcaError set_kinematic_motion(int8_t ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
 
 	/**
-	* @brief Use the software trigger to start a kinematic motion, this will also run any chained motions
-	* @ID Identification of the motion to be triggered
-	*/
+	 * @brief Trigger to start a kinematic motion, this will also run any chained motions
+	 * @param	ID  Identification of the motion to be triggered
+	 * @note	This function will only have a result if the motor is currently in kinematic mode.
+ 	 *			Please refer to the Orca Series Reference Manual, section Controllers->Kinematic Controller
+ 	 *			for details.
+	 */
 	OrcaError trigger_kinematic_motion(int8_t ID);
 
 #pragma endregion
 
 #pragma region HAPTICS
 
+	/**
+	 *	@brief	An enum representing the values of different bits for constructing an active
+	 *			haptic effects bitmask.
+	 */
 	enum HapticEffect {
 		ConstF = 1 << 0,
 		Spring0 = 1 << 1,
@@ -384,56 +451,96 @@ public:
 	};
 
 	/**
-	* @brief	Sets each haptic effect to enabled or disabled according to the input bits.
-	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
-	 *			for details on this function.
+	 *  @brief	Sets each haptic effect to enabled or disabled according to the input bits.
+	 *	@param	effects  The bitmask representing which haptic effects should be enabled. Will be a combination
+				of the HapticEffect enum values.
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	*/
 	OrcaError enable_haptic_effects(uint16_t effects);
 
+	/**
+	 *	@brief	Enum representing valid options for different Spring Coupling settings
+	 */
+	enum SpringCoupling
+	{
+		both, //!< Apply spring force in both directions
+		positive, //!< Apply spring force in only the positive direction
+		negative //!< Apply spring force in only the negative direction
+	};
+
 	/** 
 	 *	@brief	Configures a spring effect with the given parameters.
-	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
-	 *			for details on this function.
+	 *	@param	spring_id	The ID of the spring effect to be configured.
+	 *	@param	gain	The amount of gain (force per distance from spring center) for this spring effect.
+	 *	@param	center	The center of the spring effect. The position where no spring force will be applied.
+	 *	@param	dead_zone	The radius of the 'dead zone' for the spring. For any position within the radius
+	 *						of the dead zone from the spring center, no spring force will be applied.
+	 *	@param	saturation	The maximum force that can be applied by the spring
+	 *	@param	coupling	The directions from the center in which the spring force applies.
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	 */
-	OrcaError set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone = 0, uint16_t saturation = 0, uint8_t coupling = 0);
+	OrcaError set_spring_effect(
+		uint8_t spring_id, 
+		uint16_t gain, 
+		int32_t center, 
+		uint16_t dead_zone = 0, 
+		uint16_t saturation = 0,
+		SpringCoupling coupling = SpringCoupling::both);
 
+	/**
+	 *	@brief	Enum representing options for different Oscillator Types
+	 */
 	enum OscillatorType
 	{
-		Pulse = 0,
-		Sine,
-		Triangle,
-		Saw
+		Pulse = 0, //!< Create a pulse oscillation effect. Requires setting the duty cycle parameter
+		Sine, //!< Create a sine wave oscillation
+		Triangle, //!< Create a triangle shape oscillation
+		Saw //!< Create a saw shape oscillation
 	};
 
 	/**
 	 *	@brief	Configures the parameters of an oscillation effect with the given parameters.
-	 *	@notes	Please refer to the Orcs Series Reference Manual, section Controllers->Haptic Controller
-	 *			for details on this function.
-	 * 
+	 *	@param	osc_id	The oscillation effect's ID number.
+	 *	@param	amplitude	The amplitude of the oscillation effect.
+	 *	@param	frequency_dhz	The frequency, in decihertz, of the oscillation effect.
+	 *	@param	duty	The duty-cycle of the oscillation effect. Only relevant for pulse type effects.
+	 *	@param	type	The type of oscillation effect to create.
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	 */
 	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type);
 
 	/**
 	*	@brief Sets the damping value in Haptic Mode
 	*	@param damping	The damping gain (4*N*s/mm)
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	*/
 	OrcaError set_damper(uint16_t damping);
 
 	/**
 	*	@brief Sets the inertia value in Haptic Mode
 	*	@param inertia	The inertia gain (64*N*s^2/mm)
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	*/
 	OrcaError set_inertia(uint16_t inertia);
 
 	/**
 	*	@brief Sets the constant force value in Haptic Mode
 	*	@param force	(mN)
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	*/
 	OrcaError set_constant_force(int32_t force);
 
 	/**
 	*	@brief Sets the constant force filter value in Haptic Mode
 	*	@param force_filter	Amount of filtering on constant force inputs
+	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *			for details.
 	*/
 	OrcaError set_constant_force_filter(uint16_t force_filter);
 

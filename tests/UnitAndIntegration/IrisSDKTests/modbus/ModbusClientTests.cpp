@@ -12,7 +12,7 @@ class ModbusClientTests : public testing::Test
 protected:
 	ModbusClientTests() :
 		log(std::make_shared<TestLog>()),
-		modbus_client(serial_interface, clock, -1)
+		modbus_client(serial_interface, clock)
 	{
 		modbus_client.begin_logging(log);
 	}

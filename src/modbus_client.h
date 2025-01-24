@@ -57,20 +57,16 @@ namespace orcaSDK
 class ModbusClient {
 public:
 
-    const int channel_number;               //!<the channels identifying number
-
     /**
     * @brief construct ModbusClient object
     * @param _channel_number specify channel number, particularly relevant if there are multiple uart channels possible
     */                       
     ModbusClient(
         SerialInterface& serial_interface,
-        Clock& clock,
-        int _channel_number
+        Clock& clock
     ):
         serial_interface(serial_interface),
         clock(clock),
-        channel_number(_channel_number),
 		repsonse_timeout_cycles  ( kDefaultResponseTimeout_uS	 ),	
 		interchar_timeout_cycles ( kDefaultIntercharTimeout_uS	 ),
 		turnaround_delay_cycles  ( kDefaultTurnaroundTime_uS )

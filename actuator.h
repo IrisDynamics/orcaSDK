@@ -95,13 +95,6 @@ public:
 	void close_serial_port();
 
 	/**
-	* @brief Returns the UART channel number in use
-	*
-	* @return int, channel number
-	*/
-	int channel_number();
-
-	/**
 	* @brief Returns the total amount of force being sensed by the motor
 	*
 	* @return uint32_t - force in milli-Newtons

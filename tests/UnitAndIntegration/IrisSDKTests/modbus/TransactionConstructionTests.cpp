@@ -10,7 +10,7 @@ class TransactionConstructionTests : public testing::Test
 {
 protected:
 	TransactionConstructionTests() :
-		modbus_client(serial_interface, clock, -1)
+		modbus_client(serial_interface, clock)
 	{}
 
 	TestSerialInterface serial_interface;

@@ -38,7 +38,7 @@ Actuator::Actuator(
 ) :
 	serial_interface(serial_interface),
 	clock(clock),
-	modbus_client(*serial_interface, *clock, 0),
+	modbus_client(*serial_interface, *clock),
 	name(name),
 	stream(this, modbus_client, modbus_server_address),
 	modbus_server_address(modbus_server_address),
@@ -52,10 +52,6 @@ OrcaError Actuator::open_serial_port(int port_number, int baud_rate, int interfr
 
 void Actuator::close_serial_port() {
 	serial_interface->close_serial_port();
-}
-
-int Actuator::channel_number() {
-	return modbus_client.channel_number;
 }
 
 OrcaError Actuator::set_mode(MotorMode orca_mode) {

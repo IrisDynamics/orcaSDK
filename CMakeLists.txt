@@ -27,6 +27,7 @@ target_sources(orcaSDK_core
 			src/command_and_confirm.h
 			src/clock.h
 			src/error_types.h
+			src/command_stream_structs.h
 			tools/log.h
 			tools/log_interface.h
 			tools/timer.h

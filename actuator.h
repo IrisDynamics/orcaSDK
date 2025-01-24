@@ -36,6 +36,7 @@
 #include "src/orca_modes.h"
 
 #include "src/error_types.h"
+#include "src/command_stream_structs.h"
 
 namespace orcaSDK
 {
@@ -209,16 +210,6 @@ public:
 #pragma endregion
 
 #pragma region STREAMING
-
-	struct StreamData
-	{
-		int32_t position{ 0 };
-		int32_t force{ 0 };
-		uint16_t power{ 0 };
-		int16_t temperature{ 0 };
-		uint16_t voltage{ 0 };
-		uint16_t errors{ 0 };
-	};
 
 	StreamData stream_cache;
 

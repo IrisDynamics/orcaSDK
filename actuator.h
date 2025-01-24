@@ -281,6 +281,13 @@ public:
 	OrcaResult<uint16_t> get_temperature_C();
 
 	/**
+	* @brief Returns the temperature of the motor's coil in Celcius
+	* 
+	* @return uint16_t - Temperature of the coil in Celcius
+	*/
+	OrcaResult<uint16_t> get_coil_temperature_C();
+
+	/**
 	* @brief Returns the amount of voltage the motor is recieving, in milli-Volts. 
 	* 
 	* @return uint16_t - voltage in milli-Voltage 

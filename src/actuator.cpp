@@ -275,6 +275,10 @@ OrcaResult<uint16_t> Actuator::get_temperature_C() {
 	return read_register_blocking(STATOR_TEMP);
 }
 
+OrcaResult<uint16_t> Actuator::get_coil_temperature_C() {
+	return read_register_blocking(COIL_TEMP);
+}
+
 OrcaResult<uint16_t> Actuator::get_voltage_mV() {
 	return read_register_blocking(VDD_FINAL);
 }

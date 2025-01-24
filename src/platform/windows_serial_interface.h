@@ -57,10 +57,6 @@ public:
         clean_up_handles();
     }
 
-    void set_new_serial_port(int comport) {
-        channel_number = comport;
-    }
-
     void close_serial_port() override {
         clean_up_handles();
     }
@@ -69,8 +65,8 @@ public:
      * @brief Intializes the com port settings
      * @param baud The baud rate as defined in the client_config.h file
     */
-    OrcaError open_serial_port(int baud) override {
-        initialize_and_acquire_resources(baud);
+    OrcaError open_serial_port(int serial_port_number, int baud) override {
+        initialize_and_acquire_resources(serial_port_number, baud);
         if (!serial_success) return OrcaError(true, "Could not obtain serial port.");
         return { false, "" };
     }
@@ -264,7 +260,6 @@ private:
 
     //IO file handle stuff
     HANDLE hSerial{ nullptr }; //The com port file handle 
-    int channel_number = 0; //The com port number
     DCB dcbSerialParams = { 0 }; //Serial parameters for file handle
     bool serial_success = false;     //flag bool to indicate if the handle to the serial port is obtained
     COMMTIMEOUTS timeouts{
@@ -275,7 +270,7 @@ private:
             0 
     };
 
-    void initialize_and_acquire_resources(int baud)
+    void initialize_and_acquire_resources(int channel_number, int baud)
     {
         if (serial_success)
         {

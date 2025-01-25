@@ -374,7 +374,7 @@ OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t 
 		gain,
 		uint16_t(center),
 		uint16_t(center >> 16),
-		coupling,
+		static_cast<uint16_t>(coupling),
 		dead_zone,
 		saturation,
 

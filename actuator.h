@@ -1,6 +1,6 @@
 /**
    @file actuator.h
-   @author Kali Erickson <kerickson@irisdynamics.com>, rebecca mcwilliam <rmcwilliam@irisdynamics.com>, kyle hagen <khagen@irisdynamics.com>, dan beddoes <dbeddoes@irisdynamics.com>
+   @author Aiden Bull <abull@irisdynamics.com>, Kali Erickson <kerickson@irisdynamics.com>, rebecca mcwilliam <rmcwilliam@irisdynamics.com>, kyle hagen <khagen@irisdynamics.com>, dan beddoes <dbeddoes@irisdynamics.com>
    @brief  Actuator object that abstracts the use of the modbus library/communications for communication with an Orca Series linear motor
    @version 2.2.0
     

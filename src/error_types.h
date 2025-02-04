@@ -49,7 +49,7 @@ public:
 	 *		function will return an empty string.
 	 *	@return	std::string	An error message containing a description of what error occurred
 	 */
-	std::string what()
+	std::string what() const
 	{
 		return error_message;
 	}

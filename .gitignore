@@ -3,3 +3,5 @@ tests/.vs
 .vs
 documentation/
 out/
+dependencies/
+>>>>>>> cfec9a7 (Added simplest setup for downloading and building with ASIO)

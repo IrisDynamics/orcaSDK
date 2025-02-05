@@ -68,6 +68,9 @@ target_sources(orcaSDK_core
 
 target_compile_features(orcaSDK_core PUBLIC cxx_std_11)
 
+include(ASIO.cmake)
+target_link_libraries(orcaSDK_core PRIVATE asio)
+
 set_target_properties(orcaSDK_core
 	PROPERTIES
 		VERSION 1.0.0
@@ -82,22 +85,22 @@ set_target_properties(orcaSDK_core
 	# COMPATIBILITY SameMajorVersion
 # )
 
-include(GNUInstallDirs)
-install(TARGETS orcaSDK_core
-	EXPORT orcaSDKConfig
-	FILE_SET publicAPI
-	INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-export(TARGETS orcaSDK_core
-	NAMESPACE orcaSDK::
-	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
-)
-install(EXPORT orcaSDKConfig 
-	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
-	NAMESPACE orcaSDK::
-)
+# include(GNUInstallDirs)
+# install(TARGETS orcaSDK_core
+	# EXPORT orcaSDKConfig
+	# FILE_SET publicAPI
+	# INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# # PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# # PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# )
+# export(TARGETS orcaSDK_core
+	# NAMESPACE orcaSDK::
+	# FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
+# )
+# install(EXPORT orcaSDKConfig 
+	# DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
+	# NAMESPACE orcaSDK::
+# )
 	# RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 		# COMPONENT	orcaSDK_Runtime
 	# LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

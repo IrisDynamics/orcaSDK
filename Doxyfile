@@ -74,7 +74,7 @@ PROJECT_ICON           =
 # entered, it will be relative to the location where Doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = C:/Users/AidenBull/Documents/orcaSDK/doxygen_output
+OUTPUT_DIRECTORY       = ./documentation
 
 # If the CREATE_SUBDIRS tag is set to YES then Doxygen will create up to 4096
 # sub-directories (in 2 levels) under the output directory of each output format
@@ -965,9 +965,9 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = C:/Users/AidenBull/Documents/orcaSDK \
-                         C:/Users/AidenBull/Documents/orcaSDK/src \
-                         C:/Users/AidenBull/Documents/orcaSDK/tools
+INPUT                  = ./ \
+                         ./src \
+                         ./tools
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1134,7 +1134,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = C:/Users/AidenBull/Documents/orcaSDK/doxygen_output
+IMAGE_PATH             = ./documentation
 
 # The INPUT_FILTER tag can be used to specify a program that Doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

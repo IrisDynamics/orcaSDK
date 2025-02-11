@@ -65,7 +65,7 @@ public:
      * @brief Intializes the com port settings
      * @param baud The baud rate as defined in the client_config.h file
     */
-    OrcaError open_serial_port(int serial_port_number, int baud) override {
+    OrcaError open_serial_port(int serial_port_number, unsigned int baud) override {
         initialize_and_acquire_resources(serial_port_number, baud);
         if (!serial_success) return OrcaError(true, "Could not obtain serial port.");
         return { false, "" };
@@ -79,7 +79,7 @@ public:
      * @brief If there are bytes left to send, add them to a buffer, then send them all together.
     */
     //need messages to be switched to protected, not private 
-    void tx_enable() override {
+    void tx_enable(size_t) override {
         if (!serial_success) return; //Don't write if we don't have a device to connect to
         if (write_in_progress) return; //Don't write if the previous write hasn't completed
 

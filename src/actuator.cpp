@@ -1,5 +1,5 @@
 // TODO (Aiden Dec 20, 2024): Remove when making cross-platform
-#include "platform/windows_serial_interface.h" 
+#include "src/SerialASIO.h" 
 #undef max
 #undef min
 #include "orca600_api/orca600.h"
@@ -23,7 +23,7 @@ Actuator::Actuator(
 	uint8_t modbus_server_address
 ) :
 	Actuator(
-		std::make_shared<windows_SerialInterface>(),
+		std::make_shared<SerialASIO>(),
 		std::make_shared<ChronoClock>(),
 		name,
 		modbus_server_address

@@ -46,6 +46,30 @@ public:
 		return { 0 };
 	}
 
+	OrcaError open_serial_port(std::string serial_port_path, unsigned int baud) override
+	{
+		asio::error_code ec;
+		serial_port.open(serial_port_path, ec);
+
+		if (ec)	return { ec.value(), ec.message() };
+
+		serial_port.set_option(asio::serial_port::baud_rate{ baud });
+		serial_port.set_option(asio::serial_port::stop_bits{ asio::serial_port::stop_bits::type::one });
+		serial_port.set_option(asio::serial_port::parity{ asio::serial_port::parity::type::even });
+
+		work_to_do = true;
+
+		read_thread = std::thread{ [=]() {
+			read_incoming_data();
+		} }; 
+
+		//work_thread = std::thread{ [=]() {
+		//	io_context.run();
+		//} };
+
+		return { 0 };
+	}
+
 	void close_serial_port() override {
 		work_to_do = false;
 		//work_guard.reset();

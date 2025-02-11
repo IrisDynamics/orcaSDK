@@ -122,31 +122,32 @@ namespace orcaSDK {
 
 		// Referenced from awesoon's answer here: https://stackoverflow.com/questions/16357999/current-date-and-time-as-string
 		std::string get_timestamp(TimestampType timestamp_type) {
-			if (timestamp_type == TimestampType::CurrentDateTime) {
-				std::time_t now = std::time(0);
+			// if (timestamp_type == TimestampType::CurrentDateTime) {
+			// 	std::time_t now = std::time(0);
 
-				std::tm localtm;
-				localtime_s(&localtm, &now);
+			// 	std::tm localtm;
+			// 	localtime_s(&localtm, &now);
 
-				std::stringstream ss;
-				try {
-					ss << std::put_time(&localtm, "%a %d %b %Y %H:%M:%S: ");
-				}
-				catch (std::exception& e)
-				{
-					std::cout << e.what() << std::endl;
-				}
+			// 	std::stringstream ss;
+			// 	try {
+			// 		ss << std::put_time(&localtm, "%a %d %b %Y %H:%M:%S: ");
+			// 	}
+			// 	catch (std::exception& e)
+			// 	{
+			// 		std::cout << e.what() << std::endl;
+			// 	}
 
-				return ss.str();
-			}
-			else if (timestamp_type == TimestampType::DurationSinceOpening) {
-				auto curr_time = std::chrono::high_resolution_clock::now();
-				std::chrono::duration<float> time_since_start = curr_time - start_time;
-				return as_seconds(time_since_start) + ": ";
-			}
-			else {
-				return "Unknown Timestamp: ";
-			}
+			// 	return ss.str();
+			// }
+			// else if (timestamp_type == TimestampType::DurationSinceOpening) {
+			// 	auto curr_time = std::chrono::high_resolution_clock::now();
+			// 	std::chrono::duration<float> time_since_start = curr_time - start_time;
+			// 	return as_seconds(time_since_start) + ": ";
+			// }
+			// else {
+			// 	return "Unknown Timestamp: ";
+			// }
+			return std::string("My Test");
 		}
 	};
 

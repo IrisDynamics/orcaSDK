@@ -13,7 +13,8 @@ protected:
 
 	void SetUp()
 	{
-		motor.open_serial_port(serial_port_number);
+		OrcaError error = motor.open_serial_port(serial_port_number, 19200, 0);
+		if (error) std::cout << "Error opening serial port: " << error.what();
 	}
 
 	const int serial_port_number = 7;
@@ -27,7 +28,8 @@ TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameC
 {
 	EXPECT_NE(0, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
 	motor.close_serial_port();
-	motor.open_serial_port(serial_port_number);
+	OrcaError error = motor.open_serial_port(serial_port_number, 19200, 0);
+	if (error) std::cout << "Error opening serial port: " << error.what();
 	EXPECT_NE(0, motor.read_register_blocking(STATOR_TEMP).value);
 }
 

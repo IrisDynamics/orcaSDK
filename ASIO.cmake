@@ -13,4 +13,5 @@ ExternalProject_Add(
 )
 
 add_library(asio INTERFACE)
+add_dependencies(asio asio-repo)
 target_include_directories(asio INTERFACE dependencies/asio/include)

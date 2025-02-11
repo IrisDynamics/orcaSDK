@@ -45,6 +45,7 @@ target_sources(orcaSDK_core
 			src/standard_modbus_functions.h
 			src/orca_stream.h
 			src/transaction.h
+			src/SerialASIO.h
 			src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
 			
 	# PRIVATE
@@ -69,7 +70,7 @@ target_sources(orcaSDK_core
 target_compile_features(orcaSDK_core PUBLIC cxx_std_11)
 
 include(ASIO.cmake)
-target_link_libraries(orcaSDK_core PRIVATE asio)
+target_link_libraries(orcaSDK_core PUBLIC asio)
 
 set_target_properties(orcaSDK_core
 	PROPERTIES

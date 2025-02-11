@@ -88,7 +88,7 @@ public:
     /**
       * @brief init tranceiver hardware
      */
-    OrcaError init(int serial_port_number, int baud, int interframe_delay_us)
+    OrcaError init(int serial_port_number, unsigned int baud, int interframe_delay_us)
     {
         reset_state();
         OrcaError serial_port_error = serial_interface.open_serial_port(serial_port_number, baud);
@@ -202,7 +202,7 @@ public:
                     if (logging) log_transaction_transmission(active_transaction);
                     
                     messages.mark_active_message_sent();
-    			    serial_interface.tx_enable();		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
+    			    serial_interface.tx_enable(active_transaction->get_expected_length());		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
                     diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
                 }
     		}

@@ -19,7 +19,7 @@ public:
 	 *	@brief	Obtains the serial port with the given serial port number. Setting baud rate
 	 *			based on the passed parameter.
 	 */
-	virtual OrcaError open_serial_port(int serial_port_number, int baud) = 0;
+	virtual OrcaError open_serial_port(int serial_port_number, unsigned int baud) = 0;
 
 	/**
 	 *	@brief	Closes and releases any currently held serial port by this object.
@@ -45,7 +45,7 @@ public:
 	/**
 	 *	@brief	Writes all currently queued/buffered bytes to the serial port.
 	 */
-	virtual void tx_enable() = 0;
+	virtual void tx_enable(size_t bytes_to_read) = 0;
 
 	/**
 	 *	@brief	Returns true if there is received data ready to be consumed by

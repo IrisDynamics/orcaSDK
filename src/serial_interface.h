@@ -22,6 +22,13 @@ public:
 	virtual OrcaError open_serial_port(int serial_port_number, unsigned int baud) = 0;
 
 	/**
+	 *	@brief	Obtains the serial port with the given serial port number. Setting baud rate
+	 *			based on the passed parameter.
+	 */
+	virtual OrcaError open_serial_port(std::string serial_port_path, unsigned int baud) = 0;
+
+
+	/**
 	 *	@brief	Closes and releases any currently held serial port by this object.
 	 */
 	virtual void close_serial_port() = 0;

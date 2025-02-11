@@ -26,7 +26,7 @@ public:
 
 
 	//Handling TX
-	void tx_enable() override {
+	void tx_enable(size_t) override {
 		////while there are bytes left to send in the transaction, continue adding them to sendBuf
 		//while (messages.get_active_transaction()->bytes_left_to_send()) {
 		//	send();
@@ -46,9 +46,16 @@ public:
 
 	//Misc
 
-	orcaSDK::OrcaError open_serial_port(int, int) override {
+	// Accept windows comport
+	orcaSDK::OrcaError open_serial_port(int, unsigned int) override {
 		return { false, "" };
 	}
+
+	// Accept linux comport
+	orcaSDK::OrcaError open_serial_port(std::string, unsigned int) override {
+		return { false, "" };
+	}
+
 	void close_serial_port() {}
 	void set_new_serial_port(int) {}
 

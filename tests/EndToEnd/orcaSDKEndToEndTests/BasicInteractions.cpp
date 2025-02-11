@@ -17,12 +17,20 @@ protected:
 		if (error) std::cout << "Error opening serial port: " << error.what();
 	}
 
-	const int serial_port_number = 7;
+	std::string serial_port_number = "/dev/ttyS0";
 	Actuator motor;
 };
 
 using namespace std::literals::chrono_literals;
 using namespace std::chrono;
+
+TEST_F(BasicInteractionTests, InfiniteLoopTest)
+{
+	while(true)
+	{
+		motor.get_position_um();
+	}
+}
 
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {

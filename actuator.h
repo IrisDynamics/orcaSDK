@@ -109,6 +109,12 @@ public:
 		int interframe_delay = ModbusClient::kDefaultInterframeDelay_uS
 	);
 
+	OrcaError open_serial_port(
+		std::string port_path, 
+		int baud_rate = ModbusClient::kDefaultBaudRate, 
+		int interframe_delay = ModbusClient::kDefaultInterframeDelay_uS
+	);
+
 	/**
 	 *	@brief	Closes any open serial port and releases all handles to it.
 	 */

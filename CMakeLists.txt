@@ -94,10 +94,10 @@ set_target_properties(orcaSDK_core
 	# # PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	# # PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 # )
-# export(TARGETS orcaSDK_core
-	# NAMESPACE orcaSDK::
-	# FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
-# )
+export(TARGETS orcaSDK_core
+	NAMESPACE orcaSDK::
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
+)
 # install(EXPORT orcaSDKConfig 
 	# DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
 	# NAMESPACE orcaSDK::

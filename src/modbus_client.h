@@ -89,20 +89,10 @@ public:
     /**
       * @brief init tranceiver hardware
      */
-    OrcaError init(int serial_port_number, unsigned int baud, int interframe_delay_us)
+    void init(int interframe_delay_us)
     {
         reset_state();
-        OrcaError serial_port_error = serial_interface.open_serial_port(serial_port_number, baud);
-        if (!serial_port_error) interframe_delay_cycles = interframe_delay_us;
-        return serial_port_error;
-    }
-
-    OrcaError init(std::string serial_port_path, unsigned int baud, int interframe_delay_us)
-    {
-        reset_state();
-        OrcaError serial_port_error = serial_interface.open_serial_port(serial_port_path, baud);
-        if (!serial_port_error) interframe_delay_cycles = interframe_delay_us;
-        return serial_port_error;
+        interframe_delay_cycles = interframe_delay_us;
     }
 
     /**

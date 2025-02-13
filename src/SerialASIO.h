@@ -22,28 +22,12 @@ public:
 
 	OrcaError open_serial_port(int serial_port_number, unsigned int baud) override
 	{
+#if defined _WIN32
 		std::string port_name = std::string("\\\\.\\COM") + std::to_string(serial_port_number);
-
-		asio::error_code ec;
-		serial_port.open(port_name, ec);
-
-		if (ec)	return { ec.value(), ec.message() };
-
-		serial_port.set_option(asio::serial_port::baud_rate{ baud });
-		serial_port.set_option(asio::serial_port::stop_bits{ asio::serial_port::stop_bits::type::one });
-		serial_port.set_option(asio::serial_port::parity{ asio::serial_port::parity::type::even });
-
-		work_to_do = true;
-
-		read_thread = std::thread{ [=]() {
-			read_incoming_data();
-		} }; 
-
-		//work_thread = std::thread{ [=]() {
-		//	io_context.run();
-		//} };
-
-		return { 0 };
+#else
+		std::string port_name = std::string("/dev/ttyS") + std::to_string(serial_port_number);
+#endif
+		return open_serial_port(port_name, baud);
 	}
 
 	OrcaError open_serial_port(std::string serial_port_path, unsigned int baud) override

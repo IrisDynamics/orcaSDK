@@ -46,11 +46,17 @@ Actuator::Actuator(
 {}
 
 OrcaError Actuator::open_serial_port(int port_number, int baud_rate, int interframe_delay) {
-	return modbus_client.init(port_number, baud_rate, interframe_delay);
+	OrcaError serial_error = serial_interface->open_serial_port(port_number, baud_rate);
+	if (serial_error) return serial_error;
+	modbus_client.init(interframe_delay);
+	return { 0 };
 }
 
 OrcaError Actuator::open_serial_port(std::string port_path, int baud_rate, int interframe_delay) {
-	return modbus_client.init(port_path, baud_rate, interframe_delay);
+	OrcaError serial_error = serial_interface->open_serial_port(port_path, baud_rate);
+	if (serial_error) return serial_error;
+	modbus_client.init(interframe_delay);
+	return { 0 };
 }
 
 void Actuator::close_serial_port() {

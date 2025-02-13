@@ -94,7 +94,7 @@ set_target_properties(orcaSDK_core
 	# # PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	# # PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 # )
-export(TARGETS orcaSDK_core
+export(TARGETS orcaSDK_core asio
 	NAMESPACE orcaSDK::
 	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
 )

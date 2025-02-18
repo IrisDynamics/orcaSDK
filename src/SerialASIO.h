@@ -54,7 +54,7 @@ public:
 	}
 
 	void close_serial_port() override {
-		serial_port.close();
+		if (serial_port.is_open()) serial_port.close();
 	}
 
 	void adjust_baud_rate(uint32_t baud_rate_bps) override {

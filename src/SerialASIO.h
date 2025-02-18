@@ -5,19 +5,28 @@
 #include <mutex>
 #include <future>
 #include <iostream>
+#include <memory>
 
 namespace orcaSDK {
 
-class SerialASIO : public SerialInterface
+class SerialASIO : public SerialInterface, public std::enable_shared_from_this<SerialASIO>
 {
 public:
 	SerialASIO() :
-		serial_port(io_context)
-	{}
+		serial_port(io_context),
+		work_guard(io_context.get_executor())
+	{
+		read_buffer.resize(256);
+		std::thread t{ [=]() {
+			io_context.run();
+		} };
+		t.detach();
+	}
 
 	~SerialASIO()
 	{
 		close_serial_port();
+		work_guard.reset();
 	}
 
 	OrcaError open_serial_port(int serial_port_number, unsigned int baud) override
@@ -41,27 +50,11 @@ public:
 		serial_port.set_option(asio::serial_port::stop_bits{ asio::serial_port::stop_bits::type::one });
 		serial_port.set_option(asio::serial_port::parity{ asio::serial_port::parity::type::even });
 
-		work_to_do = true;
-
-		read_thread = std::thread{ [=]() {
-			read_incoming_data();
-		} }; 
-
-		//work_thread = std::thread{ [=]() {
-		//	io_context.run();
-		//} };
-
 		return { 0 };
 	}
 
 	void close_serial_port() override {
-		work_to_do = false;
-		//work_guard.reset();
-		serial_port.cancel();
 		serial_port.close();
-		io_context.run();
-		read_thread.join();
-		//work_thread.join();
 	}
 
 	void adjust_baud_rate(uint32_t baud_rate_bps) override {
@@ -73,33 +66,54 @@ public:
 	}
 
 	void send_byte(uint8_t data) override {
-		//std::lock_guard<std::mutex> lock_gd{ write_lock };
+		std::lock_guard<std::mutex> lock{ write_lock };
 		send_data.push_back(data);
 	}
 
 	void tx_enable(size_t _bytes_to_read) override {
 		bytes_to_read = _bytes_to_read;
-		size_t num_sent = serial_port.write_some(asio::buffer(send_data));
-		send_data.erase(send_data.begin(), send_data.begin() + num_sent);
-		//serial_port.async_write_some(asio::buffer(send_data), [this](const asio::error_code& ec, size_t num_sent)
-		//	{
-		//		std::lock_guard<std::mutex> lock_gd{ write_lock };
-		//		send_data.erase(send_data.begin(), send_data.begin() + num_sent);
-		//	});
+		serial_port.cancel();
+		{
+			//Clear any leftover read data
+			std::lock_guard<std::mutex> lock{ read_lock };
+			read_data.clear();
+		}
+		std::lock_guard<std::mutex> lock{ write_lock };
+		serial_port.async_write_some(asio::buffer(send_data), [me=shared_from_this()](const asio::error_code& ec, size_t bytes_written)
+			{
+				std::lock_guard<std::mutex> lock{ me->write_lock };
+				me->send_data.clear();
+				if (ec) return;
+				me->read_message_function_code();
+			});
 	}
 
 	bool ready_to_receive() override {
-		std::lock_guard<std::mutex> light_lock{read_light_lock};
 		std::lock_guard<std::mutex> lock{ read_lock };
 		return read_data.size();
 	}
 
 	uint8_t receive_byte() override {
-		std::lock_guard<std::mutex> light_lock{ read_light_lock };
 		std::lock_guard<std::mutex> lock{ read_lock };
 		uint8_t byte = read_data.front();
 		read_data.erase(read_data.begin(), read_data.begin() + 1);
 		return byte;
+	}
+
+	std::vector<uint8_t> receive_bytes_blocking() override
+	{
+		std::unique_lock<std::mutex> lock{ read_lock };
+	
+		if (read_data.size() < bytes_to_read)
+		{
+			//The wait time should be as small as possible, while being long
+			// enough to ensure the response isn't going to arrive
+			read_notifier.wait_for(lock, std::chrono::milliseconds(25)); 
+		}
+		
+		std::vector<uint8_t> bytes_read = read_data;
+		read_data.clear();
+		return bytes_read;
 	}
 
 private:
@@ -109,96 +123,50 @@ private:
 	std::vector<uint8_t> send_data;
 	std::vector<uint8_t> read_data;
 
-	std::atomic<bool> work_to_do{ false };
-	//asio::executor_work_guard<asio::io_context::executor_type> work_guard;
+	asio::executor_work_guard<asio::io_context::executor_type> work_guard;
 
-	//std::mutex write_lock;
+	std::condition_variable read_notifier;
 
+	std::mutex write_lock;
 	std::mutex read_lock;
-	std::mutex read_light_lock;
-
-	std::thread read_thread;
-	//std::thread work_thread;
 
 	std::atomic<size_t> bytes_to_read{ 0 };
 
-	void read_incoming_data()
+	std::vector<uint8_t> read_buffer;
+
+	void read_message_function_code()
 	{
-		std::vector<uint8_t> read_buffer;
-		read_buffer.resize(256);
-//		asio::cancellation_signal cancel_signal;
-//		asio::steady_timer timer{io_context};
-//
-//using std::chrono::steady_clock;
-//using std::chrono::microseconds;
-		while (work_to_do)
-		{
-			asio::error_code ec1;
-			size_t bytes_read = serial_port.read_some(asio::buffer(read_buffer, 2), ec1);
-
-			if (ec1)
-			{
-				//std::cerr << "Read Function Code Failed" << ec1.message() << ". Bytes read: " << bytes_read << "\n";
-				continue;
-			}
-
-			if (read_buffer[1] & 0x80)
-			{
-				//Error code encountered
-				bytes_to_read = 5;
-			}
-
-			asio::error_code ec2;
-			bytes_read = serial_port.read_some(asio::buffer(read_buffer.data() + 2, bytes_to_read - 2), ec2);
-
-			if (ec2)
-			{
-				std::cerr << "Read Remaining Message Failed" << ec2.message() << "\n";
-				continue;
-			}
-			
-			std::unique_lock<std::mutex> lock{ read_lock };
-
-			for (int i = 0; i < bytes_read + 2; i++)
-			{
-				read_data.push_back(read_buffer[i]);
-			}
-
-			lock.unlock();
-			std::lock_guard<std::mutex> light_lock{ read_light_lock };
-			//auto time_start = steady_clock::now();
-
-			//timer.expires_after((steady_clock::now() + microseconds(500)) - steady_clock::now());
-			//timer.async_wait([&cancel_signal, &time_start](const asio::error_code) {
-			//	cancel_signal.emit(asio::cancellation_type::partial);
-			//	std::cout << "Timer emit after " << (steady_clock::now() - time_start).count() << "\n";
-			//	});
-			/*asio::async_read(serial_port, asio::buffer(read_buffer), asio::bind_cancellation_slot(
-				cancel_signal.slot(),
-				[&read_buffer, this](const asio::error_code& ec, size_t amount_read)
+		serial_port.async_read_some(
+			asio::buffer(read_buffer, 2), 
+			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read) {
+				if (ec || bytes_read != 2) return;
+				if (me->read_buffer[1] & 0x80)
 				{
-					if (ec.value() != 995)
-					{
-						std::cout << "Read error: " << ec.message() << std::endl;
-						return;
-					}
-
-					std::unique_lock<std::mutex> lock{ read_lock };
-
-					for (int i = 0; i < amount_read; i++)
-					{
-						read_data.push_back(read_buffer[i]);
-					}
-
-					lock.unlock();
-					std::lock_guard<std::mutex> light_lock{ read_light_lock };
-
-					std::cout << "Read Iteration Complete\n";
+					me->bytes_to_read = 5;
 				}
-				));*/
+				std::unique_lock<std::mutex> read_guard(me->read_lock);
+				for (int i = 0; i < bytes_read; i++)
+				{
+					me->read_data.push_back(me->read_buffer[i]);
+				}
+				me->read_message_body();
+			});	
+	}
 
-			//timer.wait();
-		}
+	void read_message_body()
+	{
+		serial_port.async_read_some(
+			asio::buffer(read_buffer.data() + 2, bytes_to_read - 2),
+			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read)
+			{
+				if (ec) return;
+				std::unique_lock<std::mutex> lock(me->read_lock);
+				for (int i = 0; i < bytes_read; i++)
+				{
+					me->read_data.push_back(me->read_buffer[i+2]);
+				}
+				me->read_notifier.notify_one();
+			});
 	}
 };
 

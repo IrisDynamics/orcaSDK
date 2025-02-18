@@ -180,36 +180,57 @@ public:
     		if ( messages.available_to_send() ) {
                 if (serial_interface.ready_to_send())
                 {
-                    //while there are bytes left to send in the transaction, continue adding them to sendBuf
-                    Transaction* active_transaction = messages.get_active_transaction();
-                    while (active_transaction->bytes_left_to_send()) {
-                        //send the current data byte
-                        uint8_t data = active_transaction->pop_tx_buffer();
-                        serial_interface.send_byte(data);
-                        diagnostic_counters.increment_diagnostic_counter(bytes_out_count);
-
-                        if (active_transaction->is_fully_sent()) {
-
-                            if (active_transaction->is_broadcast_message()) { //is it a broadcast message?
-                                enable_turnaround_delay();
-                            }
-                            else {
-                                enable_response_timeout();
-                            }
-                        }
-                    }
-                    if (logging) log_transaction_transmission(active_transaction);
-                    
-                    messages.mark_active_message_sent();
-    			    serial_interface.tx_enable(active_transaction->get_expected_length());		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
-                    diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
+                    send_front_message();
                 }
     		}
     	}
     }
 
+    void send_front_message()
+    {
+        //while there are bytes left to send in the transaction, continue adding them to sendBuf
+        Transaction* active_transaction = messages.get_active_transaction();
 
+        if (!active_transaction->is_queued()) return;
 
+        while (active_transaction->bytes_left_to_send()) {
+            //send the current data byte
+            uint8_t data = active_transaction->pop_tx_buffer();
+            serial_interface.send_byte(data);
+            diagnostic_counters.increment_diagnostic_counter(bytes_out_count);
+
+            if (active_transaction->is_fully_sent()) {
+
+                if (active_transaction->is_broadcast_message()) { //is it a broadcast message?
+                    enable_turnaround_delay();
+                }
+                else {
+                    enable_response_timeout();
+                }
+            }
+        }
+        if (logging) log_transaction_transmission(active_transaction);
+
+        messages.mark_active_message_sent();
+        serial_interface.tx_enable(active_transaction->get_expected_length());		// enabling the transmitter interrupts results in the send() function being called until the active message is fully sent to hardware
+        diagnostic_counters.increment_diagnostic_counter(message_sent_count);    //temp? - for frequency benchmarking
+
+    }
+
+    void receive_blocking() {
+        Transaction* active_transaction = messages.get_active_transaction();
+
+        std::vector<uint8_t> response = serial_interface.receive_bytes_blocking();
+
+        for (int i = 0; i < response.size(); i++)
+        {
+            active_transaction->load_reception(response[i]); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
+            diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
+        }
+
+        active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+        conclude_transaction(active_transaction);
+    }
 
 ////////////////////////////////////////////////////////////
 ///////////////////////// Queuing and Dequeuing Messages //

@@ -13,30 +13,31 @@ protected:
 
 	void SetUp()
 	{
-		OrcaError error = motor.open_serial_port(serial_port_number, 19200, 0);
+		OrcaError error = motor.open_serial_port(serial_port_number, baud_rate, 0);
 		if (error) std::cout << "Error opening serial port: " << error.what();
 	}
 
-	std::string serial_port_number = "/dev/ttyS0";
+	unsigned int baud_rate = 1000000;
+	size_t serial_port_number = 7;
 	Actuator motor;
 };
 
 using namespace std::literals::chrono_literals;
 using namespace std::chrono;
 
-TEST_F(BasicInteractionTests, InfiniteLoopTest)
-{
-	while(true)
-	{
-		motor.get_position_um();
-	}
-}
+//TEST_F(BasicInteractionTests, InfiniteLoopTest)
+//{
+//	while(true)
+//	{
+//		std::cout << motor.get_position_um().value << "           \r";
+//	}
+//}
 
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {
 	EXPECT_NE(0, motor.read_wide_register_blocking(SHAFT_POS_UM).value);
 	motor.close_serial_port();
-	OrcaError error = motor.open_serial_port(serial_port_number, 19200, 0);
+	OrcaError error = motor.open_serial_port(serial_port_number, baud_rate, 0);
 	if (error) std::cout << "Error opening serial port: " << error.what();
 	EXPECT_NE(0, motor.read_register_blocking(STATOR_TEMP).value);
 }
@@ -96,4 +97,13 @@ TEST_F(BasicInteractionTests, MotorCommandPopulatesAllStreamValues)
 	EXPECT_NE(motor.stream_cache.position, 0);
 	EXPECT_NE(motor.stream_cache.temperature, 0);
 	EXPECT_NE(motor.stream_cache.voltage, 0);
+}
+
+TEST_F(BasicInteractionTests, DestroyingAnActuatorWithoutOpeningASerialPortDoesntThrow)
+{
+	EXPECT_NO_THROW(
+		{
+			Actuator unopened_motor{"hello"};
+		}
+	);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 #include "error_types.h"
 
 namespace orcaSDK
@@ -64,6 +65,8 @@ public:
 	 *	@brief	Pops and returns a byte from the received buffer.
 	 */
 	virtual uint8_t receive_byte() = 0;
+
+	virtual std::vector<uint8_t> receive_bytes_blocking() = 0;
 };
 
 }

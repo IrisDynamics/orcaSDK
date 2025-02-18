@@ -19,6 +19,7 @@ public:
 		read_buffer.resize(256);
 		io_context_run_thread = std::thread{ [=]() {
 			io_context.run();
+			std::cout << "Completed work in thread" << std::endl;
 		} };
 	}
 

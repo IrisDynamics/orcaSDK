@@ -17,16 +17,16 @@ public:
 		work_guard(io_context.get_executor())
 	{
 		read_buffer.resize(256);
-		std::thread t{ [=]() {
+		io_context_run_thread = std::thread{ [=]() {
 			io_context.run();
 		} };
-		t.detach();
 	}
 
 	~SerialASIO()
 	{
 		close_serial_port();
 		work_guard.reset();
+		io_context_run_thread.join();
 	}
 
 	OrcaError open_serial_port(int serial_port_number, unsigned int baud) override
@@ -129,6 +129,8 @@ private:
 
 	std::mutex write_lock;
 	std::mutex read_lock;
+
+	std::thread io_context_run_thread;
 
 	std::atomic<size_t> bytes_to_read{ 0 };
 

@@ -58,7 +58,7 @@ public:
 	}
 
 	void adjust_baud_rate(uint32_t baud_rate_bps) override {
-		serial_port.set_option(asio::serial_port::baud_rate{ baud_rate_bps });
+		if (serial_port.is_open()) serial_port.set_option(asio::serial_port::baud_rate{ baud_rate_bps });
 	}
 
 	bool ready_to_send() override {

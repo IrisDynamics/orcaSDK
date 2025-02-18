@@ -190,8 +190,11 @@ void Actuator::flush()
 
 	while (modbus_client.get_queue_size() > 0)
 	{
-		run();
-		if (modbus_client.get_queue_size() > 0) std::this_thread::yield();
+		modbus_client.send_front_message();
+		modbus_client.receive_blocking();
+
+		Transaction response = modbus_client.dequeue_transaction();
+		handle_transaction_response(response);
 	}
 
 	set_stream_paused(current_paused_state);

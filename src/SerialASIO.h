@@ -79,7 +79,7 @@ public:
 			read_data.clear();
 		}
 		std::lock_guard<std::mutex> lock{ write_lock };
-		serial_port.async_write_some(asio::buffer(send_data), [me=shared_from_this()](const asio::error_code& ec, size_t bytes_written)
+		asio::async_write(serial_port, asio::buffer(send_data), [me=shared_from_this()](const asio::error_code& ec, size_t bytes_written)
 			{
 				std::lock_guard<std::mutex> lock{ me->write_lock };
 				me->send_data.clear();
@@ -138,7 +138,7 @@ private:
 
 	void read_message_function_code()
 	{
-		serial_port.async_read_some(
+		asio::async_read(serial_port,
 			asio::buffer(read_buffer, 2), 
 			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read) {
 				if (ec || bytes_read != 2) return;
@@ -157,7 +157,7 @@ private:
 
 	void read_message_body()
 	{
-		serial_port.async_read_some(
+		asio::async_read(serial_port,
 			asio::buffer(read_buffer.data() + 2, bytes_to_read - 2),
 			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read)
 			{

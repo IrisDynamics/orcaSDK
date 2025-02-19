@@ -71,6 +71,9 @@ public:
 		return !receive_buffer.empty();
 	}
 
+	std::vector<uint8_t> receive_bytes_blocking() override{
+		return {};
+	}
 
 private:
 	std::deque<char> receive_buffer;

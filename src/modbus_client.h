@@ -313,11 +313,11 @@ public:
 
     DiagnosticsTracker diagnostic_counters;
 
-    static constexpr int kDefaultBaudRate = 19200;
-    static constexpr int kDefaultInterframeDelay_uS = 2000;
-    static constexpr int kDefaultIntercharTimeout_uS = 16000;
-    static constexpr int kDefaultTurnaroundTime_uS = 500;
-    static constexpr int kDefaultResponseTimeout_uS = 20000;
+    static inline constexpr int kDefaultBaudRate = 19200;
+    static inline constexpr int kDefaultInterframeDelay_uS = 2000;
+    static inline constexpr int kDefaultIntercharTimeout_uS = 16000;
+    static inline constexpr int kDefaultTurnaroundTime_uS = 500;
+    static inline constexpr int kDefaultResponseTimeout_uS = 20000;
 
 private:
     SerialInterface& serial_interface;

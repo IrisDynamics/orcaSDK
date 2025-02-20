@@ -96,8 +96,8 @@ public:
 		while(message_len--) {
 
 			// calculate crc
-			index = crc_hi_byte ^ *message++;
-			crc_hi_byte = crc_lo_byte ^ crc_hi_table_s[index];
+			index = crc_yte ^ *message++;
+			crc_hi_byte = crlo_byte ^ crc_hi_table_s[index];
 			crc_lo_byte = crc_lo_table_s[index];
 
 		}

@@ -10,7 +10,7 @@ add_library(orcaSDK_core
 	src/orca_stream.cpp
 	src/standard_modbus_functions.cpp	
 	src/command_and_confirm.cpp
-)
+ "src/constants.h")
 add_library(orcaSDK::core ALIAS orcaSDK_core)
 	
 target_sources(orcaSDK_core

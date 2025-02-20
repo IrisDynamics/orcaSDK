@@ -37,6 +37,7 @@
 
 #include "src/error_types.h"
 #include "src/command_stream_structs.h"
+#include "src/constants.h"
 
 namespace orcaSDK
 {
@@ -105,14 +106,14 @@ public:
 	 */
 	OrcaError open_serial_port(
 		int port_number, 
-		int baud_rate = ModbusClient::kDefaultBaudRate, 
-		int interframe_delay = ModbusClient::kDefaultInterframeDelay_uS
+		int baud_rate = Constants::kDefaultBaudRate,
+		int interframe_delay = Constants::kDefaultInterframeDelay_uS
 	);
 
 	OrcaError open_serial_port(
 		std::string port_path, 
-		int baud_rate = ModbusClient::kDefaultBaudRate, 
-		int interframe_delay = ModbusClient::kDefaultInterframeDelay_uS
+		int baud_rate = Constants::kDefaultBaudRate,
+		int interframe_delay = Constants::kDefaultInterframeDelay_uS
 	);
 
 	/**

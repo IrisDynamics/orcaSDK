@@ -283,12 +283,14 @@ OrcaResult<uint16_t> Actuator::get_power_W() {
 	return read_register_blocking(POWER);
 }
 
-OrcaResult<uint16_t> Actuator::get_temperature_C() {
-	return read_register_blocking(STATOR_TEMP);
+OrcaResult<int16_t> Actuator::get_temperature_C() {
+	OrcaResult<uint16_t> result = read_register_blocking(STATOR_TEMP);
+	return { (int16_t)result.value, result.error };
 }
 
-OrcaResult<uint16_t> Actuator::get_coil_temperature_C() {
-	return read_register_blocking(COIL_TEMP);
+OrcaResult<int16_t> Actuator::get_coil_temperature_C() {
+	OrcaResult<uint16_t> result = read_register_blocking(COIL_TEMP);
+	return { (int16_t)result.value, result.error };
 }
 
 OrcaResult<uint16_t> Actuator::get_voltage_mV() {

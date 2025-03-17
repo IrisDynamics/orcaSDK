@@ -120,6 +120,4 @@ export(TARGETS orcaSDK_core
 
 # include(CPack)
 
-if (PROJECT_IS_TOP_LEVEL)
-	add_subdirectory(tests)
-endif()
+add_subdirectory(tests EXCLUDE_FROM_ALL)

@@ -1,5 +1,23 @@
 # orcaSDK
 
+## Contents
+- [Introduction](#introduction) <br>
+- [Prerequisites](#prerequisites) <br>
+    - [Software](#software) <br>
+    - [Hardware](#hardware) <br>
+    - [Knowledge](#knowledge) <br>
+- [Setting Up Hardware and Testing Your Motor](#setting-up-hardware-and-testing-your-motor) 
+  - [Windows](#windows) </li> 
+- [Clone the Repository](#clone-the-repository) <br>
+- [Building the SDK](#building-the-sdk) <br>
+    - [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
+- [Building an Application using the SDK](#building-an-application-using-the-sdk)
+    - [Create a CMakeLists.txt file](#create-a-cmakeliststxt-file) 
+- [Compile and Run Your Application](#compile-and-run-your-application)
+    - [Visual Studio](#visual-studio)
+    - [Command Line](#command-line)
+- [Whats Next?](#whats-next)
+
 ## Introduction
 Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their Orca series linear motor. 
 

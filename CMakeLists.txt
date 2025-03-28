@@ -38,6 +38,7 @@ target_sources(orcaSDK_core
 			src/chrono_clock.h
 			src/diagnostics_tracker.h
 			src/function_code_parameters.h
+			src/constants.h
 			
 			src/mb_crc.h
 			src/message_queue.h
@@ -69,8 +70,8 @@ target_sources(orcaSDK_core
 
 target_compile_features(orcaSDK_core PUBLIC cxx_std_11)
 
+include(GNUInstallDirs)
 include(ASIO.cmake)
-target_link_libraries(orcaSDK_core PUBLIC asio)
 
 set_target_properties(orcaSDK_core
 	PROPERTIES
@@ -86,29 +87,30 @@ set_target_properties(orcaSDK_core
 	# COMPATIBILITY SameMajorVersion
 # )
 
-# include(GNUInstallDirs)
-# install(TARGETS orcaSDK_core
-	# EXPORT orcaSDKConfig
-	# FILE_SET publicAPI
-	# INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# # PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# # PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-# )
+install(TARGETS orcaSDK_core
+	EXPORT orcaSDKConfig
+	FILE_SET publicAPI
+	FILE_SET asioHeaders
+	INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	# PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
 export(TARGETS orcaSDK_core
 	NAMESPACE orcaSDK::
 	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
 )
-# install(EXPORT orcaSDKConfig 
-	# DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
-	# NAMESPACE orcaSDK::
-# )
-	# RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-		# COMPONENT	orcaSDK_Runtime
-	# LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		# COMPONENT			orcaSDK_Runtime
-		# NAMELINK_COMPONENT	orcaSDK_Development
-	# ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		# COMPONENT	orcaSDK_Development
+install(EXPORT orcaSDKConfig 
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
+	NAMESPACE orcaSDK::
+)
+	# runtime destination ${cmake_install_bindir}
+		# component	orcasdk_runtime
+	# library destination ${cmake_install_libdir}
+		# component			orcasdk_runtime
+		# namelink_component	orcasdk_development
+	# archive destination ${cmake_install_libdir}
+		# component	orcasdk_development
 # )
 
 # #Packaging

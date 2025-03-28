@@ -1,22 +1,22 @@
-if(POLICY CMP0135)
-  cmake_policy(SET CMP0135 NEW)
-endif()
-
-include(ExternalProject)
-ExternalProject_Add(
+include(FetchContent)
+FetchContent_Declare(
 	asio-repo
-	URL https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-32-0.zip	
-	SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/dependencies
-	CONFIGURE_COMMAND ""
-	BUILD_COMMAND ""
-	INSTALL_COMMAND ""
+	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+	GIT_TAG 03ae834edbace31a96157b89bf50e5ee464e5ef9 # release 1.32.0
+	FIND_PACKAGE_ARGS
 )
 
-add_library(asio INTERFACE)
-add_dependencies(asio asio-repo)
-target_include_directories(asio INTERFACE dependencies/asio/include)
+FetchContent_MakeAvailable(asio-repo)
 
-export(TARGETS asio
-	NAMESPACE asio::
-	FILE "${CMAKE_CURRENT_BINARY_DIR}/asioConfig.cmake"
+file(GLOB_RECURSE asioHeaders_glob
+		"${asio-repo_SOURCE_DIR}/asio/include/*.hpp"
+		"${asio-repo_SOURCE_DIR}/asio/include/*.h")
+
+target_sources(orcaSDK_core
+	PUBLIC
+		FILE_SET asioHeaders
+		TYPE HEADERS
+		BASE_DIRS "${asio-repo_SOURCE_DIR}/asio/include"
+		FILES
+			${asioHeaders_glob}
 )

@@ -34,7 +34,7 @@ public:
 #if defined _WIN32
 		std::string port_name = std::string("\\\\.\\COM") + std::to_string(serial_port_number);
 #else
-		std::string port_name = std::string("/dev/ttyS") + std::to_string(serial_port_number);
+		std::string port_name = std::string("/dev/ttyUSB") + std::to_string(serial_port_number);
 #endif
 		return open_serial_port(port_name, baud);
 	}

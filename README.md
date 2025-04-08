@@ -8,7 +8,9 @@
     - [Knowledge](#knowledge) <br>
 - [Setting Up Hardware and Testing Your Motor](#setting-up-hardware-and-testing-your-motor) 
   - [Windows](#windows) </li> 
-- [Clone the Repository](#clone-the-repository) <br>
+  - [Linux](#linux) </li> 
+- [Download the Latest Release](#download-the-latest-release) <br>
+  - [(Optional) Download the Documentation](#optional-download-the-documentation) <br>
 - [Building the SDK](#building-the-sdk) <br>
     - [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
 - [Building an Application using the SDK](#building-an-application-using-the-sdk)
@@ -39,7 +41,6 @@ Currently, these tools are only available for applications running on Windows.
 To use the SDK you will need the following tools:
 
 ### Software
-- [A Git client](https://git-scm.com/downloads). Our tutorials assume a command-line client.
 - A C++ build system. For Windows your most appropriate option is likely MSBuild, which comes packaged with the IDE we recommend, [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
 - [CMake](https://cmake.org/) 
     
@@ -51,7 +52,7 @@ To use the SDK you will need the following tools:
     - An rs485 cable
 
 ### Knowledge
-- Some basic programming knowledge, while not expressly required, will be very helpful. These tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.
+- Some basic programming knowledge, while not expressly required, will be very helpful. The tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.
 
 ## Setting Up Hardware and Testing Your Motor
 
@@ -71,17 +72,31 @@ Windows users will need to update a setting on their RS422 cable. Each cable has
 
 Keep a note of what the COM port number for your RS422 cable is. You will need it for each time you want to connect to your motor through the SDK.
 
-## Clone the Repository
+### Linux
 
-To set up this project, first clone this repo using whatever git client you have:
+When you plug in an RS422 or RS485 cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
 
 ```
-git clone git@github.com:IrisDynamics/orcaSDK.git
+sudo chmod 666 /dev/ttyUSB0
 ```
-or
+
+Additionally, your RS422 cable should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
+
 ```
-git clone https://github.com/IrisDynamics/orcaSDK.git
+setserial /dev/ttyUSB0 low_latency
 ```
+
+Linux doesn't save parameters for these devices by default, which means that each time you turn on your computer or plug in your device, your cables will be assigned a new ttyUSB file, which may not have the same number as the last time you used it. In addition, because this is a new file, you will need to repeat the previous two commands again. If you don't want to locate your device and repeat these commands regularly, you can set up automatic configuration by writing up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html) for your device.
+
+## Download the Latest Release
+
+On our Github's main page, navigate to the Releases section on the right side of the screen and download and unzip the source code of the latest release. 
+
+Alternatively if you have a git client, you can clone the repo and build from the main branch.
+
+### (Optional) Download the Documentation
+
+We also recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser.
 
 ## Building the SDK
 
@@ -191,7 +206,7 @@ For now don't worry about the contents of this source file.
 
 ## Compile and Run Your Application
 
-Building the application can be done in a few ways. We recommend interacting with your project through Visual Studio. But you can also build your app using the command line.
+Building the application can be done in a few ways. For Windows users we recommend interacting with your project through Visual Studio. But you can also build your app using the command line.
 
 ### Visual Studio
 

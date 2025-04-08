@@ -96,7 +96,7 @@ public:
 	/**
 	 * @brief	Attempts to open a desired serial port, assigning a baud rate and interframe
 	 *			delay for this connection.
-	 * @param	port_number  The serial port number of the rs422 cable that the desired device
+	 * @param	port_path	The file path corresponding to the rs422 cable that the desired device
 	 *						 is connected to.
 	 * @param	baud_rate	The desired baud rate for this connection. Should match the baud
 	 *						rate configured in the Orca's modbus settings.
@@ -105,13 +105,20 @@ public:
 	 *								configured in the Orca's modbus settings.
 	 */
 	OrcaError open_serial_port(
-		int port_number, 
+		std::string port_path,
 		int baud_rate = Constants::kDefaultBaudRate,
 		int interframe_delay = Constants::kDefaultInterframeDelay_uS
 	);
 
+	/**
+	 *	Attempts to open a desired serial port, creating the expected file path
+	 *	from the assigned port number of the Actuator's rs422 cable.
+	 * @param	port_number	The assigned port number of the rs422 cable that the desired device
+	 *						 is connected to.
+	 * @overload	Actuator::open_serial_port(int port_number, int baud_rate, int interframe_delay)
+	 */
 	OrcaError open_serial_port(
-		std::string port_path, 
+		int port_number, 
 		int baud_rate = Constants::kDefaultBaudRate,
 		int interframe_delay = Constants::kDefaultInterframeDelay_uS
 	);

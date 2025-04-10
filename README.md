@@ -35,14 +35,15 @@ The benefits of using the SDK include:
 
 If after considering your options custom software seems like the appropriate solution, then this repo is for you! The SDK is a C++ library designed to provide an easy to use and understand abstraction for your motor. The SDK also contains C++ implementations of a few commonly used tools. 
 
-Currently, these tools are only available for applications running on Windows. 
-
 ## Prerequisites
 To use the SDK you will need the following tools:
 
 ### Software
-- A C++ build system. For Windows your most appropriate option is likely MSBuild, which comes packaged with the IDE we recommend, [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
+- A C++ build system. 
+    - For Windows your most appropriate option is likely MSBuild, which comes packaged with [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
+    - For Linux you most appropriate options is likely GCC.
 - [CMake](https://cmake.org/) 
+- A IDE or text editor of your choice
     
 ### Hardware
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
@@ -108,20 +109,29 @@ cd build
 cmake ..
 ```
 
-If everything works fine, the cmake command should identify a local C++ compiler and use it to configure a project, ready to be built. Now run the following command from inside the build directory
+If everything works fine, the cmake command should identify a local C++ compiler and use it to configure a project, ready to be built. Now run one of the following two commands from inside the build directory. 
 
+If you wish to develop in debug mode, run:
 ```
-cmake --build .
+cmake --build . --config debug
+```
+Else if you wish to develop in release mode, run:
+```
+cmake --build . --config release
 ```
 
 If no errors are reported, the library will be built and is ready to be consumed by your application.
 
 ### (Optional) Install the SDK to your local system
 
-If you'd like to install the SDK to your system to allow for easy reuse, you'll need to execute one additional command. First, open another command line, this time with administrator permissions. Then navigate once again to the build directory and execute the following command.
+If you'd like to install the SDK to your system to allow for easy reuse, you'll need to execute one additional command. First, open another command line, this time with administrator permissions. Then navigate once again to the build directory and execute the following command. You will need to pass the build type that you've built the library in to the --config flag
 
 ```
-cmake --install .
+cmake --install . --config debug
+```
+OR
+```
+cmake --install . --config release
 ```
 
 ## Building an Application using the SDK
@@ -214,7 +224,7 @@ To build a CMake app though Visual Studio follow these steps:
  - If using Visual Studio, open the app, and on the project selection window, select the option "Open a local folder". 
  - Select the folder that contains your CMakeLists.txt file. Visual Studio should recognize the project as a CMake project upon opening and configure itself appropriately. 
  - To interact with your project, right click on any item in the Solution Explorer, and select "Switch to CMake Targets View". 
- - To build your application. Expand the dropdown menu for your project and right click on your application. Either select "Set as Startup Item" then click the play button in the top, or select "Debug". Either will result in running your app.
+ - To build your application. Expand the dropdown menu for your project and right click on your application. Either select "Set as Startup Item" then click the play button in the top.
 
 ### Command Line
 
@@ -224,10 +234,19 @@ If building your app through the command line, simply use the same commands as w
 mkdir build
 cd build
 cmake ..
-cmake --build .
 ```
 
-If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated in the build directory.
+When running the actual build command, make sure to pass in the --config flag that corresponds with how the library was built:
+
+```
+cmake --build . --config debug
+```
+OR
+```
+cmake --build . --config release
+```
+
+If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory.
 
 ## What's Next?
 

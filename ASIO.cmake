@@ -10,7 +10,8 @@ FetchContent_MakeAvailable(asio-repo)
 
 file(GLOB_RECURSE asioHeaders_glob
 		"${asio-repo_SOURCE_DIR}/asio/include/*.hpp"
-		"${asio-repo_SOURCE_DIR}/asio/include/*.h")
+		"${asio-repo_SOURCE_DIR}/asio/include/*.h"
+		"${asio-repo_SOURCE_DIR}/asio/include/*.ipp")
 
 target_sources(orcaSDK_core
 	PUBLIC

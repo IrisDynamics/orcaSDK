@@ -1,17 +1,17 @@
 # orcaSDK
 
 ## Contents
-- [Introduction](#introduction) <br>
-- [Prerequisites](#prerequisites) <br>
-    - [Software](#software) <br>
-    - [Hardware](#hardware) <br>
-    - [Knowledge](#knowledge) <br>
+- [Introduction](#introduction) 
+- [Prerequisites](#prerequisites) 
+    - [Software](#software) 
+    - [Hardware](#hardware) 
+    - [Knowledge](#knowledge) 
 - [Setting Up Hardware and Testing Your Motor](#setting-up-hardware-and-testing-your-motor) 
-  - [Windows](#windows) </li> 
-  - [Linux](#linux) </li> 
-- [Download the Latest Release](#download-the-latest-release) <br>
-  - [(Optional) Download the Documentation](#optional-download-the-documentation) <br>
-- [Building the SDK](#building-the-sdk) <br>
+    - [Windows](#windows) 
+    - [Linux](#linux) 
+- [Download the Latest Release](#download-the-latest-release) 
+    - [(Optional) Download the Documentation](#optional-download-the-documentation)
+- [Building the SDK](#building-the-sdk) 
     - [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
 - [Building an Application using the SDK](#building-an-application-using-the-sdk)
     - [Create a CMakeLists.txt file](#create-a-cmakeliststxt-file) 

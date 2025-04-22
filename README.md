@@ -43,6 +43,7 @@ To use the SDK you will need the following tools:
     - For Windows your most appropriate option is likely MSBuild, which comes packaged with [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
     - For Linux you most appropriate options is likely GCC.
 - [CMake](https://cmake.org/) 
+- Installation of git client is necessary to help CMake build succesfully. Git can be downloaded at the following [link](https://git-scm.com/).
 - A IDE or text editor of your choice
     
 ### Hardware
@@ -91,13 +92,13 @@ Linux doesn't save parameters for these devices by default, which means that eac
 
 ## Download the Latest Release
 
-On our Github's main page, navigate to the Releases section on the right side of the screen and download and unzip the source code of the latest release. 
+On our Github's main page, navigate to the Releases section on the right side of the screen and download and unzip the source code of the latest release of the ORCA SDK. 
 
 Alternatively if you have a git client, you can clone the repo and build from the main branch.
 
 ### (Optional) Download the Documentation
 
-We also recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser.
+We also recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
 
 ## Building the SDK
 
@@ -181,6 +182,11 @@ find_package() searches CMake's known install paths for any package with a match
 find_package(orcaSDK REQUIRED PATHS <path-to-your-orcaSDK-build-directory>)
 ```
 
+For example, if you have added the SDK within your project folder, the path would be:
+```
+find_package(orcaSDK REQUIRED PATHS orcaSDK/build)
+```
+
 target_link_libraries() indicates to CMake that the target listed as the first parameter is a client of the target described after. In this case, the basicOrcaSDKApp target is a client of the orcaSDK::core target. orcaSDK::core is the name of the core library of the SDK. The PRIVATE parameter indicates that the library is only meant to be consumed by the client target and to not propagate its settings further.
 
 At this point we have the most simple CMakeLists.txt file describing an application which makes use of the SDK. At this point your CMakeLists.txt file should look something like this:
@@ -224,7 +230,7 @@ To build a CMake app though Visual Studio follow these steps:
  - If using Visual Studio, open the app, and on the project selection window, select the option "Open a local folder". 
  - Select the folder that contains your CMakeLists.txt file. Visual Studio should recognize the project as a CMake project upon opening and configure itself appropriately. 
  - To interact with your project, right click on any item in the Solution Explorer, and select "Switch to CMake Targets View". 
- - To build your application. Expand the dropdown menu for your project and right click on your application. Either select "Set as Startup Item" then click the play button in the top.
+ - To build your application, expand the dropdown menu for your project and right click on your application. Select "Set as Startup Item" then click the play button in the top.
 
 ### Command Line
 
@@ -236,7 +242,7 @@ cd build
 cmake ..
 ```
 
-When running the actual build command, make sure to pass in the --config flag that corresponds with how the library was built:
+After executing the above steps, when running the actual build command, make sure to pass in the --config flag that corresponds with how the library was built:
 
 ```
 cmake --build . --config debug
@@ -245,6 +251,8 @@ OR
 ```
 cmake --build . --config release
 ```
+
+For further information regarding CMake projects in Visual Studio, [CMake Project in Visual Studio](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170) is a helpful resource.
 
 If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory.
 

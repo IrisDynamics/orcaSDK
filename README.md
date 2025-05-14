@@ -50,8 +50,8 @@ To use the SDK you will need the following tools:
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
     - A cable splitter
-    - An rs422 cable
-    - An rs485 cable
+    - An RS422 cable (yellow)
+    - An RS485 cable (blue)
 
 ### Knowledge
 - Some basic programming knowledge, while not expressly required, will be very helpful. The tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.
@@ -62,27 +62,27 @@ Before continuing onto any software development, make sure that you have read th
 
 ### Windows
 
-Windows users will need to update a setting on their RS422 cable. Each cable has a built in latency of 16ms by default. For the RS485 cable, this is fine, but the SDK requires that this latency setting is reduced as much as possible. This allows for high speed communication with your motor. To update this setting, follow these steps:
+Windows users will need to update a setting on their yellow cable. Each cable has a built in latency of 16ms by default. For the blue cable, this is fine, but the SDK requires that this latency setting is reduced as much as possible. This allows for high speed communication with your motor. To update this setting, follow these steps:
  - Ensure your cables are connected to your computer
  - Open Device Manager
  - Navigate to "Ports (COM & LPT)" and expand the dropdown menu
- - Right click on the COM port for your RS422 cable and select "Properties"
-    - If you do not know which COM port number corresponds to your RS422 cable, try unplugging and plugging back in your cable. The COM port you're looking for should disappear and reappear in the dropdown options
+ - Right click on the COM port for your yellow cable and select "Properties"
+    - If you do not know which COM port number corresponds to your yellow cable, try unplugging and plugging back in your cable. The COM port you're looking for should disappear and reappear in the dropdown options
  - Under the "Port Settings" tab of the properties window, select "Advanced"
  - Set the "Latency Timer (msec)" option to a value of 1
  - Select Ok to confirm your selections
 
-Keep a note of what the COM port number for your RS422 cable is. You will need it for each time you want to connect to your motor through the SDK.
+Keep a note of what the COM port number for your yellow cable is. You will need it for each time you want to connect to your motor through the SDK.
 
 ### Linux
 
-When you plug in an RS422 or RS485 cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
+When you plug in an yellow or blue cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
 
 ```
 sudo chmod 666 /dev/ttyUSB0
 ```
 
-Additionally, your RS422 cable should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
+Additionally, your yellow cable should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
 
 ```
 setserial /dev/ttyUSB0 low_latency

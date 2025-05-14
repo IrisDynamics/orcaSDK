@@ -50,8 +50,8 @@ To use the SDK you will need the following tools:
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
     - A cable splitter
-    - An RS422 cable (yellow)
-    - An RS485 cable (blue)
+    - An RS422 cable, used with Modbus and the Orca SDK (yellow)
+    - An RS485 cable, used with Iris Controls (blue)
 
 ### Knowledge
 - Some basic programming knowledge, while not expressly required, will be very helpful. The tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.

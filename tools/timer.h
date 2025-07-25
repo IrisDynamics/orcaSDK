@@ -75,7 +75,7 @@ public:
 	 */
 	uint32_t time_remaining() {
 		if (has_expired()) return 0;
-		return ((start_time + duration) - std::chrono::system_clock::now()).count();
+		return std::chrono::duration_cast<std::chrono::milliseconds>((start_time + duration) - std::chrono::system_clock::now()).count();
 	}
 
 	/**

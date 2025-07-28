@@ -125,8 +125,7 @@ namespace orcaSDK {
 			if (timestamp_type == TimestampType::CurrentDateTime) {
 				std::time_t now = std::time(0);
 
-				std::tm localtm;
-				localtime_s(&localtm, &now);
+				std::tm localtm = *localtime(&now);
 
 				std::stringstream ss;
 				try {

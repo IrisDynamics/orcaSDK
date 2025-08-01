@@ -9,7 +9,8 @@ typedef enum {
 	ForceMode = 2,
 	PositionMode = 3,
 	HapticMode = 4,
-	KinematicMode = 5
+	KinematicMode = 5,
+	AutoZeroMode = 55
 
 } MotorMode;
 

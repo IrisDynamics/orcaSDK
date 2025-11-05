@@ -9,24 +9,26 @@
 
 namespace orcaSDK {
 
-class SerialASIO : public SerialInterface, public std::enable_shared_from_this<SerialASIO>
+class SerialASIO : public SerialInterface
 {
 public:
 	SerialASIO() :
-		serial_port(io_context),
-		work_guard(io_context.get_executor())
+		serial_port(io_context)
 	{
 		read_buffer.resize(256);
 		io_context_run_thread = std::thread{ [=]() {
-			io_context.run();
+			while (keep_running)
+			{
+				io_context.run();
+			}
 		} };
 	}
 
 	~SerialASIO()
 	{
-		close_serial_port();
-		work_guard.reset();
+		keep_running = false; 
 		io_context_run_thread.join();
+		close_serial_port();
 	}
 
 	OrcaError open_serial_port(int serial_port_number, unsigned int baud) override
@@ -79,12 +81,12 @@ public:
 			read_data.clear();
 		}
 		std::lock_guard<std::mutex> lock{ write_lock };
-		asio::async_write(serial_port, asio::buffer(send_data), [me=shared_from_this()](const asio::error_code& ec, size_t bytes_written)
+		asio::async_write(serial_port, asio::buffer(send_data), [&](const asio::error_code& ec, size_t bytes_written)
 			{
-				std::lock_guard<std::mutex> lock{ me->write_lock };
-				me->send_data.clear();
+				std::lock_guard<std::mutex> lock{ write_lock };
+				send_data.clear();
 				if (ec) return;
-				me->read_message_function_code();
+				read_message_function_code();
 			});
 	}
 
@@ -123,14 +125,13 @@ private:
 	std::vector<uint8_t> send_data;
 	std::vector<uint8_t> read_data;
 
-	asio::executor_work_guard<asio::io_context::executor_type> work_guard;
-
 	std::condition_variable read_notifier;
 
 	std::mutex write_lock;
 	std::mutex read_lock;
 
 	std::thread io_context_run_thread;
+	std::atomic<bool> keep_running = true;
 
 	std::atomic<size_t> bytes_to_read{ 0 };
 
@@ -140,18 +141,18 @@ private:
 	{
 		asio::async_read(serial_port,
 			asio::buffer(read_buffer, 2), 
-			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read) {
+			[&](const asio::error_code& ec, size_t bytes_read) {
 				if (ec || bytes_read != 2) return;
-				if (me->read_buffer[1] & 0x80)
+				if (read_buffer[1] & 0x80)
 				{
-					me->bytes_to_read = 5;
+					bytes_to_read = 5;
 				}
-				std::unique_lock<std::mutex> read_guard(me->read_lock);
+				std::unique_lock<std::mutex> read_guard(read_lock);
 				for (int i = 0; i < bytes_read; i++)
 				{
-					me->read_data.push_back(me->read_buffer[i]);
+					read_data.push_back(read_buffer[i]);
 				}
-				me->read_message_body();
+				read_message_body();
 			});	
 	}
 
@@ -159,15 +160,15 @@ private:
 	{
 		asio::async_read(serial_port,
 			asio::buffer(read_buffer.data() + 2, bytes_to_read - 2),
-			[me = shared_from_this()](const asio::error_code& ec, size_t bytes_read)
+			[&](const asio::error_code& ec, size_t bytes_read)
 			{
 				if (ec) return;
-				std::unique_lock<std::mutex> lock(me->read_lock);
+				std::unique_lock<std::mutex> lock(read_lock);
 				for (int i = 0; i < bytes_read; i++)
 				{
-					me->read_data.push_back(me->read_buffer[i+2]);
+					read_data.push_back(read_buffer[i+2]);
 				}
-				me->read_notifier.notify_one();
+				read_notifier.notify_one();
 			});
 	}
 };

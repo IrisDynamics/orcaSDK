@@ -68,7 +68,6 @@ public:
 	}
 
 	void send_byte(uint8_t data) override {
-		std::lock_guard<std::mutex> lock{ write_lock };
 		send_data.push_back(data);
 	}
 
@@ -80,14 +79,14 @@ public:
 			std::lock_guard<std::mutex> lock{ read_lock };
 			read_data.clear();
 		}
-		std::lock_guard<std::mutex> lock{ write_lock };
-		asio::async_write(serial_port, asio::buffer(send_data), [&](const asio::error_code& ec, size_t bytes_written)
+		std::shared_ptr<std::vector<uint8_t>> write_buffer = std::make_shared<std::vector<uint8_t>>(send_data);
+		// Copying write buffer in lambda capture list to keep it alive for the duration of the write
+		asio::async_write(serial_port, asio::buffer(*write_buffer), [&, write_buffer](const asio::error_code& ec, size_t bytes_written)
 			{
-				std::lock_guard<std::mutex> lock{ write_lock };
-				send_data.clear();
 				if (ec) return;
 				read_message_function_code();
 			});
+		send_data.clear();
 	}
 
 	bool ready_to_receive() override {
@@ -127,7 +126,6 @@ private:
 
 	std::condition_variable read_notifier;
 
-	std::mutex write_lock;
 	std::mutex read_lock;
 
 	std::thread io_context_run_thread;

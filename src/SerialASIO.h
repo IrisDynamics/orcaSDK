@@ -12,21 +12,18 @@ namespace orcaSDK {
 class SerialASIO : public SerialInterface
 {
 public:
-	SerialASIO() :
-		serial_port(io_context)
+	SerialASIO()
 	{
 		read_buffer.resize(256);
 		io_context_run_thread = std::thread{ [=]() {
-			while (keep_running)
-			{
-				io_context.run();
-			}
+			io_context.run();
 		} };
 	}
 
 	~SerialASIO()
 	{
-		keep_running = false; 
+		work_guard.reset();
+		if (serial_port.is_open()) serial_port.cancel();
 		io_context_run_thread.join();
 		close_serial_port();
 	}
@@ -119,7 +116,8 @@ public:
 
 private:
 	asio::io_context io_context;
-	asio::serial_port serial_port;
+	asio::serial_port serial_port{io_context};
+	asio::executor_work_guard<asio::io_context::executor_type> work_guard{asio::make_work_guard(io_context)};
 
 	std::vector<uint8_t> send_data;
 	std::vector<uint8_t> read_data;
@@ -129,7 +127,6 @@ private:
 	std::mutex read_lock;
 
 	std::thread io_context_run_thread;
-	std::atomic<bool> keep_running = true;
 
 	std::atomic<size_t> bytes_to_read{ 0 };
 

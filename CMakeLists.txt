@@ -47,25 +47,6 @@ target_sources(orcaSDK_core
 			src/orca_stream.h
 			src/transaction.h
 			src/SerialASIO.h
-			src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
-			
-	# PRIVATE
-		# FILE_SET implementationIncludes
-		# TYPE HEADERS
-		# FILES
-			# src/chrono_clock.h
-			# src/diagnostics_tracker.h
-			# src/function_code_parameters.h
-			# src/mb_config.h
-			# src/mb_crc.h
-			# src/message_queue.h
-			# src/modbus_client.h
-			# src/modbus_client
-			# src/standard_modbus_functions.h
-			# src/orca_stream.h
-			# src/transaction.h
-			# src/platform/windows_serial_interface.h #WINDOWS SPECIFIC
-		
 )
 
 target_compile_features(orcaSDK_core PUBLIC cxx_std_11)

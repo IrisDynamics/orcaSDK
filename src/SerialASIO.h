@@ -114,6 +114,24 @@ public:
 		return bytes_read;
 	}
 
+	void flush_and_discard_receive_buffer() override {
+		std::array<uint8_t, 256> flush_buffer;
+		asio::async_read(serial_port, asio::buffer(flush_buffer, 256), [&](asio::error_code ec, size_t bytes_read) {
+			// Need a completion handler, even if empty, for the read to execute
+			});
+
+		std::promise<bool> wait_barrier;
+		std::future<bool> wait_barrier_future = wait_barrier.get_future();
+
+		asio::steady_timer t{io_context, std::chrono::milliseconds(20)};
+		t.async_wait([&](asio::error_code ec) {
+			serial_port.cancel();
+			wait_barrier.set_value(true);
+			});
+
+		wait_barrier_future.get();
+	}
+
 private:
 	asio::io_context io_context;
 	asio::serial_port serial_port{io_context};

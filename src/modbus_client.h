@@ -229,6 +229,10 @@ public:
         }
 
         active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+        if (!active_transaction->is_reception_valid())
+        {
+            serial_interface.flush_and_discard_receive_buffer();
+        }
         conclude_transaction(active_transaction);
     }
 

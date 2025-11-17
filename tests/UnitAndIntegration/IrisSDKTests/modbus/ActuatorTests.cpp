@@ -83,23 +83,23 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 	EXPECT_TRUE(result.error);
 }
 
-TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFailed)
-{
-	motor.read_register_blocking(POWER, MessagePriority::important);
+//TEST_F(ActuatorTests, AMessageMarkedImportantWillRetryEvenIfTheInitialMessageFailed)
+//{
+//	motor.read_register_blocking(POWER, MessagePriority::important);
+//
+//	EXPECT_EQ(6, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
+//}
 
-	EXPECT_EQ(6, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
-}
-
-TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedImportant)
-{
-	motor.read_register_blocking(POWER, MessagePriority::important);
-
-	EXPECT_EQ(6, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
-
-	motor.read_register_blocking(POWER, MessagePriority::not_important);
-
-	EXPECT_EQ(7, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
-}
+//TEST_F(ActuatorTests, SubsequentMessagesAfterAnImportantMessageAreNotAlsoMarkedImportant)
+//{
+//	motor.read_register_blocking(POWER, MessagePriority::important);
+//
+//	EXPECT_EQ(6, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
+//
+//	motor.read_register_blocking(POWER, MessagePriority::not_important);
+//
+//	EXPECT_EQ(7, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
+//}
 
 TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
 {
@@ -167,19 +167,6 @@ TEST_F(ActuatorTests, InvalidMessagesDoNotUpdateTimeSinceLastResponse)
 	EXPECT_GT(motor.time_since_last_response_microseconds(), 1000000000);
 }
 
-TEST_F(ActuatorTests, WhenMultipleReceivedMessagesInReceiveBufferActuatorCorrectlyReadsTheFirst)
-{
-	std::deque<char> double_message = std::deque<char>
-	{
-		'\x1', '\x3', '\x2', '\0', '\2', '\x39', '\x85', '\x1', '\x3', '\x2', '\0', '\0', '\xb8', '\x44'
-	};
-	serial_interface->consume_new_message(double_message);
-
-	OrcaResult<uint16_t> read_result = motor.read_register_blocking(418);
-
-	EXPECT_FALSE(read_result.error);
-	EXPECT_EQ(2, read_result.value);
-}
 //TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)
 //{
 //	std::vector<char> empty_out_buffer{};

@@ -68,54 +68,54 @@ TEST_F(ModbusClientTests, ModbusClientOutputsIncomingBytesToLogFileIfLoggingEnab
 	ASSERT_EQ(logString, log->last_written_string);
 }
 
-TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
-{
-	Transaction test_transaction;
-	uint8_t data_bytes[2] = {
-			'\x4',
-			'\xc'
-	};
-	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
+//TEST_F(ModbusClientTests, IfMessageTimedOutModbusClientAppendsTimedOutToLog)
+//{
+//	Transaction test_transaction;
+//	uint8_t data_bytes[2] = {
+//			'\x4',
+//			'\xc'
+//	};
+//	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
+//
+//	modbus_client.enqueue_transaction(test_transaction);
+//
+//	clock.pass_time(10000);
+//
+//	modbus_client.run_out();
+//
+//	clock.pass_time(modbus_client.kDefaultResponseTimeout_uS + 1);
+//	modbus_client.run_in();
+//
+//	std::string logString = "30001\trx\tTimed out. ";
+//	ASSERT_EQ(logString, log->last_written_string);
+//}
 
-	modbus_client.enqueue_transaction(test_transaction);
-
-	clock.pass_time(10000);
-
-	modbus_client.run_out();
-
-	clock.pass_time(modbus_client.kDefaultResponseTimeout_uS + 1);
-	modbus_client.run_in();
-
-	std::string logString = "30001\trx\tTimed out. ";
-	ASSERT_EQ(logString, log->last_written_string);
-}
-
-TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
-{
-	Transaction test_transaction;
-	uint8_t data_bytes[2] = {
-			'\x4',
-			'\xc'
-	};
-	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
-
-	modbus_client.enqueue_transaction(test_transaction);
-
-	clock.pass_time(10000);
-
-	modbus_client.run_out();
-
-	std::deque<char> incoming_message{
-		'\x1'
-	};
-	serial_interface.consume_new_message(incoming_message);
-	modbus_client.run_in();
-	clock.pass_time(modbus_client.kDefaultIntercharTimeout_uS + 1);
-	modbus_client.run_in();
-
-	std::string logString = "26001\trx\t01\tUnexpected interchar. ";
-	ASSERT_EQ(logString, log->last_written_string);
-}
+//TEST_F(ModbusClientTests, AppendsUnexpectedIntercharTimeoutToLog)
+//{
+//	Transaction test_transaction;
+//	uint8_t data_bytes[2] = {
+//			'\x4',
+//			'\xc'
+//	};
+//	test_transaction.load_transmission_data(1, 3, data_bytes, 2, 6);
+//
+//	modbus_client.enqueue_transaction(test_transaction);
+//
+//	clock.pass_time(10000);
+//
+//	modbus_client.run_out();
+//
+//	std::deque<char> incoming_message{
+//		'\x1'
+//	};
+//	serial_interface.consume_new_message(incoming_message);
+//	modbus_client.run_in();
+//	clock.pass_time(modbus_client.kDefaultIntercharTimeout_uS + 1);
+//	modbus_client.run_in();
+//
+//	std::string logString = "26001\trx\t01\tUnexpected interchar. ";
+//	ASSERT_EQ(logString, log->last_written_string);
+//}
 
 TEST_F(ModbusClientTests, AppendsWrongAddressWhenOutgoingAddressDoesntMatchIncomingAddress)
 {

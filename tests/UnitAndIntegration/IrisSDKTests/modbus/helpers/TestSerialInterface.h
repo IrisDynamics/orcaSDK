@@ -72,7 +72,12 @@ public:
 	}
 
 	std::vector<uint8_t> receive_bytes_blocking() override{
-		return {};
+		return std::vector<uint8_t>(receive_buffer.begin(), receive_buffer.end());
+	}
+
+	void flush_and_discard_receive_buffer()
+	{
+		receive_buffer.clear();
 	}
 
 private:

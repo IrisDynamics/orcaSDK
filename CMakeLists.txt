@@ -31,9 +31,6 @@ target_sources(orcaSDK_core
 			tools/log.h
 			tools/log_interface.h
 			tools/timer.h
-			orca600_api/orca600.h
-			orca600_api/orca600_memory_map.h
-			orca600_api/orca600_registers.h
 			
 			src/chrono_clock.h
 			src/diagnostics_tracker.h

@@ -100,4 +100,7 @@ install(EXPORT orcaSDKConfig
 
 # include(CPack)
 
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+set(orcaSDK_TEST "false" CACHE BOOL "Should the orcaSDK test targets be included?")
+if (orcaSDK_TEST)
+	add_subdirectory(tests)
+endif()

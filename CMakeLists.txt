@@ -53,17 +53,17 @@ include(ASIO.cmake)
 
 set_target_properties(orcaSDK_core
 	PROPERTIES
-		VERSION 1.0.0
-		SOVERSION 1
+		VERSION ${orcaSDK_VERSION}
+		SOVERSION ${orcaSDK_VERSION_MAJOR}
 	EXPORT_NAME core
 )
 
-# include(CMakePackageConfigHelpers)
-# write_basic_package_version_file(
-	# orcaSDKConfigVersion.cmake
-	# VERSION 1.0.0
-	# COMPATIBILITY SameMajorVersion
-# )
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+	orcaSDKConfigVersion.cmake
+	VERSION ${orcaSDK_VERSION}
+	COMPATIBILITY SameMajorVersion
+)
 
 install(TARGETS orcaSDK_core
 	EXPORT orcaSDKConfig

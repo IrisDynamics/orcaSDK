@@ -1,6 +1,4 @@
 if(orcaSDK_VENDOR_ASIO)
-	project(asio)
-
 	include(GNUInstallDirs)
 
 	include(FetchContent)

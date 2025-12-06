@@ -1,6 +1,5 @@
 #include "orca_stream.h"
 #include "../actuator.h"
-#include "../orca600_api/orca600_memory_map.h"
 
 namespace orcaSDK
 {

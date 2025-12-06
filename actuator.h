@@ -25,7 +25,10 @@
 
 #include <cstdint>
 #include "src/message_priority.h"
-#include "orca600_api/orca600_memory_map.h"
+extern "C" {
+	#include "c/orca_registers.h"
+}
+#include "cpp/orca_registers.hpp"
 #include <string>
 #include <vector>
 

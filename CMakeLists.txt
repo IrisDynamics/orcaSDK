@@ -10,7 +10,7 @@ add_library(orcaSDK_core
 	src/orca_stream.cpp
 	src/standard_modbus_functions.cpp	
 	src/command_and_confirm.cpp
- "src/constants.h")
+)
 add_library(orcaSDK::core ALIAS orcaSDK_core)
 	
 target_sources(orcaSDK_core
@@ -49,12 +49,14 @@ target_sources(orcaSDK_core
 target_compile_features(orcaSDK_core PUBLIC cxx_std_11)
 
 include(GNUInstallDirs)
+option(orcaSDK_VENDOR_ASIO "Should the SDK automatically download asio?" ON)
 include(ASIO.cmake)
+option(orcaSDK_VENDOR_ORCAAPI "Should the SDK automatically download orcaAPI?" ON)
+include(orcaAPI.cmake)
 
-set_target_properties(orcaSDK_core
-	PROPERTIES
-		VERSION ${orcaSDK_VERSION}
-		SOVERSION ${orcaSDK_VERSION_MAJOR}
+set_target_properties(orcaSDK_core PROPERTIES
+	VERSION ${orcaSDK_VERSION}
+	SOVERSION ${orcaSDK_VERSION_MAJOR}
 	EXPORT_NAME core
 )
 
@@ -66,39 +68,25 @@ write_basic_package_version_file(
 )
 
 install(TARGETS orcaSDK_core
-	EXPORT orcaSDKConfig
+	EXPORT orcaSDKTargets
 	FILE_SET publicAPI
-	FILE_SET asioHeaders
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-	# PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-export(TARGETS orcaSDK_core
-	NAMESPACE orcaSDK::
-	FILE "${CMAKE_CURRENT_BINARY_DIR}/orcaSDKConfig.cmake"
-)
-install(EXPORT orcaSDKConfig 
+install(EXPORT orcaSDKTargets 
 	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK
 	NAMESPACE orcaSDK::
 )
-	# runtime destination ${cmake_install_bindir}
-		# component	orcasdk_runtime
-	# library destination ${cmake_install_libdir}
-		# component			orcasdk_runtime
-		# namelink_component	orcasdk_development
-	# archive destination ${cmake_install_libdir}
-		# component	orcasdk_development
-# )
 
-# #Packaging
-# set(CPACK_PACKAGE_NAME orcaSDK)
-# set(CPACK_PACKAGE_VENDOR IrisDynamicsLtd)
-# set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A C++ library for interacting with your Orca Series Linear Motor.")
-# set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
-# set(CPACK_VERBATIM_VARIABLES TRUE)
-
-# include(CPack)
+install(
+	FILES
+		"orcaSDKConfig.cmake"
+	DESTINATION
+		"${CMAKE_INSTALL_LIBDIR}/cmake/orcaSDK"
+)
 
 set(orcaSDK_TEST "false" CACHE BOOL "Should the orcaSDK test targets be included?")
 if (orcaSDK_TEST)

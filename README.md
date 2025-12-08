@@ -9,15 +9,13 @@
 - [Setting Up Hardware and Testing Your Motor](#setting-up-hardware-and-testing-your-motor) 
     - [Windows](#windows) 
     - [Linux](#linux) 
-- [Download the Latest Release](#download-the-latest-release) 
-    - [(Optional) Download the Documentation](#optional-download-the-documentation)
 - [Building the SDK](#building-the-sdk) 
-    - [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
-- [Building an Application using the SDK](#building-an-application-using-the-sdk)
     - [Create a CMakeLists.txt file](#create-a-cmakeliststxt-file) 
+    - [Create main.cpp](#create-maincpp)
 - [Compile and Run Your Application](#compile-and-run-your-application)
     - [Visual Studio](#visual-studio)
     - [Command Line](#command-line)
+- [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
 - [Whats Next?](#whats-next)
 
 ## Introduction
@@ -86,54 +84,15 @@ setserial /dev/ttyUSB0 low_latency
 
 Linux doesn't save parameters for these devices by default, which means that each time you turn on your computer or plug in your device, your cables will be assigned a new ttyUSB file, which may not have the same number as the last time you used it. In addition, because this is a new file, you will need to repeat the previous two commands again. If you don't want to locate your device and repeat these commands regularly, you can set up automatic configuration by writing up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html) for your device.
 
-## Download the Latest Release
-
-On our Github's main page, navigate to the Releases section on the right side of the screen and download and unzip the source code of the latest release of the ORCA SDK. 
-
-Alternatively if you have a git client, you can clone the repo and build from the main branch.
-
-### (Optional) Download the Documentation
-
-We recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
-
 ## Building the SDK
 
-We recommend building the SDK using CMake. The SDK aims to support standard integration with CMake projects as a config-file package. To begin, open a command-line in the root directory of the cloned repository. Enter the following commands:
-
-```
-mkdir build
-cd build
-cmake ..
-```
-
-If everything works fine, the cmake command should identify a local C++ compiler and use it to configure a project, ready to be built. Now run one of the following two commands from inside the build directory. 
-
-If you wish to develop in debug mode, run:
-```
-cmake --build . --config debug
-```
-Else if you wish to develop in release mode, run:
-```
-cmake --build . --config release
-```
-
-If no errors are reported, the library will be built and is ready to be consumed by your application.
-
-### (Optional) Install the SDK to your local system
-
-If you'd like to install the SDK to your system to allow for easy reuse, you'll need to execute one additional command. First, open another command line, this time with administrator permissions. Then navigate once again to the build directory and execute the following command. You will need to pass the build type that you've built the library in to the --config flag
-
-```
-cmake --install . --config debug
-```
-OR
-```
-cmake --install . --config release
-```
-
-## Using the SDK
-
 The goal for this section is to illustrate how to create and compile a basic project that uses the orcaSDK. The goal is to get to the point of successful compilation, not for detailed use of the SDK. For tutorials and example projects with such use cases, we have created a separate repo, which we link to at the end of this README. Before going through those tutorials, however, we will assume you have followed the steps listed here for how to create a basic application.
+
+We strongly recommend using CMake to build the SDK. For the vast majority of users we recommend using CMake's FetchContent features which we describe in this section.
+
+> If our recommended build solution is insufficient for your needs, orcaSDK-CMake-Details.md contains relevant details for custom installations.
+
+---
 
 ### Create a CMakeLists.txt file
 
@@ -161,29 +120,32 @@ add_executable(basicOrcaSDKApp
 )
 ```
 
-This new command defines an application target which will result in an executable (.exe) when the project is built. Right now it depends on the source file main.cpp. We have not defined this file yet, and will save that until the next step.
+This command defines an application target which will result in an executable (.exe on Windows) when the project is built. This command depends on the source file main.cpp. We will describe this file in the next step.
 
-Finally we add the commands which find and link the orcaSDK to the executable target.
+Next we add the commands which download the orcaSDK and its dependencies and prepare it for use.
 
 ```CMakeLists.txt
 ...
 
-find_package(orcaSDK REQUIRED)
-target_link_libraries(basicOrcaSDKApp PRIVATE orcaSDK::core)
+include(FetchContent)
+FetchContent_Declare(orcaSDK
+    GIT_REPOSITORY https://github.com/IrisDynamics/orcaSDK.git
+    GIT_TAG main # Or 'v1.1.0' or some commit hash from the SDK
+)
+FetchContent_MakeAvailable(orcaSDK)
 ```
 
-find_package() searches CMake's known install paths for any package with a matching name. The REQUIRED parameter tells CMake to stop executing immediately if it failes to find the package. If you chose to build the SDK but not install it, this command must be modified to include the path to your build directory.
+The command `include(FetchContent)` makes the CMake FetchContent features available for use in this project. The next command `FetchContent_Declare(orcaSDK ...)` describes where to download the SDK from and what version to use. The `FetchContent_MakeAvailable(orcaSDK)` command downloads and builds the SDK, making it available for use.
 
-```
-find_package(orcaSDK REQUIRED PATHS <path-to-your-orcaSDK-build-directory>)
+Finally, we add one more command to associate the SDK with your executable.
+
+```CMakeLists.txt
+...
+
+target_link_libraries(basicOrcaSDKApp PUBLIC orcaSDK::core)
 ```
 
-For example, if you have added the SDK within your project folder, the path would be:
-```
-find_package(orcaSDK REQUIRED PATHS orcaSDK/build)
-```
-
-target_link_libraries() indicates to CMake that the target listed as the first parameter is a client of the target described after. In this case, the basicOrcaSDKApp target is a client of the orcaSDK::core target. orcaSDK::core is the name of the core library of the SDK. The PRIVATE parameter indicates that the library is only meant to be consumed by the client target and to not propagate its settings further.
+`target_link_libraries(basicOrcaSDKApp ...)` indicates to CMake that your application is a client of the SDK, and requires access to the SDK's include paths and compiled object files.
 
 At this point we have a simple CMakeLists.txt file describing an application which makes use of the SDK. Your CMakeLists.txt file should look something like this:
 
@@ -196,8 +158,14 @@ add_executable(basicOrcaSDKApp
     main.cpp
 )
 
-find_package(orcaSDK REQUIRED)
-target_link_libraries(basicOrcaSDKApp PRIVATE orcaSDK::core)
+include(FetchContent)
+FetchContent_Declare(orcaSDK
+    GIT_REPOSITORY https://github.com/IrisDynamics/orcaSDK.git
+    GIT_TAG main # Or 'v1.1.0' or some commit hash from the SDK
+)
+FetchContent_MakeAvailable(orcaSDK)
+
+target_link_libraries(basicOrcaSDKApp PUBLIC orcaSDK::core)
 ```
 
 ### Create main.cpp
@@ -220,12 +188,14 @@ For now don't worry about the contents of this source file.
 
 ## Compile and Run Your Application
 
-Building the application can be done in a few ways. For Windows users we recommend interacting with your project through Visual Studio. But you can also build your app using the command line.
+Building the application can be done in a few ways. For Windows users we recommend interacting with your project through Visual Studio. 
+
+If on Linux, or if you don't want to use Visual Studio, you can also build your app using the command line.
 
 ### Visual Studio
 
 To build a CMake app though Visual Studio follow these steps:
- - If using Visual Studio, open the app, and on the project selection window, select the option "Open a local folder". 
+ - Open Visual Studio, and on the project selection window, select the option "Open a local folder". 
  - Select the folder that contains your CMakeLists.txt file. Visual Studio should recognize the project as a CMake project upon opening and configure itself appropriately. 
  - To interact with your project, right click on any item in the Solution Explorer, and select "Switch to CMake Targets View". 
  - To build your application, expand the dropdown menu for your project and right click on your application. Select "Set as Startup Item" then click the play button in the top.
@@ -234,25 +204,20 @@ For further information regarding CMake projects in Visual Studio, [CMake Projec
 
 ### Command Line
 
-If building your app through the command line, simply use the same commands as when building the library
+If building your app through the command line, simply use the following commands.
 
 ```
 mkdir build
 cd build
 cmake ..
-```
-
-After executing the above steps, when running the actual build command, make sure to pass in the --config flag that corresponds with how the library was built:
-
-```
-cmake --build . --config debug
-```
-OR
-```
-cmake --build . --config release
+cmake --build .
 ```
 
 If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory, or within the build directory itself.
+
+## (Optional) Download the Documentation
+
+We recommend downloading the documentation package, found in the releases section of this Github repo. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
 
 ## What's Next?
 

@@ -15,7 +15,7 @@
 - [Compile and Run Your Application](#compile-and-run-your-application)
     - [Visual Studio](#visual-studio)
     - [Command Line](#command-line)
-- [(Optional) Install the SDK to your local system](#optional-install-the-sdk-to-your-local-system)
+- [(Optional) Download the Documentation](#optional-download-the-documentation)
 - [Whats Next?](#whats-next)
 
 ## Introduction

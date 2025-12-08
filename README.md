@@ -36,7 +36,8 @@ To use the SDK you will need the following tools:
 - A C++ build system. 
     - For Windows the most appropriate option is likely MSBuild, which comes packaged with [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
     - For Linux the most appropriate option is likely GCC.
-- [CMake](https://cmake.org/) 
+- [CMake](https://cmake.org/)
+    - If using Visual Studio, this is installed as part of the 'Desktop development for C++' workload.
 - Installation of git client is necessary to help CMake build succesfully. Git can be downloaded at the following [link](https://git-scm.com/).
 - A IDE or text editor of your choice
     

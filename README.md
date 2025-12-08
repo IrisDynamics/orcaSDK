@@ -21,27 +21,23 @@
 - [Whats Next?](#whats-next)
 
 ## Introduction
-Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their Orca series linear motor. 
+Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their ORCA series linear motor. 
 
-Not all use cases require custom software for controlling an Orca motor. It's possible that a tool already exists that handles your use case. Other options include:
-
-- The Orca motor's built in GUI accessible through [IrisControls](https://irisdynamics.com/products/software).
-- Our [MATLAB](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG230704_Orca_Series_Modbus_RTU_with_MATLAB.pdf) and [LabVIEW](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG230713_Orca_Series_Modbus_RTU_with_LabVIEW.pdf) packages
-- One of our SmartHubs.
+Not all use cases require custom software for controlling an ORCA motor. It's possible that a more appropriate tool exists for your use case. See a list of available options on the [Getting Started](https://irisdynamics.com/getting-started-resources) page of our website.
 
 The benefits of using the SDK include:
 - High speed serial communication with the motor
 - Programmatic control over the motor using every operational mode available
 
-If after considering your options custom software seems like the appropriate solution, then this repo is for you! The SDK is a C++ library designed to provide an easy to use and understand abstraction for your motor. The SDK also contains C++ implementations of a few commonly used tools. 
+If after considering your options custom software seems like the appropriate solution, then this repo is for you! The SDK is a C++ library designed to provide an easy to use and understand abstraction for your motor.
 
 ## Prerequisites
 To use the SDK you will need the following tools:
 
 ### Software
 - A C++ build system. 
-    - For Windows your most appropriate option is likely MSBuild, which comes packaged with [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
-    - For Linux you most appropriate options is likely GCC.
+    - For Windows the most appropriate option is likely MSBuild, which comes packaged with [Microsoft Visual Studio](https://visualstudio.microsoft.com/).
+    - For Linux the most appropriate option is likely GCC.
 - [CMake](https://cmake.org/) 
 - Installation of git client is necessary to help CMake build succesfully. Git can be downloaded at the following [link](https://git-scm.com/).
 - A IDE or text editor of your choice
@@ -50,7 +46,7 @@ To use the SDK you will need the following tools:
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
     - A cable splitter
-    - An RS422 cable, used with Modbus and the Orca SDK (yellow)
+    - An RS422 cable, used with Modbus and the SDK (yellow)
     - An RS485 cable, used with Iris Controls (blue)
 
 ### Knowledge
@@ -58,11 +54,11 @@ To use the SDK you will need the following tools:
 
 ## Setting Up Hardware and Testing Your Motor
 
-Before continuing onto any software development, make sure that you have read through and followed the steps in the Orca Series Quickstart Guide, which can be found on [our downloads page](https://irisdynamics.com/downloads). We recommend testing your motors functionality through IrisControls, also hosted on our downloads page, before beginning to operate your motor through the SDK.
+Before continuing onto any software development, make sure that you have read through and followed the steps in the Orca Series Quickstart Guide, which can be found on [our downloads page](https://irisdynamics.com/downloads). We recommend testing your motor's functionality through IrisControls, also hosted on our downloads page, before beginning to operate your motor through the SDK.
 
 ### Windows
 
-Windows users will need to update a setting on their yellow cable. Each cable has a built in latency of 16ms by default. For the blue cable, this is fine, but the SDK requires that this latency setting is reduced as much as possible. This allows for high speed communication with your motor. To update this setting, follow these steps:
+On Windows, each cable has a built in latency of 16ms between messages by default. For the blue cable, this is fine. But to enable high speed communication with your motor, this latency setting should be reduced as much as possible on the yellow cable. To update this setting, follow these steps:
  - Ensure your cables are connected to your computer
  - Open Device Manager
  - Navigate to "Ports (COM & LPT)" and expand the dropdown menu
@@ -76,7 +72,7 @@ Keep a note of what the COM port number for your yellow cable is. You will need 
 
 ### Linux
 
-When you plug in an yellow or blue cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
+When you plug in a yellow or blue cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
 
 ```
 sudo chmod 666 /dev/ttyUSB0
@@ -98,7 +94,7 @@ Alternatively if you have a git client, you can clone the repo and build from th
 
 ### (Optional) Download the Documentation
 
-We also recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
+We recommend downloading the documentation package, also found in the releases section on Github. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
 
 ## Building the SDK
 
@@ -135,7 +131,7 @@ OR
 cmake --install . --config release
 ```
 
-## Building an Application using the SDK
+## Using the SDK
 
 The goal for this section is to illustrate how to create and compile a basic project that uses the orcaSDK. The goal is to get to the point of successful compilation, not for detailed use of the SDK. For tutorials and example projects with such use cases, we have created a separate repo, which we link to at the end of this README. Before going through those tutorials, however, we will assume you have followed the steps listed here for how to create a basic application.
 
@@ -189,7 +185,7 @@ find_package(orcaSDK REQUIRED PATHS orcaSDK/build)
 
 target_link_libraries() indicates to CMake that the target listed as the first parameter is a client of the target described after. In this case, the basicOrcaSDKApp target is a client of the orcaSDK::core target. orcaSDK::core is the name of the core library of the SDK. The PRIVATE parameter indicates that the library is only meant to be consumed by the client target and to not propagate its settings further.
 
-At this point we have the most simple CMakeLists.txt file describing an application which makes use of the SDK. At this point your CMakeLists.txt file should look something like this:
+At this point we have a simple CMakeLists.txt file describing an application which makes use of the SDK. Your CMakeLists.txt file should look something like this:
 
 ```CMakeLists.txt
 cmake_minimum_required(VERSION 3.23)
@@ -203,6 +199,8 @@ add_executable(basicOrcaSDKApp
 find_package(orcaSDK REQUIRED)
 target_link_libraries(basicOrcaSDKApp PRIVATE orcaSDK::core)
 ```
+
+### Create main.cpp
 
 Next let's create a very simple main.cpp which makes use of the SDK, and build it to test if our system is working.
 
@@ -232,6 +230,8 @@ To build a CMake app though Visual Studio follow these steps:
  - To interact with your project, right click on any item in the Solution Explorer, and select "Switch to CMake Targets View". 
  - To build your application, expand the dropdown menu for your project and right click on your application. Select "Set as Startup Item" then click the play button in the top.
 
+For further information regarding CMake projects in Visual Studio, [CMake Project in Visual Studio](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170) is a helpful resource.
+
 ### Command Line
 
 If building your app through the command line, simply use the same commands as when building the library
@@ -252,9 +252,7 @@ OR
 cmake --build . --config release
 ```
 
-For further information regarding CMake projects in Visual Studio, [CMake Project in Visual Studio](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-170) is a helpful resource.
-
-If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory.
+If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory, or within the build directory itself.
 
 ## What's Next?
 

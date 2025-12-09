@@ -71,11 +71,11 @@ public:
 		return !receive_buffer.empty();
 	}
 
-	std::vector<uint8_t> receive_bytes_blocking() override{
-		return std::vector<uint8_t>(receive_buffer.begin(), receive_buffer.end());
+	orcaSDK::OrcaResult<std::vector<uint8_t>> receive_bytes_blocking() override{
+		return { std::vector<uint8_t>(receive_buffer.begin(), receive_buffer.end()), {0, ""} };
 	}
 
-	void flush_and_discard_receive_buffer()
+	void flush_and_discard_receive_buffer() override
 	{
 		receive_buffer.clear();
 	}

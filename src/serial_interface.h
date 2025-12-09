@@ -69,6 +69,8 @@ public:
 	virtual std::vector<uint8_t> receive_bytes_blocking() = 0;
 
 	virtual void flush_and_discard_receive_buffer() = 0;
+
+	virtual bool is_open() = 0;
 };
 
 }

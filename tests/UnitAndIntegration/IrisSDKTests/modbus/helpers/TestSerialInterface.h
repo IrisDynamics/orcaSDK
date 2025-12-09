@@ -80,6 +80,10 @@ public:
 		receive_buffer.clear();
 	}
 
+	bool is_open() override {
+		return true;
+	}
+
 private:
 	std::deque<char> receive_buffer;
 	uint64_t current_time = 0;

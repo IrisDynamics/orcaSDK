@@ -137,7 +137,7 @@ TEST_F(ActuatorTests, AfterReceivingASuccessfulMessageTimeSinceLastMessageBecome
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	motor.read_register_blocking(STATOR_TEMP);
+	motor.read_register_blocking(BOARD_TEMP);
 
 	EXPECT_EQ(motor.time_since_last_response_microseconds(), 0);
 }
@@ -153,7 +153,7 @@ TEST_F(ActuatorTests, AfterReceivingASuccessfulMessageAndWaitingTimeSinceLastRes
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	motor.read_register_blocking(STATOR_TEMP);
+	motor.read_register_blocking(BOARD_TEMP);
 
 	clock->pass_time(5000);
 

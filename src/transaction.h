@@ -54,9 +54,10 @@ public:
 
         R_OVERRUN_ERROR        	= 2,
         INTERCHAR_TIMEOUT_ERROR	= 3,
-		RESPONSE_TIMEOUT_ERROR 	= 4,
-		UNEXPECTED_RESPONDER   	= 5,
+        RESPONSE_TIMEOUT_ERROR 	= 4,
+        UNEXPECTED_RESPONDER   	= 5,
         CRC_ERROR              	= 6,
+        SERIAL_PORT_NOT_OPEN    = 7,
     } error_id;
 
     constexpr Transaction() = default;

@@ -226,6 +226,7 @@ void Actuator::handle_transaction_response(Transaction response)
 	if (ec & (1 << Transaction::INTERCHAR_TIMEOUT_ERROR)) error_message << "Unexpected interchar delay timeout. ";
 	if (ec & (1 << Transaction::UNEXPECTED_RESPONDER)) error_message << "Wrong modbus response address. ";
 	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "Wrong CRC. ";
+	if (ec & (1 << Transaction::SERIAL_PORT_NOT_OPEN)) error_message << "There is no opened serial port. ";
 
 	message_error = OrcaError{response.get_failure_codes(), error_message.str()};
 

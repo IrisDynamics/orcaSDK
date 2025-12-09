@@ -220,15 +220,24 @@ public:
     void receive_blocking() {
         Transaction* active_transaction = messages.get_active_transaction();
 
-        std::vector<uint8_t> response = serial_interface.receive_bytes_blocking();
-
-        for (int i = 0; i < response.size(); i++)
+        if (serial_interface.is_open())
         {
-            active_transaction->load_reception(response[i]); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
-            diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
+            std::vector<uint8_t> response = serial_interface.receive_bytes_blocking();
+
+            for (int i = 0; i < response.size(); i++)
+            {
+                active_transaction->load_reception(response[i]); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
+                diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
+            }
+    
+            active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+        }
+        else
+        {
+            active_transaction->invalidate(Transaction::SERIAL_PORT_NOT_OPEN);
+            active_transaction->mark_finished();
         }
 
-        active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
         if (!active_transaction->is_reception_valid())
         {
             serial_interface.flush_and_discard_receive_buffer();

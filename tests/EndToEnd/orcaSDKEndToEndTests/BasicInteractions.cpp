@@ -32,6 +32,11 @@ using namespace std::chrono;
 //		std::cout << motor.get_position_um().value << "           \r";
 //	}
 //}
+TEST_F(BasicInteractionTests, ReadingWithoutOpeningDoesntThrowException)
+{
+	motor.close_serial_port();
+	motor.get_position_um();
+}
 
 TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameComport)
 {

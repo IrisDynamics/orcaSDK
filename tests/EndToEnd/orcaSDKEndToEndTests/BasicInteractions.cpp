@@ -39,7 +39,7 @@ TEST_F(BasicInteractionTests, MotorCanObtainRelinquishAndThenObtainAgainTheSameC
 	motor.close_serial_port();
 	OrcaError error = motor.open_serial_port(serial_port_number, baud_rate, 0);
 	if (error) std::cout << "Error opening serial port: " << error.what();
-	EXPECT_NE(0, motor.read_register_blocking(STATOR_TEMP).value);
+	EXPECT_NE(0, motor.read_register_blocking(BOARD_TEMP).value);
 }
 
 TEST_F(BasicInteractionTests, CommandAndTestCompletesDeterministically)

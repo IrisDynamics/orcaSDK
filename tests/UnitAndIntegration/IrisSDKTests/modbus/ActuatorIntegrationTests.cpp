@@ -60,7 +60,7 @@ TEST_F(ActuatorIntegrationTests, PerformingSingleWideReadReturnsSingleWideReturn
 	ModbusTesting::CalculateAndAppendCRC(next_input_message);
 	serial_interface->consume_new_message(next_input_message);
 
-	EXPECT_EQ(2, motor.read_register_blocking(STATOR_TEMP).value);
+	EXPECT_EQ(2, motor.read_register_blocking(BOARD_TEMP).value);
 }
 
 TEST_F(ActuatorIntegrationTests, PerformingMultipleReadReturnsVectorOfResults)
@@ -74,7 +74,7 @@ TEST_F(ActuatorIntegrationTests, PerformingMultipleReadReturnsVectorOfResults)
 
 	std::vector<uint16_t> expected_output { 2, 256, 255 };
 
-	OrcaResult<std::vector<uint16_t>> result = motor.read_multiple_registers_blocking(STATOR_TEMP, 3);
+	OrcaResult<std::vector<uint16_t>> result = motor.read_multiple_registers_blocking(BOARD_TEMP, 3);
 
 	EXPECT_EQ(expected_output, result.value);
 }

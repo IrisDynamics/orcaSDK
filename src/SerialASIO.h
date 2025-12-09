@@ -100,9 +100,9 @@ public:
 		return byte;
 	}
 
-	std::vector<uint8_t> receive_bytes_blocking() override
+	OrcaResult<std::vector<uint8_t>> receive_bytes_blocking() override
 	{
-		if (!serial_port.is_open()) return {};
+		if (!serial_port.is_open()) return { {}, { 1, "No serial port open." } };
 
 		std::unique_lock<std::mutex> lock{ read_lock };
 	
@@ -110,12 +110,21 @@ public:
 		{
 			//The wait time should be as small as possible, while being long
 			// enough to ensure the response isn't going to arrive
+			timeout_occurred = true;
 			read_notifier.wait_for(lock, std::chrono::milliseconds(25)); 
 		}
 		
 		std::vector<uint8_t> bytes_read = read_data;
 		read_data.clear();
-		return bytes_read;
+
+		if (timeout_occurred)
+		{
+			return { bytes_read, {1, "Read blocking timed out."} };
+		}
+		else
+		{
+			return { bytes_read, {0, ""} };
+		}
 	}
 
 	void flush_and_discard_receive_buffer() override {
@@ -150,6 +159,7 @@ private:
 	std::vector<uint8_t> send_data;
 	std::vector<uint8_t> read_data;
 
+	std::atomic<bool> timeout_occurred = false;
 	std::condition_variable read_notifier;
 
 	std::mutex read_lock;
@@ -191,6 +201,7 @@ private:
 				{
 					read_data.push_back(read_buffer[i+2]);
 				}
+				timeout_occurred = false;
 				read_notifier.notify_one();
 			});
 	}

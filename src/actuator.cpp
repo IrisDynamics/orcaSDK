@@ -222,7 +222,7 @@ void Actuator::handle_transaction_response(Transaction response)
 	int ec = response.get_failure_codes();
 
 	std::stringstream error_message;
-	if (ec & (1 << Transaction::RESPONSE_TIMEOUT_ERROR)) error_message << "Response timed out, the motor took too long to respond. ";
+	if (ec & (1 << Transaction::RESPONSE_TIMEOUT_ERROR)) error_message << "Response timed out. Check that your baud is configured correctly and you're connected to the right cable. ";
 	if (ec & (1 << Transaction::INTERCHAR_TIMEOUT_ERROR)) error_message << "Unexpected interchar delay timeout. ";
 	if (ec & (1 << Transaction::UNEXPECTED_RESPONDER)) error_message << "Wrong modbus response address. ";
 	if (ec & (1 << Transaction::CRC_ERROR)) error_message << "Wrong CRC. ";

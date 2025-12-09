@@ -222,15 +222,25 @@ public:
 
         if (serial_interface.is_open())
         {
-            std::vector<uint8_t> response = serial_interface.receive_bytes_blocking();
+            OrcaResult<std::vector<uint8_t>> response_read = serial_interface.receive_bytes_blocking();
 
-            for (int i = 0; i < response.size(); i++)
+            if (response_read.error)
             {
-                active_transaction->load_reception(response[i]); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
-                diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
+                active_transaction->invalidate(Transaction::RESPONSE_TIMEOUT_ERROR);
+                active_transaction->mark_finished();
             }
-    
-            active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+            else
+            {
+                std::vector<uint8_t> response = response_read.value;
+
+                for (int i = 0; i < response.size(); i++)
+                {
+                    active_transaction->load_reception(response[i]); //read the next byte from the receiver buffer. This clears the byte received interrupt    ??TODO: should we be loading here? it seems that in the overrun case we've already walked off the end of the array??
+                    diagnostic_counters.increment_diagnostic_counter(bytes_in_count);
+                }
+
+                active_transaction->validate_response(diagnostic_counters);// might transition to resting from connected
+            }
         }
         else
         {

@@ -131,6 +131,10 @@ public:
 
 		wait_barrier_future.get();
 	}
+	
+	bool is_open() override {
+		return serial_port.is_open();
+	}
 
 private:
 	asio::io_context io_context;

@@ -69,6 +69,8 @@ public:
 	}
 
 	void tx_enable(size_t _bytes_to_read) override {
+		if (!serial_port.is_open()) return;
+
 		bytes_to_read = _bytes_to_read;
 		serial_port.cancel();
 		{
@@ -100,6 +102,8 @@ public:
 
 	std::vector<uint8_t> receive_bytes_blocking() override
 	{
+		if (!serial_port.is_open()) return {};
+
 		std::unique_lock<std::mutex> lock{ read_lock };
 	
 		if (read_data.size() < bytes_to_read)
@@ -115,6 +119,8 @@ public:
 	}
 
 	void flush_and_discard_receive_buffer() override {
+		if (!serial_port.is_open()) return;
+
 		std::array<uint8_t, 256> flush_buffer;
 		asio::async_read(serial_port, asio::buffer(flush_buffer, 256), [&](asio::error_code ec, size_t bytes_read) {
 			// Need a completion handler, even if empty, for the read to execute

@@ -318,9 +318,9 @@ OrcaResult<uint16_t> Actuator::get_errors() {
 	return read_register_blocking(ERROR_0);
 }
 
-OrcaResult<uint32_t> Actuator::get_serial_number() {
+OrcaResult<int32_t> Actuator::get_serial_number() {
 	OrcaResult<int32_t> result = read_wide_register_blocking(SERIAL_NUMBER_LOW);
-	return { (uint32_t)result.value, result.error };
+	return { result.value, result.error };
 }
 
 OrcaResult<uint16_t> Actuator::get_major_version() {

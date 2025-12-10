@@ -568,9 +568,9 @@ public:
 	/**
 	* @brief Returns the actuator serial number
 	*
-	* @return uint32_t - actuator serial number
+	* @return int32_t - actuator serial number
 	*/
-	OrcaResult<uint32_t> get_serial_number();
+	OrcaResult<int32_t> get_serial_number();
 
 	/**
 	* @brief Return the firmware major version

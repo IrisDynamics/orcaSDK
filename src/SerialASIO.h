@@ -1,3 +1,5 @@
+#pragma once
+
 #include "serial_interface.h"
 #include "asio.hpp"
 #include "error_types.h"

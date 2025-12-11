@@ -138,6 +138,11 @@ OrcaError Actuator::write_multiple_registers_blocking(uint16_t reg_start_address
 	return message_error;
 }
 
+OrcaError Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, std::vector<uint16_t> write_data, MessagePriority priority)
+{
+	return write_multiple_registers_blocking(reg_start_address, write_data.size(), write_data.data(), priority);
+}
+
 OrcaResult<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocking(
 	uint16_t read_starting_address, uint8_t read_num_registers,
 	uint16_t write_starting_address, uint8_t write_num_registers,
@@ -158,6 +163,18 @@ OrcaResult<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocki
 	flush();
 
 	return { message_data, message_error };
+}
+
+OrcaResult<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocking(
+	uint16_t read_starting_address, uint8_t read_num_registers,
+	uint16_t write_starting_address, std::vector<uint16_t> write_data,
+	MessagePriority priority)
+{
+	return read_write_multiple_registers_blocking(
+		read_starting_address, read_num_registers,
+		write_starting_address, write_data.size(),
+		write_data.data(), priority
+	);
 }
 
 OrcaResult<int32_t> Actuator::get_force_mN() {

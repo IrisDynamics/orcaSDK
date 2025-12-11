@@ -123,6 +123,24 @@ TEST_F(ActuatorIntegrationTests, PerformingMultipleWriteSendsMultipleWriteMessag
 	EXPECT_EQ(expected_send, serial_interface->sendBuffer);
 }
 
+TEST_F(ActuatorIntegrationTests, MultipleWriteOverloadBehavesAsOriginal)
+{
+	clock->set_auto_time_pass(10000); //Force timeout, only care about send
+
+	std::vector<uint16_t> out_values =
+	{
+		256,
+		512
+	};
+	motor.write_multiple_registers_blocking(SHAFT_POS_UM, out_values, MessagePriority::not_important);
+
+	std::vector<char> expected_send{
+		'\x1', '\x10', '\x1', '\x56', '\x0', '\x2', '\x4', '\x1', '\x0', '\x2', '\x0', '\x7b', '\xb5',
+	};
+
+	EXPECT_EQ(expected_send, serial_interface->sendBuffer);
+}
+
 TEST_F(ActuatorIntegrationTests, ReadWriteRegistersBlockingBothWritesCorrectlyAndReadsCorrectly)
 {
 	//Arrange
@@ -137,6 +155,38 @@ TEST_F(ActuatorIntegrationTests, ReadWriteRegistersBlockingBothWritesCorrectlyAn
 	//Act
 	std::vector<uint16_t> actual_output = motor.read_write_multiple_registers_blocking(
 		128, 3, 256, 2, input_data.data()).value;
+
+	//Assert
+	std::vector<char> expected_serial_write_data = std::vector<char>{
+			'\x1', '\x17',
+			'\x0', '\x80',	//Read start address 
+			'\x0', '\x3',	//Read num registers
+			'\x1', '\x0',	//Write start address
+			'\x0', '\x2',	//Write num registers
+			'\x4',			//Write byte count
+			'\x0', '\x10', '\x2', '\x0',	//Write data
+			'\x99', '\xce'	//CRC
+	};
+	EXPECT_EQ(expected_serial_write_data, serial_interface->sendBuffer);
+
+	std::vector<uint16_t> expected_output{ 2, 256, 255 };
+	EXPECT_EQ(expected_output, actual_output);
+}
+
+TEST_F(ActuatorIntegrationTests, ReadWriteRegistersBlockingOverloadBehavesLikeDefault)
+{
+	//Arrange
+	std::vector<uint16_t> input_data{ 16, 512 };
+
+	std::deque<char> serial_read_data = std::deque<char>{
+		'\x1', '\x3', '\x4', '\0', '\x2', '\x1', '\x0', '\x0', '\xff'
+	};
+	ModbusTesting::CalculateAndAppendCRC(serial_read_data);
+	serial_interface->consume_new_message(serial_read_data);
+
+	//Act
+	std::vector<uint16_t> actual_output = motor.read_write_multiple_registers_blocking(
+		128, 3, 256, input_data).value;
 
 	//Assert
 	std::vector<char> expected_serial_write_data = std::vector<char>{

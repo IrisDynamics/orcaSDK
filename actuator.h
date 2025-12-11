@@ -221,10 +221,18 @@ public:
 	 *
 	 * @param reg_start_address The starting register address to be written to
 	 * @param num_registers How many registers to read
-	 * @param write_data An array containing the value to be written
+	 * @param write_data An array containing the values to be written
 	 */
 	OrcaError write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important);
-
+	/**
+	 * @brief Writes multiple register values to the motor.
+	 *
+	 * @param reg_start_address The starting register address to be written to
+	 * @param write_data A vector containing the values to be written
+	 * @overload Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
+	 */
+	OrcaError write_multiple_registers_blocking(uint16_t reg_start_address, std::vector<uint16_t> write_data, MessagePriority priority = MessagePriority::important);
+		
 	/**
 	 * @brief Simultaneously reads a set of values from the motor and writes a set of values to the motor.
 	 *
@@ -238,6 +246,20 @@ public:
 		uint16_t read_starting_address, uint8_t read_num_registers,
 		uint16_t write_starting_address, uint8_t write_num_registers,
 		uint16_t* write_data,
+		MessagePriority priority = MessagePriority::important);
+
+	/**
+	 * @brief Simultaneously reads a set of values from the motor and writes a set of values to the motor.
+	 *
+	 * @param read_starting_address The starting register address to be read from
+	 * @param read_num_registers The amount of registers to read
+	 * @param write_starting_address The starting register address to be written to
+	 * @param write_data A vector containing the values to be written
+	 * @overload Actuator::read_write_multiple_registers_blocking(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers,	uint16_t* write_data, MessagePriority priority = MessagePriority::important)
+	 */
+	OrcaResult<std::vector<uint16_t>> read_write_multiple_registers_blocking(
+		uint16_t read_starting_address, uint8_t read_num_registers,
+		uint16_t write_starting_address, std::vector<uint16_t> write_data,
 		MessagePriority priority = MessagePriority::important);
 
 	/**

@@ -161,7 +161,7 @@ private:
 	std::vector<uint8_t> send_data;
 	std::vector<uint8_t> read_data;
 
-	std::atomic<bool> timeout_occurred = false;
+	std::atomic<bool> timeout_occurred{false};
 	std::condition_variable read_notifier;
 
 	std::mutex read_lock;

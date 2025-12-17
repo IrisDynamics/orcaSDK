@@ -71,7 +71,7 @@ public:
 	 *	@overload Actuator::Actuator(const char* name, uint8_t modbus_server_address = 1)
 	 */
 	Actuator(
-		const char* name,
+		const char* name = "",
 		uint8_t modbus_server_address = 1
 	);
 
@@ -90,7 +90,7 @@ public:
 	Actuator(
 		std::shared_ptr<SerialInterface> serial_interface,
 		std::shared_ptr<Clock> clock,
-		const char* name,
+		const char* name = "",
 		uint8_t modbus_server_address = 1
 	);
 

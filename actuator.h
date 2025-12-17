@@ -94,7 +94,7 @@ public:
 		uint8_t modbus_server_address = 1
 	);
 
-	const char* name;
+	std::string name;
 
 	/**
 	 * @brief	Attempts to open a desired serial port, assigning a baud rate and interframe

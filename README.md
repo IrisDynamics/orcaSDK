@@ -93,8 +93,6 @@ We strongly recommend using CMake to build the SDK. For the vast majority of use
 
 > If our recommended build solution is insufficient for your needs, orcaSDK-CMake-Details.md contains relevant details for custom installations.
 
----
-
 ### Create a CMakeLists.txt file
 
 The basic unit of projects using CMake is the CMakeLists.txt file. To begin, create a file called CMakeLists.txt in the folder in which you'd like to create your application. Open the new file with a text editor of your choice and add the following text:

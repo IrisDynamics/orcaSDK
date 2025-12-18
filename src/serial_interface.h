@@ -8,7 +8,12 @@ namespace orcaSDK
 {
 
 /**
- *	@brief	The pure virtual interface that the SDK relies on for performing
+ *	@brief	WARNING - UNSTABLE: We are still determining the appropriate interface
+ *			between our modbus client and the serial implementations that it relies
+ *			on. Because of this, we don't expect this interface to remain stable,
+ *			and we might modify the interface between minor releases.
+ *
+ *			This is the pure virtual interface that the SDK relies on for performing
  *			serial communication. Must be implemented if using the SDK on 
  *			unsupported platforms.
  */
@@ -66,10 +71,21 @@ public:
 	 */
 	virtual uint8_t receive_byte() = 0;
 
+	/**
+	 *	@brief	Reads a complete serial response from the client. An error
+	 *			returned from this function is interpreted as a timeout by
+	 *			the SDK.
+	 */
 	virtual OrcaResult<std::vector<uint8_t>> receive_bytes_blocking() = 0;
 
+	/**
+	 *	@brief	Flushes all data stored in the underlying read buffer.
+	 */
 	virtual void flush_and_discard_receive_buffer() = 0;
 
+	/**
+	 *	@brief	Returns true if a serial port has been obtained and is open.
+	 */
 	virtual bool is_open() = 0;
 };
 

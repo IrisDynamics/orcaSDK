@@ -314,7 +314,7 @@ public:
 	void enable_stream();
 
 	/**
-	 * @brief Disable communication with a server device. Moves into disconnecting state where transceiver hardware will be disabled
+	 * @brief	Disables command streaming with the ORCA
 	*/
 	void disable_stream();
 

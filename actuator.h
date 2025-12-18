@@ -47,7 +47,7 @@ namespace orcaSDK
 
 /**
    @class Actuator
-   @brief Class that abstracts the communications between the client and a Orca motor server.
+   @brief Class that abstracts the communications between the client and an ORCA Series Linear Motor.
 
 		This class should be the centerpoint for all communication with your motor from this 
 		SDK. Other classes and types in this SDK should be understood in reference to this class.
@@ -102,10 +102,10 @@ public:
 	 * @param	port_path	The file path corresponding to the rs422 cable that the desired device
 	 *						 is connected to.
 	 * @param	baud_rate	The desired baud rate for this connection. Should match the baud
-	 *						rate configured in the Orca's modbus settings.
+	 *						rate configured in the ORCA's modbus settings.
 	 * @param	interframe_delay	The time that this object will wait after concluding a message
 	 *								before initiating the next. Should match the interframe delay
-	 *								configured in the Orca's modbus settings.
+	 *								configured in the ORCA's modbus settings.
 	 */
 	OrcaError open_serial_port(
 		std::string port_path,
@@ -151,13 +151,13 @@ public:
 	* @return uint16_t  The bitmask containing all active errors present on the motor.
 	* @note		To check for a specific error, check whether the bit which corresponds with
 	*			the error value is currently set, we recommend using a bitwise AND with the
-	*			value of the error of interest. See the Orca Reference Manual, section 
+	*			value of the error of interest. See the ORCA Reference Manual, section 
 	*			'Errors->Active and Latched Error Registers' for details on the error types.
 	*/
 	OrcaResult<uint16_t> get_errors();
 
 	/**
-	* @brief	Write to the orca control register to change the mode of operation of the motor.
+	* @brief	Write to the ORCA control register to change the mode of operation of the motor.
 	*			Also changes what type of command stream will be sent during high speed streaming.
 	*/
 	OrcaError set_mode(MotorMode orca_mode);
@@ -165,7 +165,7 @@ public:
 	/**
 	* @brief Requests from the motor what mode of operation the motor is currently in.
 	* 
-	* @return MotorMode  The mode of operation that the Orca is currently in.
+	* @return MotorMode  The mode of operation that the ORCA is currently in.
 	*/
 	OrcaResult<MotorMode> get_mode();
 
@@ -299,15 +299,15 @@ public:
 	void run();
 
 	/**
-	 * @brief	Enables command streaming with the Orca. 
+	 * @brief	Enables command streaming with the ORCA. 
 	 *		
-	 *		Command streaming is the main form of asynchronous communication with the Orca. Command
+	 *		Command streaming is the main form of asynchronous communication with the ORCA. Command
 			streaming is also required for certain modes of communication, including Position mode, 
 			Force mode, and Haptic mode. When command streaming is enabled, this object	will automatically 
 			inject command stream messages when the run() function is called, and this object isn't 
 			currently waiting on an active message. When command stream messages complete, this object
 			populates the returned data from the motor into the stream_cache public StreamData struct member. 
-			See the Orca Series Modbus User Guide, section Orca-specific Function Codes for details on 
+			See the ORCA Series Modbus User Guide, section ORCA-specific Function Codes for details on 
 			command streaming.
 	 *	
 	*/
@@ -377,7 +377,7 @@ public:
 	OrcaError zero_position();
 
 	/**
-	 * @brief Copies the register for latched errors from the orca memory map into the local memory map 
+	 * @brief Copies the register for latched errors from the ORCA memory map into the local memory map 
 	 * 
 	 *		Latched errors are errors that were found by the motor, but are no longer active (not happening anymore)
 	 */
@@ -438,7 +438,7 @@ public:
 	 * @param  degain derivative gain with respect to error
 	 * @note	The position controller's PID tuning affects the behaviour of the motor in 
 	 *			both position control mode and kinematic control mode. Please refer to the 
-	 *			Orca Series Reference Manual, section Controllers->Position Controller
+	 *			ORCA Series Reference Manual, section Controllers->Position Controller
 	 *			for details.
 	 */
 	void tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
@@ -456,7 +456,7 @@ public:
 	 * @param	type  0 = minimize power, 1 = maximize smoothness
 	 * @param	auto_next  Should this motion to another motion after completing?
 	 * @param	next_id  The motion that should be executed next, in the case that chain is set to true
-	 * @note	Please refer to the Orca Series Reference Manual, section Controllers->Kinematic Controller
+	 * @note	Please refer to the ORCA Series Reference Manual, section Controllers->Kinematic Controller
 	 *			for details.
 	 */
 	OrcaError set_kinematic_motion(int8_t ID,int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id = -1);
@@ -465,7 +465,7 @@ public:
 	 * @brief Trigger to start a kinematic motion, this will also run any chained motions
 	 * @param	ID  Identification of the motion to be triggered
 	 * @note	This function will only have a result if the motor is currently in kinematic mode.
- 	 *			Please refer to the Orca Series Reference Manual, section Controllers->Kinematic Controller
+ 	 *			Please refer to the ORCA Series Reference Manual, section Controllers->Kinematic Controller
  	 *			for details.
 	 */
 	OrcaError trigger_kinematic_motion(int8_t ID);
@@ -493,7 +493,7 @@ public:
 	 *  @brief	Sets each haptic effect to enabled or disabled according to the input bits.
 	 *	@param	effects  The bitmask representing which haptic effects should be enabled. Will be a combination
 				of the HapticEffect enum values.
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
 	OrcaError enable_haptic_effects(uint16_t effects);
@@ -517,7 +517,7 @@ public:
 	 *						of the dead zone from the spring center, no spring force will be applied.
 	 *	@param	saturation	The maximum force that can be applied by the spring
 	 *	@param	coupling	The directions from the center in which the spring force applies.
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	 */
 	OrcaError set_spring_effect(
@@ -546,7 +546,7 @@ public:
 	 *	@param	frequency_dhz	The frequency, in decihertz, of the oscillation effect.
 	 *	@param	duty	The duty-cycle of the oscillation effect. Only relevant for pulse type effects.
 	 *	@param	type	The type of oscillation effect to create.
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	 */
 	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type);
@@ -554,7 +554,7 @@ public:
 	/**
 	*	@brief Sets the damping value in Haptic Mode
 	*	@param damping	The damping gain (4*N*s/mm)
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
 	OrcaError set_damper(uint16_t damping);
@@ -562,7 +562,7 @@ public:
 	/**
 	*	@brief Sets the inertia value in Haptic Mode
 	*	@param inertia	The inertia gain (64*N*s^2/mm)
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
 	OrcaError set_inertia(uint16_t inertia);
@@ -570,7 +570,7 @@ public:
 	/**
 	*	@brief Sets the constant force value in Haptic Mode
 	*	@param force	(mN)
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
 	OrcaError set_constant_force(int32_t force);
@@ -578,7 +578,7 @@ public:
 	/**
 	*	@brief Sets the constant force filter value in Haptic Mode
 	*	@param force_filter	Amount of filtering on constant force inputs
-	 *	@note	Please refer to the Orca Series Reference Manual, section Controllers->Haptic Controller
+	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
 	OrcaError set_constant_force_filter(uint16_t force_filter);

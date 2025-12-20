@@ -48,7 +48,7 @@ PROJECT_NAME           = orcaSDK
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 1.0.0
+PROJECT_NUMBER         = 1.1.0
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -524,7 +524,7 @@ TIMESTAMP              = NO
 # normally produced when WARNINGS is set to YES.
 # The default value is: NO.
 
-EXTRACT_ALL            = NO
+EXTRACT_ALL            = YES
 
 # If the EXTRACT_PRIVATE tag is set to YES, all private members of a class will
 # be included in the documentation.
@@ -923,7 +923,7 @@ WARN_IF_UNDOC_ENUM_VAL = NO
 # Possible values are: NO, YES, FAIL_ON_WARNINGS and FAIL_ON_WARNINGS_PRINT.
 # The default value is: NO.
 
-WARN_AS_ERROR          = FAIL_ON_WARNINGS_PRINT
+WARN_AS_ERROR          = NO
 
 # The WARN_FORMAT tag determines the format of the warning messages that Doxygen
 # can produce. The string should contain the $file, $line, and $text tags, which
@@ -967,7 +967,8 @@ WARN_LOGFILE           =
 
 INPUT                  = ./ \
                          ./src \
-                         ./tools
+                         ./tools \
+                         ./build/_deps/orcaapi-src/cpp/orca_registers.hpp
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1084,7 +1085,8 @@ EXCLUDE                = src/mb_crc.h \
                          src/chrono_clock.h \
                          src/diagnostics_tracker.h \
                          src/function_code_parameters.h \
-                         src/platform/windows_serial_interface.h
+                         src/platform/windows_serial_interface.h \
+                         src/SerialASIO.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2661,7 +2663,7 @@ CLASS_GRAPH            = YES
 # The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-COLLABORATION_GRAPH    = YES
+COLLABORATION_GRAPH    = NO
 
 # If the GROUP_GRAPHS tag is set to YES then Doxygen will generate a graph for
 # groups, showing the direct groups dependencies. Explicit enabling a group
@@ -2758,7 +2760,7 @@ INCLUDED_BY_GRAPH      = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALL_GRAPH             = YES
+CALL_GRAPH             = NO
 
 # If the CALLER_GRAPH tag is set to YES then Doxygen will generate a caller
 # dependency graph for every global function or class method.
@@ -2770,7 +2772,7 @@ CALL_GRAPH             = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALLER_GRAPH           = YES
+CALLER_GRAPH           = NO
 
 # If the GRAPHICAL_HIERARCHY tag is set to YES then Doxygen will graphical
 # hierarchy of all classes instead of a textual one.

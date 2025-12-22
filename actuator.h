@@ -477,6 +477,7 @@ public:
 	/**
 	 *	@brief	An enum representing the values of different bits for constructing an active
 	 *			haptic effects bitmask.
+	 *  @deprecated  Use ORCAReg::HAPTIC_STATUS_Values definitions
 	 */
 	enum HapticEffect {
 		ConstF = 1 << 0,
@@ -491,8 +492,8 @@ public:
 
 	/**
 	 *  @brief	Sets each haptic effect to enabled or disabled according to the input bits.
-	 *	@param	effects  The bitmask representing which haptic effects should be enabled. Will be a combination
-				of the HapticEffect enum values.
+	 *	@param	effects  The bitmask representing which haptic effects should be enabled. Can be any combination
+				of haptic effects. See ORCAReg::HAPTIC_STATUS_Values for options.
 	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
@@ -500,6 +501,7 @@ public:
 
 	/**
 	 *	@brief	Enum representing valid options for different Spring Coupling settings
+	 *  @deprecated  Use ORCAReg::Sn_COUPLING_Values definitions
 	 */
 	enum SpringCoupling
 	{
@@ -516,7 +518,7 @@ public:
 	 *	@param	dead_zone	The radius of the 'dead zone' for the spring. For any position within the radius
 	 *						of the dead zone from the spring center, no spring force will be applied.
 	 *	@param	saturation	The maximum force that can be applied by the spring
-	 *	@param	coupling	The directions from the center in which the spring force applies.
+	 *	@param	coupling	The directions from the center in which the spring force applies. See ORCAReg::Sn_COUPLING_Values for options.
 	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	 */
@@ -526,10 +528,11 @@ public:
 		int32_t center, 
 		uint16_t dead_zone = 0, 
 		uint16_t saturation = 0,
-		SpringCoupling coupling = SpringCoupling::both);
+		uint16_t coupling = ORCAReg::Sn_COUPLING_Values::BOTH);
 
 	/**
 	 *	@brief	Enum representing options for different Oscillator Types
+	 *  @deprecated  Use ORCAReg::On_TYPE_Values definitions
 	 */
 	enum OscillatorType
 	{
@@ -545,11 +548,11 @@ public:
 	 *	@param	amplitude	The amplitude of the oscillation effect.
 	 *	@param	frequency_dhz	The frequency, in decihertz, of the oscillation effect.
 	 *	@param	duty	The duty-cycle of the oscillation effect. Only relevant for pulse type effects.
-	 *	@param	type	The type of oscillation effect to create.
+	 *	@param	type	The type of oscillation effect to create. See ORCAReg::On_TYPE_Values for options.
 	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	 */
-	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type);
+	OrcaError set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type);
 
 	/**
 	*	@brief Sets the damping value in Haptic Mode

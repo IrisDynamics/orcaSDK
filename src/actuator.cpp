@@ -397,11 +397,11 @@ OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t ti
 		uint16_t(delay),
 		uint16_t((type << 1) | (next_id << 3) | auto_next)
 	};
-	return write_multiple_registers_blocking(KIN0_POSITION_TARGET + (6 * ID), 6, data);
+	return write_multiple_registers_blocking(ORCAReg::KIN0_POSITION_TARGET + (6 * ID), 6, data);
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, SpringCoupling coupling) {
+OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, uint16_t coupling) {
 	uint16_t data[6] = {
 		gain,
 		uint16_t(center),
@@ -415,7 +415,7 @@ OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t 
 }
 
 //NEEDS TEST
-OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, OscillatorType type) {
+OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type) {
 	uint16_t data[4] = {
 		amplitude,
 		(uint16_t)type,

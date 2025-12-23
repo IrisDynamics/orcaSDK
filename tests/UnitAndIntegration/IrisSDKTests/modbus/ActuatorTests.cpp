@@ -101,24 +101,42 @@ TEST_F(ActuatorTests, MotorIncrementsIntercharTimeoutAfterEnoughTimePassesBetwee
 //	EXPECT_EQ(7, motor.modbus_client.diagnostic_counters[return_server_no_response_count]);
 //}
 
-TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroDoesNotGetQueued)
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthZeroIsntSent)
 {
 	std::vector<char> empty_out_buffer{};
 
-	motor.read_multiple_registers_blocking(1, 0);
+	auto res = motor.read_multiple_registers_blocking(1, 0);
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+	EXPECT_TRUE(res.error);
 }
 
-TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroDoesNotGetQueued)
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthZeroIsntSent)
 {
 	std::vector<char> empty_out_buffer{};
 
 	uint16_t unimportant_data[256];
 
-	motor.write_multiple_registers_blocking(1, 0, unimportant_data);
+	auto err = motor.write_multiple_registers_blocking(1, 0, unimportant_data);
 
 	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+	EXPECT_TRUE(err);
+}
+
+TEST_F(ActuatorTests, ReadWriteOfLengthZeroForEitherParamIsntSent)
+{
+	std::vector<char> empty_out_buffer{};
+	uint16_t unimportant_data[256];
+
+	auto res = motor.read_write_multiple_registers_blocking(1, 0, 100, 1, unimportant_data);
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+	EXPECT_TRUE(res.error);
+
+	res = motor.read_write_multiple_registers_blocking(1, 1, 100, 0, unimportant_data);
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+	EXPECT_TRUE(res.error);
 }
 
 TEST_F(ActuatorTests, TimeSinceLastMessageBeginsVeryLarge)
@@ -167,46 +185,68 @@ TEST_F(ActuatorTests, InvalidMessagesDoNotUpdateTimeSinceLastResponse)
 	EXPECT_GT(motor.time_since_last_response_microseconds(), 1000000000);
 }
 
-//TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125DoesNotGetQueued)
-//{
-//	std::vector<char> empty_out_buffer{};
-//
-//	motor.read_registers(1, 126);
-//	motor.run();
-//
-//	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
-//}
+TEST_F(ActuatorTests, MultipleRegisterReadOfLengthGreaterThan125IsntSent)
+{
+	std::vector<char> empty_out_buffer{};
 
-//TEST_F(ActuatorTests, MultipleRegisterReadOfLength125GetsQueued)
-//{
-//	motor.read_registers(1, 125);
-//	motor.run();
-//
-//	std::vector<char> empty_out_buffer{};
-//
-//	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
-//}
+	auto res = motor.read_multiple_registers_blocking(1, 126);
+	
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+	EXPECT_TRUE(res.error);
+}
 
-//TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthGreaterThan123DoesNotGetQueued)
-//{
-//	std::vector<char> empty_out_buffer{};
-//
-//	uint8_t unimportant_data[256];
-//
-//	motor.write_registers(1, 124, unimportant_data);
-//	motor.run();
-//
-//	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
-//}
-//
-//TEST_F(ActuatorTests, MultipleRegisterWriteOfLength123GetsQueued)
-//{
-//	uint8_t unimportant_data[256];
-//
-//	motor.write_registers(1, 123, unimportant_data);
-//	motor.run();
-//
-//	std::vector<char> empty_out_buffer{};
-//
-//	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
-//}
+TEST_F(ActuatorTests, MultipleRegisterReadOfLength125IsSent)
+{
+	motor.read_multiple_registers_blocking(1, 125, MessagePriority::not_important);
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLengthGreaterThan123IsntSent)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint16_t unimportant_data[124];
+
+	motor.write_multiple_registers_blocking(1, 124, unimportant_data);
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, MultipleRegisterWriteOfLength123IsSent)
+{
+	uint16_t unimportant_data[123];
+
+	motor.write_multiple_registers_blocking(1, 123, unimportant_data, MessagePriority::not_important);
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}
+TEST_F(ActuatorTests, ReadWriteMultipleRegisterWithTooLargeReadOrWriteLengthsArentSent)
+{
+	std::vector<char> empty_out_buffer{};
+
+	uint16_t unimportant_data[122];
+
+	motor.read_write_multiple_registers_blocking(1, 125, 200, 122, unimportant_data);
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+
+	motor.read_write_multiple_registers_blocking(1, 126, 200, 121, unimportant_data);
+
+	EXPECT_EQ(empty_out_buffer, serial_interface->sendBuffer);
+}
+
+TEST_F(ActuatorTests, ReadWriteMultipleRegisterWithMaximumReadWriteLengthsIsSent)
+{
+	uint16_t unimportant_data[121];
+
+	motor.read_write_multiple_registers_blocking(1, 125, 200, 121, unimportant_data, MessagePriority::not_important);
+
+	std::vector<char> empty_out_buffer{};
+
+	EXPECT_NE(empty_out_buffer, serial_interface->sendBuffer);
+}

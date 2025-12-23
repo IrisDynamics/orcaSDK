@@ -100,7 +100,9 @@ OrcaResult<uint16_t> Actuator::read_register_blocking(uint16_t reg_address, Mess
 
 OrcaResult<std::vector<uint16_t>> Actuator::read_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, MessagePriority priority)
 {
-	if (num_registers == 0) return { {}, OrcaError{0} };
+	constexpr int max_read_size = 125;
+
+	if (num_registers < 1 || num_registers > max_read_size) return { {},  {1, "Invalid read size. Must be in range [1, 125]."} };
 
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_start_address, num_registers, priority));
 	flush();
@@ -126,9 +128,10 @@ OrcaError Actuator::write_wide_register_blocking(uint16_t reg_address, int32_t w
 
 OrcaError Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority)
 {
-	if (num_registers == 0) return OrcaError{ 0 };
+	constexpr int max_write_size = 123;
+	if (num_registers < 1 || num_registers > max_write_size) return OrcaError{ 1, "Invalid write size. Must be in range [1, 123]."};
 
-	uint8_t data[128];
+	uint8_t data[max_write_size * 2];
 	for (int i = 0; i < num_registers; i++) {
 		data[i * 2] = uint8_t(write_data[i] >> 8);
 		data[i * 2 + 1] = uint8_t(write_data[i]);
@@ -149,7 +152,13 @@ OrcaResult<std::vector<uint16_t>> Actuator::read_write_multiple_registers_blocki
 	uint16_t* write_data,
 	MessagePriority priority)
 {
-	uint8_t data[128];
+	constexpr int max_write_size = 121;
+	constexpr int max_read_size = 125;
+
+	if (read_num_registers < 1 || read_num_registers > max_read_size) return { {},  {1, "Invalid read size. Must be in range [1, 125]."} };
+	if (write_num_registers < 1 || write_num_registers > max_write_size) return { {},  {1, "Invalid write size. Must be in range [1, 121]."} };
+
+	uint8_t data[max_write_size * 2];
 	for (int i = 0; i < write_num_registers; i++) {
 		data[i * 2] = uint8_t(write_data[i] >> 8);
 		data[i * 2 + 1] = uint8_t(write_data[i]);

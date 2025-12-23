@@ -224,6 +224,8 @@ public:
 	 * @param reg_start_address The starting register address to be written to
 	 * @param num_registers How many registers to read
 	 * @param write_data An array containing the values to be written
+	 * @overload Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important))
+
 	 * 
 	 * @note The maximum write size is 123 registers.
 	 */
@@ -233,7 +235,7 @@ public:
 	 *
 	 * @param reg_start_address The starting register address to be written to
 	 * @param write_data A vector containing the values to be written
-	 * @overload Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, uint8_t num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
+	 * @overload Actuator::write_multiple_registers_blocking(uint16_t reg_start_address, std::vector<uint16_t> write_data, MessagePriority priority = MessagePriority::important)
 	 * 
 	 * @note The maximum write size is 123 registers.
 	 */
@@ -247,6 +249,7 @@ public:
 	 * @param write_starting_address The starting register address to be written to
 	 * @param write_num_registers The amount of registers to write
 	 * @param write_data An array containing the values to be written
+	 * @overload Actuator::read_write_multiple_registers_blocking(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers, uint16_t* write_data, MessagePriority priority = MessagePriority::important)
 	 * 
 	 * @note The maximum write size is 121 registers, and maximum read size is 125 registers.
 	 */
@@ -263,7 +266,7 @@ public:
 	 * @param read_num_registers The amount of registers to read
 	 * @param write_starting_address The starting register address to be written to
 	 * @param write_data A vector containing the values to be written
-	 * @overload Actuator::read_write_multiple_registers_blocking(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, uint8_t write_num_registers,	uint16_t* write_data, MessagePriority priority = MessagePriority::important)
+	 * @overload Actuator::read_write_multiple_registers_blocking(uint16_t read_starting_address, uint8_t read_num_registers, uint16_t write_starting_address, std::vector<uint16_t> write_data, MessagePriority priority = MessagePriority::important)
 	 * 
 	 * @note The maximum write size is 121 registers, and maximum read size is 125 registers.
 	 */

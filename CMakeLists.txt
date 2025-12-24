@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(orcaSDK VERSION 1.0.0)
+project(orcaSDK VERSION 1.1.0)
 
 #TODO(Aiden Oct 31, 2024): 
 #	Address when we've decided how to handle platform dependencies. Add conditional 

@@ -29,6 +29,8 @@ The benefits of using the SDK include:
 
 If after considering your options custom software seems like the appropriate solution, then this repo is for you! The SDK is a C++ library designed to provide an easy to use and understand abstraction for your motor.
 
+> If you prefer Python to C++, we have [a version of this library available in Python](https://pypi.org/project/pyorcasdk/).
+
 ## Prerequisites
 To use the SDK you will need the following tools:
 

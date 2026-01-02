@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+
 namespace orcaSDK {
 	namespace Constants {
 		/* Table of CRC values for high–order byte */
@@ -51,6 +52,6 @@ namespace orcaSDK {
 		static constexpr int kDefaultInterframeDelay_uS = 2000;
 		static constexpr int kDefaultIntercharTimeout_uS = 16000;
 		static constexpr int kDefaultTurnaroundTime_uS = 500;
-		static constexpr int kDefaultResponseTimeout_uS = 20000;
+		static constexpr int kDefaultResponseTimeout_uS = 25000;
 	}
 }

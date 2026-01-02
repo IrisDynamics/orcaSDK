@@ -8,6 +8,7 @@
 #include <future>
 #include <iostream>
 #include <memory>
+#include "constants.h"
 
 namespace orcaSDK {
 
@@ -113,7 +114,7 @@ public:
 			//The wait time should be as small as possible, while being long
 			// enough to ensure the response isn't going to arrive
 			timeout_occurred = true;
-			read_notifier.wait_for(lock, std::chrono::milliseconds(25)); 
+			read_notifier.wait_for(lock, std::chrono::microseconds(Constants::kDefaultResponseTimeout_uS));
 		}
 		
 		std::vector<uint8_t> bytes_read = read_data;

@@ -41,6 +41,7 @@ target_sources(orcaSDK_core
 			src/message_queue.h
 			src/modbus_client.h
 			src/standard_modbus_functions.h
+			src/custom_modbus_functions.h
 			src/orca_stream.h
 			src/transaction.h
 			src/SerialASIO.h

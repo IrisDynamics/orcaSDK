@@ -633,6 +633,8 @@ public:
 
 #pragma endregion
 
+	OrcaError manage_high_speed_stream(uint32_t new_baud, uint16_t new_interframe_delay);
+
 private:
 	OrcaError message_error{false};
 	std::vector<uint16_t> message_data{};

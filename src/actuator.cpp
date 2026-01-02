@@ -8,6 +8,7 @@
 #include "tools/log.h"
 #include "command_and_confirm.h"
 #include <limits>
+#include "custom_modbus_functions.h"
 
 namespace orcaSDK {
 
@@ -486,6 +487,18 @@ void Actuator::disable_stream() {
 int64_t Actuator::time_since_last_response_microseconds()
 {
 	return clock->get_time_microseconds() - _time_since_last_response_microseconds;
+}
+
+OrcaError Actuator::manage_high_speed_stream(uint32_t new_baud, uint16_t new_interframe_delay)
+{
+	modbus_client.enqueue_transaction(CustomModbusFunctions::manage_high_speed_stream(
+		modbus_server_address,
+		new_baud,
+		new_interframe_delay,
+		MessagePriority::not_important
+	));
+	flush();
+	return message_error;
 }
 
 }

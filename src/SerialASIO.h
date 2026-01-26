@@ -55,6 +55,17 @@ public:
 		return { 0 };
 	}
 
+	OrcaError update_serial_parameters(unsigned int baud, asio::serial_port::stop_bits::type stop_bits, asio::serial_port::parity::type parity)
+	{
+		if (!serial_port.is_open()) return { 1, "Serial port is not open" };
+
+		serial_port.set_option(asio::serial_port::baud_rate{ baud });
+		serial_port.set_option(asio::serial_port::stop_bits{ stop_bits });
+		serial_port.set_option(asio::serial_port::parity{ parity });
+
+		return { 0 };
+	}
+
 	void close_serial_port() override {
 		serial_port.close();
 	}

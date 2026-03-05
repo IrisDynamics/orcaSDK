@@ -46,9 +46,9 @@ To use the SDK you will need the following tools:
 ### Hardware
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
-    - A cable splitter
-    - An RS422 cable, used with Modbus and the SDK (yellow)
-    - An RS485 cable, used with Iris Controls (blue)
+    - An ORCA-USB or cable splitter
+    - An RS422 interface, used with Modbus and the SDK (port A of ORCA-USB, yellow cable in port 2 of cable splitter)
+    - An RS485 interface, used with Iris Controls (port B of ORCA-USB, blue cable in port 1 of cable splitter)
 
 ### Knowledge
 - Some basic programming knowledge, while not expressly required, will be very helpful. The tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.
@@ -59,33 +59,34 @@ Before continuing onto any software development, make sure that you have read th
 
 ### Windows
 
-On Windows, each cable has a built in latency of 16ms between messages by default. For the blue cable, this is fine. But to enable high speed communication with your motor, this latency setting should be reduced as much as possible on the yellow cable. To update this setting, follow these steps:
- - Ensure your cables are connected to your computer
+On Windows, each [interface](#hardware) has a built in latency of 16ms between messages by default. For the RS485 interface, this is fine. But to enable high speed communication with your motor, this latency setting should be reduced as much as possible on the RS422 interface. To update this setting, follow these steps:
+ - Ensure your ORCA motor is connected to your computer and powered on
  - Open Device Manager
  - Navigate to "Ports (COM & LPT)" and expand the dropdown menu
- - Right click on the COM port for your yellow cable and select "Properties"
-    - If you do not know which COM port number corresponds to your yellow cable, try unplugging and plugging back in your cable. The COM port you're looking for should disappear and reappear in the dropdown options
+ - Right click on the COM port for your RS422 interface and select "Properties"
+   - If using an ORCA-USB, the RS422 interface can be identified by the 'Location' property of the general tab reading "on USB Serial Converter A"
+   - If using a cable splitter, the RS422 interface can be identified by unplugging and plugging back in your cable while monitoring the "Ports (COM & LPT)" dropdown. The COM port you're looking for should disappear and reappear in the dropdown options
  - Under the "Port Settings" tab of the properties window, select "Advanced"
  - Set the "Latency Timer (msec)" option to a value of 1
  - Select Ok to confirm your selections
 
-Keep a note of what the COM port number for your yellow cable is. You will need it for each time you want to connect to your motor through the SDK.
+Keep a note of what the COM port number for your RS422 interface is. You will need it for each time you want to connect to your motor through the SDK.
 
 ### Linux
 
-When you plug in a yellow or blue cable to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero. When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
+When you connect an [RS422 or RS485 interface](#hardware) to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero (if using ORCA-USB it will be two files). When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
 
 ```
 sudo chmod 666 /dev/ttyUSB0
 ```
 
-Additionally, your yellow cable should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
+Additionally, your RS422 interface should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
 
 ```
 setserial /dev/ttyUSB0 low_latency
 ```
 
-Linux doesn't save parameters for these devices by default, which means that each time you turn on your computer or plug in your device, your cables will be assigned a new ttyUSB file, which may not have the same number as the last time you used it. In addition, because this is a new file, you will need to repeat the previous two commands again. If you don't want to locate your device and repeat these commands regularly, you can set up automatic configuration by writing up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html) for your device.
+Linux doesn't save parameters for these devices by default, which means that each time you turn on your computer or plug in your device, an interface will be assigned to a new ttyUSB file, which may not have the same number as the last time. In addition, because this is a new file, you will need to repeat the previous two commands again. If you don't want to locate your device and repeat these commands regularly, you can set up automatic configuration by writing up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html) for your device.
 
 ## Building the SDK
 

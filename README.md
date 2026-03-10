@@ -74,19 +74,21 @@ Keep a note of what the COM port number for your RS422 interface is. You will ne
 
 ### Linux
 
-When you connect an [RS422 or RS485 interface](#hardware) to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero (if using ORCA-USB it will be two files). When this file is created, access to it will be restricted to the superuser. The file permissions can be adjusted using the chmod command. An example command (we'll assume it receives the name ttyUSB0) exposing this file for reading and writing to all users is:
+When you connect an [RS422 or RS485 interface](#hardware) to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero (if using ORCA-USB it will be two files). When this file is created, access to it will be restricted to the superuser, and port latency will default to 16ms. We recommend configuring these values by setting up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html). The following is a set of sample udev rules which give read write access to all users and set port latencies to 1ms for all supported RS422 interfaces:
 
 ```
-sudo chmod 666 /dev/ttyUSB0
+ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTR{latency_timer}="1",MODE="0666"
+ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6010",ATTR{latency_timer}="1",MODE="0666"
 ```
 
-Additionally, your RS422 interface should have its serial parameters updated to minimize port latency. This can be done using the [setserial](https://linux.die.net/man/8/setserial) command, which should be available to your package manager. Once installed the command (once again assuming the name ttyUSB0) to reduce your serial port latency is:
+To set this up, simply place these sample rules in a .rules file (E.g. '10-ORCA.rules') inside an appropriate directory (E.g. /etc/udev/rules.d/). Then reload the rules using :
 
 ```
-setserial /dev/ttyUSB0 low_latency
+udevadm control --reload-rules
+udevadm trigger
 ```
 
-Linux doesn't save parameters for these devices by default, which means that each time you turn on your computer or plug in your device, an interface will be assigned to a new ttyUSB file, which may not have the same number as the last time. In addition, because this is a new file, you will need to repeat the previous two commands again. If you don't want to locate your device and repeat these commands regularly, you can set up automatic configuration by writing up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html) for your device.
+> These steps will likely require root privilege to perform.
 
 ## Building the SDK
 

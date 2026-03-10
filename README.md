@@ -47,8 +47,8 @@ To use the SDK you will need the following tools:
 - An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
     - An ORCA-USB or cable splitter
-    - An RS422 interface, used with Modbus and the SDK (port A of ORCA-USB, yellow cable in port 2 of cable splitter)
-    - An RS485 interface, used with Iris Controls (port B of ORCA-USB, blue cable in port 1 of cable splitter)
+    - An RS422 interface, used with Modbus and the SDK (port A of ORCA-USB, or a yellow cable in port 2 of cable splitter)
+    - An RS485 interface, used with Iris Controls (port B of ORCA-USB, or a blue cable in port 1 of cable splitter)
 
 ### Knowledge
 - Some basic programming knowledge, while not expressly required, will be very helpful. The tutorials will assume that you have written a (possibly very simple) program before. Experience with C++ is particularly useful.
@@ -70,7 +70,7 @@ On Windows, each [interface](#hardware) has a built in latency of 16ms between m
  - Set the "Latency Timer (msec)" option to a value of 1
  - Select Ok to confirm your selections
 
-Keep a note of what the COM port number for your RS422 interface is. You will need it for each time you want to connect to your motor through the SDK.
+Keep a note of what the COM port number for your RS422 interface is. This is the port to use when interacting with your motor through the SDK.
 
 ### Linux
 

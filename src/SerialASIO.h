@@ -48,9 +48,21 @@ public:
 
 		if (ec)	return { ec.value(), ec.message() };
 
-		serial_port.set_option(asio::serial_port::baud_rate{ baud });
-		serial_port.set_option(asio::serial_port::stop_bits{ asio::serial_port::stop_bits::type::one });
-		serial_port.set_option(asio::serial_port::parity{ asio::serial_port::parity::type::even });
+		serial_port.set_option(asio::serial_port::baud_rate{ baud }, ec);
+		if (ec) {
+			serial_port.close();
+			return { ec.value(), "Couldn't set baud: " + ec.message()};
+		}
+		serial_port.set_option(asio::serial_port::stop_bits{ asio::serial_port::stop_bits::type::one }, ec);
+		if (ec) {
+			serial_port.close();
+			return { ec.value(), "Couldn't set stop bits: " + ec.message() };
+		}
+		serial_port.set_option(asio::serial_port::parity{ asio::serial_port::parity::type::even }, ec);
+		if (ec) {
+			serial_port.close();
+			return { ec.value(), "Couldn't set parity: " + ec.message() };
+		}
 
 		return { 0 };
 	}
@@ -59,9 +71,19 @@ public:
 	{
 		if (!serial_port.is_open()) return { 1, "Serial port is not open" };
 
-		serial_port.set_option(asio::serial_port::baud_rate{ baud });
-		serial_port.set_option(asio::serial_port::stop_bits{ stop_bits });
-		serial_port.set_option(asio::serial_port::parity{ parity });
+		asio::error_code ec;
+		serial_port.set_option(asio::serial_port::baud_rate{ baud }, ec);
+		if (ec) {
+			return { ec.value(), "Couldn't set baud: " + ec.message() };
+		}
+		serial_port.set_option(asio::serial_port::stop_bits{ stop_bits }, ec);
+		if (ec) {
+			return { ec.value(), "Couldn't set stop bits: " + ec.message() };
+		}
+		serial_port.set_option(asio::serial_port::parity{ parity }, ec);
+		if (ec) {
+			return { ec.value(), "Couldn't set parity: " + ec.message() };
+		}
 
 		return { 0 };
 	}

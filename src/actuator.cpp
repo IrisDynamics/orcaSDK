@@ -438,7 +438,7 @@ OrcaError Actuator::set_damper(uint16_t damping) {
 	return write_register_blocking(D0_GAIN_NS_MM, damping);
 }
 
-OrcaError Actuator::set_inertia(uint16_t inertia) {
+OrcaError Actuator::set_inertia(int16_t inertia) {
 	return write_register_blocking(I0_GAIN_NS2_MM, inertia);
 }
 

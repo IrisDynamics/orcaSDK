@@ -581,7 +581,7 @@ public:
 	 *	@note	Please refer to the ORCA Series Reference Manual, section Controllers->Haptic Controller
 	 *			for details.
 	*/
-	OrcaError set_inertia(uint16_t inertia);
+	OrcaError set_inertia(int16_t inertia);
 
 	/**
 	*	@brief Sets the constant force value in Haptic Mode

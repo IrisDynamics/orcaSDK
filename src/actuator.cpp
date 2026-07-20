@@ -376,7 +376,6 @@ OrcaError Actuator::set_safety_damping(uint16_t max_safety_damping) {
 	return write_register_blocking(SAFETY_DGAIN, max_safety_damping);
 }
 
-//NEEDS TEST
 OrcaError Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain) {
 
 	uint16_t data[6] = {
@@ -395,7 +394,6 @@ OrcaError Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uin
 	return err;
 }
 
-//NEEDS TEST
 OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t time, int16_t delay, int8_t type, int8_t auto_next, int8_t next_id) {
 	if (next_id == -1) {
 		next_id = ID + 1;
@@ -412,7 +410,6 @@ OrcaError Actuator::set_kinematic_motion(int8_t ID, int32_t position, int32_t ti
 	return write_multiple_registers_blocking(ORCAReg::KIN0_POSITION_TARGET + (6 * ID), 6, data);
 }
 
-//NEEDS TEST
 OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t center, uint16_t dead_zone, uint16_t saturation, uint16_t coupling) {
 	uint16_t data[6] = {
 		gain,
@@ -426,7 +423,6 @@ OrcaError Actuator::set_spring_effect(uint8_t spring_id, uint16_t gain, int32_t 
 	return write_multiple_registers_blocking(S0_GAIN_N_MM + spring_id * 6, 6, data);
 }
 
-//NEEDS TEST
 OrcaError Actuator::set_osc_effect(uint8_t osc_id, uint16_t amplitude, uint16_t frequency_dhz, uint16_t duty, uint16_t type) {
 	uint16_t data[4] = {
 		amplitude,
@@ -453,7 +449,6 @@ OrcaError Actuator::set_constant_force_filter(uint16_t force_filter) {
 	return write_register_blocking(CONST_FORCE_FILTER, force_filter);
 }
 
-//NEEDS TEST: and command revisit
 OrcaError Actuator::trigger_kinematic_motion(int8_t ID) {
 	return write_register_blocking(KIN_SW_TRIGGER, ID);
 }

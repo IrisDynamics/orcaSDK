@@ -454,7 +454,7 @@ public:
 	 *			ORCA Series Reference Manual, section Controllers->Position Controller
 	 *			for details.
 	 */
-	void tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
+	OrcaError tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain=0);
 
 #pragma endregion
 

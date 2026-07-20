@@ -377,7 +377,7 @@ OrcaError Actuator::set_safety_damping(uint16_t max_safety_damping) {
 }
 
 //NEEDS TEST
-void Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain) {
+OrcaError Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t dvgain, uint32_t sat, uint16_t degain) {
 
 	uint16_t data[6] = {
 		pgain,
@@ -388,8 +388,11 @@ void Actuator::tune_position_controller(uint16_t pgain, uint16_t igain, uint16_t
 		uint16_t(sat >> 16)
 	};
 
-	write_multiple_registers_blocking(PC_PGAIN, 6, data);
-	write_register_blocking(CTRL_REG_1, CTRL_REG_1_PC_GAIN_APPLY_Mask);
+	OrcaError err = write_multiple_registers_blocking(PC_PGAIN, 6, data);
+	if (err) return err;
+	err = write_register_blocking(CTRL_REG_1, CTRL_REG_1_PC_GAIN_APPLY_Mask);
+	if (err) return OrcaError{ 1, "Failed to apply position tuning gains: " + err.what() };
+	return err;
 }
 
 //NEEDS TEST

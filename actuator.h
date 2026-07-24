@@ -324,7 +324,7 @@ public:
 			command streaming.
 	 *	
 	*/
-	void enable_stream();
+	void enable_stream(OrcaStream::StreamType streamtype = OrcaStream::StreamType::Command);
 
 	/**
 	 * @brief	Disables command streaming with the ORCA
@@ -351,6 +351,10 @@ public:
 	* @param effects The bitmap describing which haptic effects should be enabled and disabled
 	*/
 	void update_haptic_stream_effects(uint16_t effects);
+
+	/**
+	*/
+	void set_streamed_write(uint16_t addr, int32_t value, uint8_t width = 1);
 
 #pragma endregion
 

@@ -82,6 +82,10 @@ void Actuator::set_streamed_position_um(int32_t position) {
 	stream.set_position_um(position);
 }
 
+void Actuator::set_streamed_write(uint16_t addr, int32_t value, uint8_t width) {
+	stream.set_write_value(addr, value, width);
+}
+
 OrcaResult<int32_t> Actuator::read_wide_register_blocking(uint16_t reg_address, MessagePriority priority)
 {
 	modbus_client.enqueue_transaction(DefaultModbusFunctions::read_holding_registers_fn(modbus_server_address, reg_address, 2, priority));
@@ -287,6 +291,19 @@ void Actuator::handle_transaction_response(Transaction response)
 		stream_cache.errors = (response.get_rx_data()[13] << 8) | response.get_rx_data()[14];
 		break;
 	}
+	case motor_write: {
+		uint16_t position_high = (response.get_rx_data()[1] << 8) | response.get_rx_data()[2];
+		uint16_t position_low = (response.get_rx_data()[3] << 8) | response.get_rx_data()[4];
+		stream_cache.position = combine_into_wide_register(position_low, position_high);
+		uint16_t force_high = (response.get_rx_data()[5] << 8) | response.get_rx_data()[6];
+		uint16_t force_low = (response.get_rx_data()[7] << 8) | response.get_rx_data()[8];
+		stream_cache.force = combine_into_wide_register(force_low, force_high);
+		stream_cache.power = (response.get_rx_data()[9] << 8) | response.get_rx_data()[10];
+		stream_cache.temperature = (response.get_rx_data()[11]);
+		stream_cache.voltage = (response.get_rx_data()[12] << 8) | response.get_rx_data()[13];
+		stream_cache.errors = (response.get_rx_data()[14] << 8) | response.get_rx_data()[15];
+		break;
+	}
 	case ModbusFunctionCodes::read_coils:
 	case ModbusFunctionCodes::read_discrete_inputs:
 	case ModbusFunctionCodes::read_input_registers:
@@ -475,8 +492,8 @@ void Actuator::set_stream_paused(bool paused)
 	stream_paused = paused;
 }
 
-void Actuator::enable_stream() {
-	stream.enable();
+void Actuator::enable_stream(OrcaStream::StreamType streamtype) {
+	stream.enable(streamtype);
 }
 
 void Actuator::disable_stream() {

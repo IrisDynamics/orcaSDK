@@ -14,8 +14,9 @@ bool OrcaStream::is_enabled() {
 	return enabled;
 }
 
-void OrcaStream::enable() {
+void OrcaStream::enable(StreamType type) {
 	enabled = true;
+	active_stream_mode = type;
 }
 
 void OrcaStream::disable() {
@@ -26,7 +27,15 @@ void OrcaStream::handle_stream()
 {
 	// This object can queue messages on the UART with the either the handshake or the connected run loop
 	if (is_enabled() && modbus_client.get_queue_size() == 0) {
-		motor_stream_command();
+		switch (active_stream_mode) {
+		case StreamType::Command:
+			motor_stream_command();
+			break;
+		case StreamType::Write:
+			motor_stream_write();
+			break;
+		}
+		
 	}
 }
 
@@ -50,6 +59,10 @@ void OrcaStream::motor_stream_command() {
 	}
 }
 
+void OrcaStream::motor_stream_write() {
+	motor_write_fn(modbus_server_address, write_addr, write_value, write_width);
+}
+
 void OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, int32_t register_value) {
 	uint8_t data_bytes[5] = {
 		uint8_t(command_code),
@@ -63,10 +76,27 @@ void OrcaStream::motor_command_fn(uint8_t device_address, uint8_t command_code, 
 	modbus_client.enqueue_transaction(my_temp_transaction);
 }
 
+void OrcaStream::motor_write_fn(uint8_t device_address, uint16_t register_addr, int32_t register_value, uint8_t width) {
+	uint8_t data_bytes[7] = {
+		uint8_t(register_addr >> 8),
+		uint8_t(register_addr),
+		uint8_t(width),
+		uint8_t(register_value >> 24),
+		uint8_t(register_value >> 16),
+		uint8_t(register_value >> 8),
+		uint8_t(register_value)
+	};
+	Transaction my_temp_transaction;
+	my_temp_transaction.load_transmission_data(device_address, motor_write, data_bytes, 7, get_app_reception_length(motor_write));
+	modbus_client.enqueue_transaction(my_temp_transaction);
+}
+
 int OrcaStream::get_app_reception_length(uint8_t fn_code) {
 	switch (fn_code) {
 	case motor_command:
 		return 19;
+	case motor_write:
+		return 20;
 	case change_connection_status:
 		return 12;
 	default:
@@ -89,6 +119,12 @@ void OrcaStream::set_position_um(int32_t position) {
 
 void OrcaStream::set_haptic_effects(uint16_t effects) {
 	haptic_command_effects = effects;
+}
+
+void OrcaStream::set_write_value(uint16_t addr, int32_t value, uint8_t width) {
+	write_addr = addr;
+	write_value = value;
+	write_width = width;
 }
 
 }

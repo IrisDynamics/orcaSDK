@@ -77,11 +77,13 @@ Keep a note of what the COM port number for your RS422 interface is. This is the
 When you connect an [RS422 or RS485 interface](#hardware) to your Linux device, it will appear as a file matching the pattern /dev/ttyUSB{x} with x being an arbitrary number incrementing from zero (if using ORCA-USB it will be two files). When this file is created, access to it will be restricted to the superuser, and port latency will default to 16ms. We recommend configuring these values by setting up [udev .rules files](https://www.freedesktop.org/software/systemd/man/latest/udev.html). The following is a set of sample udev rules which give read write access to all users and set port latencies to 1ms for all supported RS422 interfaces:
 
 ```
-ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",ATTR{latency_timer}="1",MODE="0666"
-ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6010",ATTR{latency_timer}="1",MODE="0666"
+SUBSYSTEM=="usb-serial",DRIVER=="ftdi_sio",ATTR{latency_timer}="1"
+SUBSYSTEM=="tty",SUBSYSTEMS=="usb-serial",DRIVERS=="ftdi_sio",MODE="0666"
 ```
 
-To set this up, simply place these sample rules in a .rules file (E.g. '10-ORCA.rules') inside an appropriate directory (E.g. /etc/udev/rules.d/). Then reload the rules using :
+> Note that these settings will apply to all FTDI USB-to-serial devices. If you're using other FTDI USB-to-serial devices which cannot have these settings, you will need to modify these rules.
+
+To set this up, simply place these sample rules in a .rules file (E.g. '99-ORCA.rules') inside an appropriate directory (E.g. /etc/udev/rules.d/). Then reload the rules using:
 
 ```
 udevadm control --reload-rules

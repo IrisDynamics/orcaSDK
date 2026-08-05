@@ -87,6 +87,11 @@ public:
 	 *	@brief	Returns true if a serial port has been obtained and is open.
 	 */
 	virtual bool is_open() = 0;
+
+	/**
+	 *	@brief	Configures how long blocking operations will wait before timing out
+	 */
+	virtual void set_timeout(uint64_t timeout_us) = 0;
 };
 
 }

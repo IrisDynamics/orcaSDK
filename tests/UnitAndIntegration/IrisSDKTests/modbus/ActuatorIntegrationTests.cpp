@@ -205,6 +205,35 @@ TEST_F(ActuatorIntegrationTests, ReadWriteRegistersBlockingOverloadBehavesLikeDe
 	EXPECT_EQ(expected_output, actual_output);
 }
 
+TEST_F(ActuatorIntegrationTests, AdjustingTimeoutCausesStreamToWaitLongerBeforeTimingOut)
+{
+	motor.enable_stream();
+
+	motor.run();
+
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::message_sent_count), 1);
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::return_server_no_response_count), 0);
+
+	clock->pass_time(Constants::kDefaultResponseTimeout_uS + 1);
+
+	motor.run();
+
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::return_server_no_response_count), 1);
+
+	clock->pass_time(Constants::kDefaultInterframeDelay_uS + 1);
+
+	motor.run();
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::message_sent_count), 2);
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::return_server_no_response_count), 1);
+
+	motor.set_response_timeout(Constants::kDefaultResponseTimeout_uS + 5000);
+
+	clock->pass_time(Constants::kDefaultResponseTimeout_uS + 1);
+
+	motor.run();
+
+	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::return_server_no_response_count), 1);
+}
 //TEST_F()
 //{
 //	motor.read_registers(SHAFT_POS_UM, 2);

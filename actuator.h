@@ -633,6 +633,16 @@ public:
 
 #pragma endregion
 
+	/**
+	 * @brief	Changes how long the client will wait after sending a message before considering 
+	 *			the response timed out.
+	 * @param	The timeout duration, in microseconds.
+	 * @note	For most applications, the default timeout should be sufficient. This function 
+	 *			should be most applicable to users with some combination of default serial port 
+	 *			latency, low baud rates, and long message lengths (E.g. Long reads, streaming)
+	 */
+	void set_response_timeout(uint64_t timeout_us);
+
 private:
 	OrcaError message_error{false};
 	std::vector<uint16_t> message_data{};

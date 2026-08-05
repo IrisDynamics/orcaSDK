@@ -486,4 +486,10 @@ int64_t Actuator::time_since_last_response_microseconds()
 	return clock->get_time_microseconds() - _time_since_last_response_microseconds;
 }
 
+void Actuator::set_response_timeout(uint64_t timeout_us)
+{
+	serial_interface->set_timeout(timeout_us);
+	modbus_client.adjust_response_timeout(timeout_us);
+}
+
 }

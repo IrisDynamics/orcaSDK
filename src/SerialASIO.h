@@ -147,7 +147,7 @@ public:
 			//The wait time should be as small as possible, while being long
 			// enough to ensure the response isn't going to arrive
 			timeout_occurred = true;
-			read_notifier.wait_for(lock, std::chrono::microseconds(Constants::kDefaultResponseTimeout_uS));
+			read_notifier.wait_for(lock, std::chrono::microseconds(timeout_us));
 		}
 		
 		std::vector<uint8_t> bytes_read = read_data;
@@ -187,6 +187,10 @@ public:
 		return serial_port.is_open();
 	}
 
+	void set_timeout(uint64_t _timeout_us) {
+		timeout_us = _timeout_us;
+	}
+
 private:
 	asio::io_context io_context;
 	asio::serial_port serial_port{io_context};
@@ -205,6 +209,8 @@ private:
 	std::atomic<size_t> bytes_to_read{ 0 };
 
 	std::vector<uint8_t> read_buffer;
+
+	uint64_t timeout_us{ Constants::kDefaultResponseTimeout_uS };
 
 	void read_message_function_code()
 	{

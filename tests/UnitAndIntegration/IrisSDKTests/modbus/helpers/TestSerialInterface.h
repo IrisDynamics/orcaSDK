@@ -84,6 +84,10 @@ public:
 		return true;
 	}
 
+	void set_timeout(uint64_t new_timeout) {
+
+	}
+
 private:
 	std::deque<char> receive_buffer;
 	uint64_t current_time = 0;

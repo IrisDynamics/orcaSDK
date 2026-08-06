@@ -234,6 +234,18 @@ TEST_F(ActuatorIntegrationTests, AdjustingTimeoutCausesStreamToWaitLongerBeforeT
 
 	EXPECT_EQ(motor.modbus_client.diagnostic_counters.Get(diagnostic_counter_t::return_server_no_response_count), 1);
 }
+
+TEST_F(ActuatorIntegrationTests, TunePositionControllerReturnsErrorIfWriteSucceedsButApplyTuningMessageFails)
+{
+	std::deque<char> serial_response_data = std::deque<char>{
+		'\x1', '\x10', '\x0', '\x85', '\x0', '\x6', '\x51', '\xe2', '\x1', '\x06', '\x0', '\x1', '\x4', '\x0', '\xda', '\x0', //Last CRC byte is incorrect (should be 0xca)
+	};
+	serial_interface->consume_new_message(serial_response_data);
+
+	auto err = motor.tune_position_controller(1, 2, 3, 4);
+
+	EXPECT_TRUE(err);
+}
 //TEST_F()
 //{
 //	motor.read_registers(SHAFT_POS_UM, 2);

@@ -4,6 +4,7 @@
 #include "src/modbus_client.h"
 #include <vector>
 #include <deque>
+#include <algorithm>
 
 class TestSerialInterface : public orcaSDK::SerialInterface
 {
@@ -26,11 +27,8 @@ public:
 
 
 	//Handling TX
-	void tx_enable(size_t) override {
-		////while there are bytes left to send in the transaction, continue adding them to sendBuf
-		//while (messages.get_active_transaction()->bytes_left_to_send()) {
-		//	send();
-		//}
+	void tx_enable(size_t response_length) override {
+		next_response_length = response_length;
 	}
 
 	void send_byte(uint8_t byte) override {
@@ -72,7 +70,10 @@ public:
 	}
 
 	orcaSDK::OrcaResult<std::vector<uint8_t>> receive_bytes_blocking() override{
-		return { std::vector<uint8_t>(receive_buffer.begin(), receive_buffer.end()), {0, ""} };
+		auto rx_length = std::min(receive_buffer.size(), next_response_length);
+		std::vector<uint8_t> retval = std::vector<uint8_t>(receive_buffer.begin(), receive_buffer.begin() + rx_length);
+		receive_buffer.erase(receive_buffer.begin(), receive_buffer.begin() + rx_length);
+		return { retval, {0, ""} };
 	}
 
 	void flush_and_discard_receive_buffer() override
@@ -91,4 +92,5 @@ public:
 private:
 	std::deque<char> receive_buffer;
 	uint64_t current_time = 0;
+	size_t next_response_length{ 0 };
 };

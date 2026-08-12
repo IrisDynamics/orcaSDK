@@ -85,7 +85,7 @@ SUBSYSTEM=="tty",SUBSYSTEMS=="usb-serial",DRIVERS=="ftdi_sio",MODE="0666"
 
 To set this up, simply place these sample rules in a .rules file (E.g. '99-ORCA.rules') inside an appropriate directory (E.g. /etc/udev/rules.d/). Then reload the rules using:
 
-```
+```bash
 udevadm control --reload-rules
 udevadm trigger
 ```
@@ -104,7 +104,7 @@ We strongly recommend using CMake to build the SDK. For the vast majority of use
 
 The basic unit of projects using CMake is the CMakeLists.txt file. To begin, create a file called CMakeLists.txt in the folder in which you'd like to create your application. Open the new file with a text editor of your choice and add the following text:
 
-```CMakeLists.txt
+```cmake
 cmake_minimum_required(VERSION 3.23)
 
 project(basicOrcaSDKProj)
@@ -118,7 +118,7 @@ project() creates a CMake project and assigns it a name. For the purpose of buil
 
 Now let's update the CMakeLists.txt file to add an application.
 
-```CMakeLists.txt
+```cmake
 ...
 
 add_executable(basicOrcaSDKApp
@@ -130,7 +130,7 @@ This command defines an application target which will result in an executable (.
 
 Next we add the commands which download the orcaSDK and its dependencies and prepare it for use.
 
-```CMakeLists.txt
+```cmake
 ...
 
 include(FetchContent)
@@ -145,7 +145,7 @@ The command `include(FetchContent)` makes the CMake FetchContent features availa
 
 Finally, we add one more command to associate the SDK with your executable.
 
-```CMakeLists.txt
+```cmake
 ...
 
 target_link_libraries(basicOrcaSDKApp PUBLIC orcaSDK::core)
@@ -155,7 +155,7 @@ target_link_libraries(basicOrcaSDKApp PUBLIC orcaSDK::core)
 
 At this point we have a simple CMakeLists.txt file describing an application which makes use of the SDK. Your CMakeLists.txt file should look something like this:
 
-```CMakeLists.txt
+```cmake
 cmake_minimum_required(VERSION 3.23)
 
 project(basicOrcaSDKProj)
@@ -178,7 +178,7 @@ target_link_libraries(basicOrcaSDKApp PUBLIC orcaSDK::core)
 
 Next let's create a very simple main.cpp which makes use of the SDK, and build it to test if our system is working.
 
-```main.cpp
+```cpp
 #include <iostream>
 #include "actuator.h"
 
@@ -212,7 +212,7 @@ For further information regarding CMake projects in Visual Studio, [CMake Projec
 
 If building your app through the command line, simply use the following commands.
 
-```
+```bash
 mkdir build
 cd build
 cmake ..

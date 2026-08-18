@@ -19,7 +19,7 @@
 - [Whats Next?](#whats-next)
 
 ## Introduction
-Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their ORCA series linear motor. 
+Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their ORCA motor. 
 
 Not all use cases require custom software for controlling an ORCA motor. It's possible that a more appropriate tool exists for your use case. See a list of available options on the [Getting Started](https://irisdynamics.com/getting-started-resources) page of our website.
 
@@ -44,7 +44,7 @@ To use the SDK you will need the following tools:
 - A IDE or text editor of your choice
     
 ### Hardware
-- An Orca series linear motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
+- An ORCA Series Linear Motor, and [any additional required components](https://irisdynamics.com/hubfs/Website/Downloads/Orca/Approved/UG220206_Orca_Series_Quickstart_Guide.pdf). A quick checklist of the dependencies includes:
     - An appropriate power supply
     - An ORCA-USB or cable splitter
     - An RS422 interface, used with Modbus and the SDK (port A of ORCA-USB, or a yellow cable in port 2 of cable splitter)
@@ -55,7 +55,7 @@ To use the SDK you will need the following tools:
 
 ## Setting Up Hardware and Testing Your Motor
 
-Before continuing onto any software development, make sure that you have read through and followed the steps in the Orca Series Quickstart Guide, which can be found on [our downloads page](https://irisdynamics.com/downloads). We recommend testing your motor's functionality through IrisControls, also hosted on our downloads page, before beginning to operate your motor through the SDK.
+Before continuing onto any software development, make sure that you have read through and followed the steps in the ORCA Series Motor Quickstart Guide, which can be found on [our downloads page](https://irisdynamics.com/downloads). We recommend testing your motor's functionality through IrisControls, also hosted on our downloads page, before beginning to operate your motor through the SDK.
 
 ### Windows
 
@@ -98,7 +98,7 @@ The goal for this section is to illustrate how to create and compile a basic pro
 
 We strongly recommend using CMake to build the SDK. For the vast majority of users we recommend using CMake's FetchContent features which we describe in this section.
 
-> If our recommended build solution is insufficient for your needs, orcaSDK-CMake-Details.md contains relevant details for custom installations.
+> If our recommended build solution is insufficient for your needs, relevant details for custom installations can be found [here](orcaSDK-CMake-Details.md).
 
 ### Create a CMakeLists.txt file
 

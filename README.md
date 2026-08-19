@@ -136,7 +136,7 @@ Next we add the commands which download the orcaSDK and its dependencies and pre
 include(FetchContent)
 FetchContent_Declare(orcaSDK
     GIT_REPOSITORY https://github.com/IrisDynamics/orcaSDK.git
-    GIT_TAG main # Or 'v1.1.0' or some commit hash from the SDK
+    GIT_TAG main # Or 'v1.1.1' or some commit hash from the SDK
 )
 FetchContent_MakeAvailable(orcaSDK)
 ```
@@ -167,7 +167,7 @@ add_executable(basicOrcaSDKApp
 include(FetchContent)
 FetchContent_Declare(orcaSDK
     GIT_REPOSITORY https://github.com/IrisDynamics/orcaSDK.git
-    GIT_TAG main # Or 'v1.1.0' or some commit hash from the SDK
+    GIT_TAG main # Or 'v1.1.1' or some commit hash from the SDK
 )
 FetchContent_MakeAvailable(orcaSDK)
 

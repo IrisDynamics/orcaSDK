@@ -15,8 +15,7 @@
 - [Compile and Run Your Application](#compile-and-run-your-application)
     - [Visual Studio](#visual-studio)
     - [Command Line](#command-line)
-- [(Optional) Download the Documentation](#optional-download-the-documentation)
-- [Whats Next?](#whats-next)
+- [Documentation](#documentation)
 
 ## Introduction
 Welcome to the orcaSDK repo! The goal of the SDK is to help users who want to create custom software for controlling their ORCA motor. 
@@ -221,10 +220,8 @@ cmake --build .
 
 If the cmake commands complete without displaying error messages, then you're done! The resulting executable should be placed in either the Debug or Release directory generated within your build directory, or within the build directory itself.
 
-## (Optional) Download the Documentation
+## Documentation
 
-We recommend downloading the documentation package, found in the releases section of this Github repo. To open the documentation, unzip the package and open the documentation.html file with any browser, located within the file's top-level directory.
+Reference documentation for orcaSDK can be found [here](https://docs.irisdynamics.com/sdk/orcasdk/). 
 
-## What's Next?
-
-Take a look at our [Tutorial Repo](https://github.com/IrisDynamics/orcaSDK_tutorials) for tutorials on how to handle some of the most common use cases for Orca motors.
+We also highly recommend taking a look at our [tutorial suite](https://docs.irisdynamics.com/sdk/tutorials/) which illustrates examples for some of the common uses cases for ORCA motors with the SDK.
